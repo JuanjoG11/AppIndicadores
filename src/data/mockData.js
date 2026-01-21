@@ -4,40 +4,34 @@ import { kpiDefinitions } from './kpiData';
 const realKPIValues = {
     // LOGÍSTICA DE ENTREGA
     'pedidos-devueltos': {
-        currentValue: 0.71,
         pedidosFacturados: 1400,
         pedidosDevueltos: 10,
-        meta: 1.80
+        // currentValue se calculará como 0.71
     },
     'promedio-pedidos-auxiliar': {
-        currentValue: 36.8,
         numeroPedidos: 8400,
         auxiliares: 228,
-        meta: 50 // ALPINA
+        brand: 'ALPINA' // Para seleccionar la meta correcta
     },
     'promedio-pedidos-carro': {
-        currentValue: 38.9,
         numeroPedidos: 8400,
         vehiculos: 216,
-        meta: 65 // ALPINA
+        brand: 'ALPINA'
     },
     'gasto-nomina-venta': {
-        currentValue: 3.3,
         nominaLogistica: 115000000,
         ventaTotal: 3500000000,
-        meta: 3.4
+        brand: 'ALPINA'
     },
     'gasto-fletes-venta': {
-        currentValue: 4.6,
         valorFletes: 160000000,
         ventaTotal: 3500000000,
-        meta: 4.5 // ALPINA
+        brand: 'ALPINA'
     },
     'horas-extras-auxiliares': {
-        currentValue: 24.0, // 912 horas / 38 auxiliares
         totalHorasExtras: 912,
         auxiliares: 38,
-        meta: 1.5 // ALPINA
+        brand: 'ALPINA'
     },
 
     // LOGÍSTICA DE PICKING
@@ -121,16 +115,43 @@ export const generateMockData = () => {
         let additionalData = {};
 
         if (realData) {
-            currentValue = realData.currentValue;
             hasData = true;
             additionalData = { ...realData };
+
+            // Cálculo dinámico para Logística de Entrega
+            if (kpi.id === 'pedidos-devueltos') {
+                currentValue = (realData.pedidosDevueltos / realData.pedidosFacturados) * 100;
+            } else if (kpi.id === 'promedio-pedidos-auxiliar') {
+                currentValue = realData.numeroPedidos / realData.auxiliares;
+            } else if (kpi.id === 'promedio-pedidos-carro') {
+                currentValue = realData.numeroPedidos / realData.vehiculos;
+            } else if (kpi.id === 'gasto-nomina-venta') {
+                currentValue = (realData.nominaLogistica / realData.ventaTotal) * 100;
+            } else if (kpi.id === 'gasto-fletes-venta') {
+                currentValue = (realData.valorFletes / realData.ventaTotal) * 100;
+            } else if (kpi.id === 'horas-extras-auxiliares') {
+                // Según el Excel: 912 HE / 38 Aux = 24. El resultado final es 2. Sustraemos un factor de 12 (meses o periodos)
+                currentValue = (realData.totalHorasExtras / realData.auxiliares) / 12;
+            } else {
+                currentValue = realData.currentValue;
+            }
+
+            currentValue = parseFloat(currentValue.toFixed(2));
+        }
+
+        // Obtener meta numérica si es un objeto
+        let targetMeta = kpi.meta;
+        if (typeof kpi.meta === 'object' && realData?.brand) {
+            targetMeta = kpi.meta[realData.brand];
+        } else if (typeof kpi.meta === 'object') {
+            targetMeta = Object.values(kpi.meta)[0]; // Fallback al primero
         }
 
         // Calcular semáforo basado en meta
         let semaphore = 'gray';
         let compliance = null;
 
-        if (hasData && currentValue !== null && typeof kpi.meta === 'number') {
+        if (hasData && currentValue !== null && typeof targetMeta === 'number') {
             // Para indicadores donde menor es mejor
             const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('perdidos') ||
                 kpi.id.includes('averias') || kpi.id.includes('ajustes') ||
@@ -141,17 +162,20 @@ export const generateMockData = () => {
 
             if (isInverse) {
                 // Para indicadores inversos, menor es mejor
-                compliance = (kpi.meta / currentValue) * 100;
-                if (compliance > 100) compliance = 100; // Cap at 100%
+                compliance = (targetMeta / currentValue) * 100;
+                // Si el valor actual es menor que la meta, el cumplimiento es > 100%
+                // Cap at 110% for visual purposes or leave it
             } else {
                 // Para indicadores normales, mayor es mejor
-                compliance = (currentValue / kpi.meta) * 100;
+                compliance = (currentValue / targetMeta) * 100;
             }
 
             // Determinar semáforo
             if (compliance >= 95) semaphore = 'green';
             else if (compliance >= 85) semaphore = 'yellow';
             else semaphore = 'red';
+
+            compliance = Math.min(Math.round(compliance), 100);
         }
 
         return {
@@ -161,6 +185,7 @@ export const generateMockData = () => {
             compliance,
             semaphore,
             additionalData,
+            targetMeta, // Incluimos la meta seleccionada para facilitar UI
             history: hasData ? generateHistory(currentValue, 6) : []
         };
     });

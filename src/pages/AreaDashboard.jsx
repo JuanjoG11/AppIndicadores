@@ -5,7 +5,7 @@ import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
-const AreaDashboard = ({ kpiData, currentUser }) => {
+const AreaDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const { areaId } = useParams();
     const area = getAreaById(areaId);
     const [editingKPI, setEditingKPI] = useState(null);
@@ -43,7 +43,9 @@ const AreaDashboard = ({ kpiData, currentUser }) => {
         }));
 
     const handleSaveKPI = (kpiId, data) => {
-        alert('Datos guardados exitosamente!');
+        if (onUpdateKPI) {
+            onUpdateKPI(kpiId, data);
+        }
         setEditingKPI(null);
     };
 

@@ -1,11 +1,12 @@
 // Indicadores REALES de TYM/TAT 2026 basados en el Excel proporcionado
 export const kpiDefinitions = [
     // ========== LOGÍSTICA DE ENTREGA ==========
+    // ========== LOGÍSTICA DE ENTREGA ==========
     {
         id: 'pedidos-devueltos',
         name: '% de pedidos devueltos',
         area: 'logistica-entrega',
-        objetivo: 'Garantizar el % más alto de efectividad en la entrega',
+        objetivo: 'Garantizar el % mas alto de efectividad en la entrega',
         meta: 1.80,
         unit: '%',
         frecuencia: 'DIARIO',
@@ -16,10 +17,15 @@ export const kpiDefinitions = [
     },
     {
         id: 'promedio-pedidos-auxiliar',
-        name: 'Promedio de pedidos entregados por AUXILIAR',
+        name: 'Promedio de pedidos entregados por AUXILIAR x marca',
         area: 'logistica-entrega',
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
-        meta: 'ALPINA: 50 | UNILEVER: 80 | POLAR: 75 | ZENU: 80',
+        meta: {
+            ALPINA: 50,
+            UNILEVER: 80,
+            POLAR: 75,
+            ZENU: 80
+        },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
         responsable: 'APRENDIZ DEVOLUCIONES',
@@ -32,7 +38,12 @@ export const kpiDefinitions = [
         name: 'Promedio de pedidos entregados por CARRO',
         area: 'logistica-entrega',
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
-        meta: 'ALPINA: 65 | UNILEVER: 80 | POLAR: 75 | ZENU: 80',
+        meta: {
+            ALPINA: 65,
+            UNILEVER: 80,
+            POLAR: 75,
+            ZENU: 80
+        },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
         responsable: 'APRENDIZ DEVOLUCIONES',
@@ -42,23 +53,33 @@ export const kpiDefinitions = [
     },
     {
         id: 'gasto-nomina-venta',
-        name: 'Gasto de nómina / Venta total',
+        name: '(Gasto de nomina /Venta total)',
         area: 'logistica-entrega',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
-        meta: 3.4,
+        meta: {
+            ALPINA: 3.4,
+            UNILEVER: 3.4,
+            POLAR: 3.4,
+            ZENU: 3.4
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'GESTIÓN HUMANA',
+        responsable: 'GESTION HUMANA',
         formula: 'NOMINA LOGISTICA / VENTA TOTAL',
         sustentacion: 'MENSUAL',
         fuente: 'SYT / MAN GO'
     },
     {
         id: 'gasto-fletes-venta',
-        name: 'Gasto de Fletes / Venta total',
+        name: '(Gasto de Fletes / Venta total)',
         area: 'logistica-entrega',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
-        meta: 'ALPINA: 4.5% | UNILEVER: 4.2% | POLAR: 6% | ZENU: 3.4%',
+        meta: {
+            ALPINA: 4.5,
+            UNILEVER: 4.2,
+            POLAR: 6,
+            ZENU: 3.4
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
@@ -68,13 +89,18 @@ export const kpiDefinitions = [
     },
     {
         id: 'horas-extras-auxiliares',
-        name: 'Horas extras trabajadas / Auxiliares',
+        name: 'Numero de horas extras trabajadas en el periodo / Auxiliares',
         area: 'logistica-entrega',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
-        meta: 'ALPINA: 1.5 | UNILEVER: 1 | POLAR: 2 | ZENU: 1',
+        meta: {
+            ALPINA: 1.5,
+            UNILEVER: 1,
+            POLAR: 2,
+            ZENU: 1
+        },
         unit: 'horas',
         frecuencia: 'QUINCENAL',
-        responsable: 'GESTIÓN HUMANA',
+        responsable: 'GESTION HUMANA',
         formula: 'TOTAL HORAS EXTRAS / AUXILIARES',
         sustentacion: 'SEMANAL',
         fuente: 'MAN GO'

@@ -8,7 +8,7 @@ const Login = ({ onLogin }) => {
 
     const handleLogin = () => {
         const user = {
-            name: selectedRole === 'Gerente' ? 'Carlos Rodríguez' : 'Juan Pérez',
+            name: selectedRole === 'Gerente' ? 'Marco Parra' : 'Juan Pérez',
             role: selectedRole,
             area: selectedRole === 'Jefe de Área' ? 'logistica-entrega' : null
         };
