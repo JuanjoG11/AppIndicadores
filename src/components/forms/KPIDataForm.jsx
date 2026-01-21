@@ -128,6 +128,51 @@ const KPIDataForm = ({ kpi, onSave, onCancel }) => {
             'horas-extras-venta-picking': [
                 { name: 'horasExtras', label: 'Valor Horas Extras ($)', type: 'number', placeholder: 'Eje: 2000000' },
                 { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3500000000' }
+            ],
+            // Deposito Specific
+            'embalajes-perdidos': [
+                { name: 'canastillasRecibidas', label: 'Canastillas Recibidas', type: 'number', placeholder: 'Eje: 5000' },
+                { name: 'canastillasGestionadas', label: 'Canastillas Gestionadas', type: 'number', placeholder: 'Eje: 5000' }
+            ],
+            'nomina-compra-deposito': [
+                { name: 'valorNomina', label: 'Valor Nómina ($)', type: 'number', placeholder: 'Eje: 13000000' },
+                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3200000000' }
+            ],
+            'horas-extras-venta-deposito': [
+                { name: 'horasExtras', label: 'Valor Horas Extras ($)', type: 'number', placeholder: 'Eje: 150000' },
+                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3500000000' }
+            ],
+            'averias-venta': [
+                { name: 'totalAverias', label: 'Total Averías ($)', type: 'number', placeholder: 'Eje: 7000000' },
+                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3500000000' }
+            ],
+            // Talento Humano Specific
+            'rotacion-personal': [
+                { name: 'personalRetirado', label: 'Personal Retirado', type: 'number', placeholder: 'Eje: 8' },
+                { name: 'promedioEmpleados', label: 'Promedio Empleados', type: 'number', placeholder: 'Eje: 160' }
+            ],
+            'ausentismo': [
+                { name: 'diasPerdidos', label: 'Días Perdidos', type: 'number', placeholder: 'Eje: 150' },
+                { name: 'diasLaborados', label: 'Días Laborados', type: 'number', placeholder: 'Eje: 4000' }
+            ],
+            'calificacion-auditoria': [
+                { name: 'actividadesEjecutadas', label: 'Actividades Ejecutadas', type: 'number', placeholder: 'Eje: 9' },
+                { name: 'actividadesProgramadas', label: 'Actividades Programadas', type: 'number', placeholder: 'Eje: 10' }
+            ],
+            'he-rn-nomina': [
+                { name: 'valorHEDHEN', label: 'Valor HED/HEN ($)', type: 'number', placeholder: 'Eje: 15000000' },
+                { name: 'totalNomina', label: 'Total Nómina ($)', type: 'number', placeholder: 'Eje: 400000000' }
+            ],
+            'gasto-nomina-venta-rrhh': [
+                { name: 'valorNomina', label: 'Valor Nómina ($)', type: 'number', placeholder: 'Eje: 613000000' },
+                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 5200000000' }
+            ],
+            'actividades-cultura': [
+                { name: 'actividadesEjecutadas', label: 'Actividades Ejecutadas', type: 'number', placeholder: 'Eje: 12' },
+                { name: 'actividadesProgramadas', label: 'Actividades Programadas', type: 'number', placeholder: 'Eje: 12' }
+            ],
+            'tiempo-contratacion': [
+                { name: 'diasVacante', label: 'Días de Respuesta', type: 'number', placeholder: 'Eje: 7' }
             ]
         };
 
@@ -163,6 +208,19 @@ const KPIDataForm = ({ kpi, onSave, onCancel }) => {
             else if (id === 'planillas-separadas') res = (d.planillasSeparadas / d.planillasGeneradas) * 100;
             else if (id === 'nomina-venta-picking') res = (d.valorNomina / d.ventaTotal) * 100;
             else if (id === 'horas-extras-venta-picking') res = (d.horasExtras / d.ventaTotal) * 100;
+            // Deposito Specific
+            else if (id === 'embalajes-perdidos') res = (d.canastillasRecibidas || 0) - (d.canastillasGestionadas || 0);
+            else if (id === 'nomina-compra-deposito') res = ((d.valorNomina || 0) / (d.ventaTotal || 1)) * 100;
+            else if (id === 'horas-extras-venta-deposito') res = ((d.horasExtras || 0) / (d.ventaTotal || 1)) * 100;
+            else if (id === 'averias-venta') res = ((d.totalAverias || 0) / (d.ventaTotal || 1)) * 100;
+            // Talento Humano Specific
+            else if (id === 'rotacion-personal') res = ((d.personalRetirado || 0) / (d.promedioEmpleados || 1)) * 100;
+            else if (id === 'ausentismo') res = ((d.diasPerdidos || 0) / (d.diasLaborados || 1)) * 100;
+            else if (id === 'calificacion-auditoria') res = ((d.actividadesEjecutadas || 0) / (d.actividadesProgramadas || 1)) * 100;
+            else if (id === 'he-rn-nomina') res = ((d.valorHEDHEN || 0) / (d.totalNomina || 1)) * 100;
+            else if (id === 'gasto-nomina-venta-rrhh') res = ((d.valorNomina || 0) / (d.ventaTotal || 1)) * 100;
+            else if (id === 'actividades-cultura') res = ((d.actividadesEjecutadas || 0) / (d.actividadesProgramadas || 1)) * 100;
+            else if (id === 'tiempo-contratacion') res = d.diasVacante;
             else if (d.currentValue !== undefined) res = d.currentValue;
         } catch (e) { return null; }
 
@@ -180,7 +238,11 @@ const KPIDataForm = ({ kpi, onSave, onCancel }) => {
         kpi.id.includes('vencida') ||
         kpi.id === 'segundos-unidad-separada' ||
         kpi.id === 'notas-errores-venta' ||
-        kpi.id.includes('nomina');
+        kpi.id.includes('nomina') ||
+        kpi.id === 'rotacion-personal' ||
+        kpi.id === 'ausentismo' ||
+        kpi.id === 'he-rn-nomina' ||
+        kpi.id === 'tiempo-contratacion';
     const isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
 
     const handleSubmit = (e) => {

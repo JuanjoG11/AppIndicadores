@@ -131,6 +131,19 @@ function App() {
           else if (kpiId === 'planillas-separadas') newValue = (d.planillasSeparadas / d.planillasGeneradas) * 100;
           else if (kpiId === 'nomina-venta-picking') newValue = (d.valorNomina / d.ventaTotal) * 100;
           else if (kpiId === 'horas-extras-venta-picking') newValue = (d.horasExtras / d.ventaTotal) * 100;
+          // Deposito Specific
+          else if (kpiId === 'embalajes-perdidos') newValue = d.canastillasRecibidas - d.canastillasGestionadas;
+          else if (kpiId === 'nomina-compra-deposito') newValue = (d.valorNomina / d.ventaTotal) * 100;
+          else if (kpiId === 'horas-extras-venta-deposito') newValue = (d.horasExtras / d.ventaTotal) * 100;
+          else if (kpiId === 'averias-venta') newValue = (d.totalAverias / d.ventaTotal) * 100;
+          // Talento Humano Specific
+          else if (kpiId === 'rotacion-personal') newValue = (d.personalRetirado / d.promedioEmpleados) * 100;
+          else if (kpiId === 'ausentismo') newValue = (d.diasPerdidos / d.diasLaborados) * 100;
+          else if (kpiId === 'calificacion-auditoria') newValue = (d.actividadesEjecutadas / d.actividadesProgramadas) * 100;
+          else if (kpiId === 'he-rn-nomina') newValue = (d.valorHEDHEN / d.totalNomina) * 100;
+          else if (kpiId === 'gasto-nomina-venta-rrhh') newValue = (d.valorNomina / d.ventaTotal) * 100;
+          else if (kpiId === 'actividades-cultura') newValue = (d.actividadesEjecutadas / d.actividadesProgramadas) * 100;
+          else if (kpiId === 'tiempo-contratacion') newValue = d.diasVacante;
           else if (d.currentValue !== undefined) newValue = d.currentValue;
         } catch (e) {
           console.error("Error calculating KPI:", e);
@@ -153,7 +166,11 @@ function App() {
             kpiId.includes('vencida') ||
             kpiId === 'segundos-unidad-separada' ||
             kpiId === 'notas-errores-venta' ||
-            kpiId.includes('nomina');
+            kpiId.includes('nomina') ||
+            kpiId === 'rotacion-personal' ||
+            kpiId === 'ausentismo' ||
+            kpiId === 'he-rn-nomina' ||
+            kpiId === 'tiempo-contratacion';
           compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
           compliance = Math.min(Math.round(compliance), 100);
           if (newValue === 0 && isInverse) compliance = 100;

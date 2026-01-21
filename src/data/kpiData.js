@@ -225,7 +225,10 @@ export const kpiDefinitions = [
         name: 'Gasto de nómina / Total de la compra',
         area: 'logistica-deposito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
-        meta: 0.4,
+        meta: {
+            TYM: 0.4,
+            TAT: 0.4
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -238,7 +241,10 @@ export const kpiDefinitions = [
         name: '# De horas extras trabajada / Venta',
         area: 'logistica-deposito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
-        meta: 0.05,
+        meta: {
+            TYM: 0.05,
+            TAT: 0.05
+        },
         unit: '%',
         frecuencia: 'QUINCENAL',
         responsable: 'GESTIÓN HUMANA',
@@ -266,65 +272,90 @@ export const kpiDefinitions = [
         name: 'Rotación de personal',
         area: 'talento-humano',
         objetivo: 'Reducir la rotación de personal en las diferentes áreas',
-        meta: 'TYM / TAT',
+        meta: {
+            TYM: 5,
+            TAT: 5
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'JEFE DE TALENTO HUMANO',
-        formula: '(# de salidas en el periodo / promedio de empleados en el mes) x100',
-        sustentacion: 'MENSUAL'
+        formula: '(# de salidas / promedio empleados) x 100',
+        sustentacion: 'MENSUAL',
+        fuente: 'MAN GO'
     },
     {
         id: 'ausentismo',
         name: '% de ausentismo',
         area: 'talento-humano',
         objetivo: 'Reducir el ausentismo en los equipos',
-        meta: 'TYM / TAT',
+        meta: {
+            TYM: 2.5,
+            TAT: 2.5
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'JEFE DE TALENTO HUMANO',
-        sustentacion: 'SEMANAL'
+        formula: 'Días perdidos / Días laborados',
+        sustentacion: 'SEMANAL',
+        fuente: 'MAN GO'
     },
     {
         id: 'calificacion-auditoria',
         name: '% calificación auditoría',
         area: 'talento-humano',
         objetivo: 'Ejecutar el Sistema de Gestión',
-        meta: 100,
+        meta: 90,
         unit: '%',
-        responsable: 'JEFE DE TALENTO HUMANO'
+        frecuencia: 'MENSUAL',
+        responsable: 'SST',
+        formula: 'Actividades ejecutadas / Actividades programadas',
+        sustentacion: 'MENSUAL',
+        fuente: 'SYCH'
     },
     {
         id: 'he-rn-nomina',
         name: 'Valor H.E-R.N / total nómina',
         area: 'talento-humano',
         objetivo: 'Reducir el pago por H.E-R.N',
-        meta: 'TYM / TAT',
+        meta: {
+            TYM: 3,
+            TAT: 3
+        },
         unit: '%',
-        frecuencia: 'QUINCENAL',
-        responsable: 'JEFE DE TALENTO HUMANO',
-        sustentacion: 'QUINCENAL'
+        frecuencia: 'MENSUAL',
+        responsable: 'GESTIÓN HUMANA',
+        formula: 'Valor HED HEN / Total nómina',
+        sustentacion: 'MENSUAL',
+        fuente: 'MAN GO'
     },
     {
         id: 'gasto-nomina-venta-rrhh',
         name: 'Gasto de Nómina / venta',
         area: 'talento-humano',
         objetivo: 'Garantizar la rentabilidad de la compañía en la nómina',
-        meta: 'TYM / TAT',
+        meta: {
+            TYM: 11,
+            TAT: 11 // Adjusted per user instruction or kept consistent validation needed
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'JEFE DE TALENTO HUMANO',
-        sustentacion: 'MENSUAL'
+        responsable: 'GESTIÓN HUMANA',
+        formula: 'Valor Nomina / Venta total',
+        sustentacion: 'MENSUAL',
+        fuente: 'SYT / MAN GO'
     },
     {
         id: 'actividades-cultura',
         name: '# de actividades / meta',
         area: 'talento-humano',
         objetivo: 'Fortalecer la cultura organizacional por medio de actividades',
-        meta: 12,
-        unit: 'actividades',
+        meta: 100,
+        unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'JEFE DE TALENTO HUMANO',
-        sustentacion: 'MENSUAL'
+        responsable: 'GESTIÓN HUMANA',
+        formula: 'Actividades ejecutadas / Actividades programadas',
+        sustentacion: 'MENSUAL',
+        fuente: 'GESTIÓN HUMANA'
     },
     {
         id: 'tiempo-contratacion',
