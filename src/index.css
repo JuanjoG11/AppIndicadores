@@ -50,15 +50,39 @@
 
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Glassmorphism & Premium Utilities */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  --glass-blur: blur(8px);
+
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-premium: 0 10px 40px -10px rgba(37, 99, 235, 0.2);
+
+  --brand-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  --brand-dark-gradient: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+
+  --radius-xl: 24px;
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--bg-app);
   color: var(--text-main);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.premium-shadow {
+  box-shadow: var(--shadow-premium);
 }
 
 /* =========================

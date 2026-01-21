@@ -100,7 +100,7 @@ export const kpiDefinitions = [
         },
         unit: 'horas',
         frecuencia: 'QUINCENAL',
-        responsable: 'GESTION HUMANA',
+        responsable: 'GESTIÓN HUMANA',
         formula: 'TOTAL HORAS EXTRAS / AUXILIARES',
         sustentacion: 'SEMANAL',
         fuente: 'MAN GO'
@@ -177,7 +177,11 @@ export const kpiDefinitions = [
         name: '$ Nómina / Total de la venta',
         area: 'logistica-picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
-        meta: 1,
+        meta: {
+            ALPINA: 1,
+            FAMILIA: 1,
+            UNILEVER: 1
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -190,7 +194,10 @@ export const kpiDefinitions = [
         name: '# De horas extras trabajada / Venta',
         area: 'logistica-picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
-        meta: 0.05,
+        meta: {
+            TYM: 0.05,
+            TAT: 0.05
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'GESTIÓN HUMANA',
@@ -372,10 +379,17 @@ export const kpiDefinitions = [
         name: '% de cartera No vencida',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
-        meta: 'ALPINA / FAMILIA / UNILEVER',
+        meta: {
+            ALPINA: 90,
+            FAMILIA: 85,
+            UNILEVER: 88,
+            POLAR: 85,
+            ZENU: 90
+        },
         unit: '%',
         frecuencia: 'QUINCENAL',
         responsable: 'ANALISTA DE CARTERA',
+        formula: 'CARTERA NO VENCIDA / CARTERA TOTAL',
         sustentacion: 'QUINCENAL'
     },
     {
@@ -383,10 +397,17 @@ export const kpiDefinitions = [
         name: '% de cartera 11-30 días',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
-        meta: 'ALPINA / FAMILIA / UNILEVER',
+        meta: {
+            ALPINA: 5,
+            FAMILIA: 8,
+            UNILEVER: 6,
+            POLAR: 8,
+            ZENU: 5
+        },
         unit: '%',
         frecuencia: 'QUINCENAL',
         responsable: 'ANALISTA DE CARTERA',
+        formula: 'CARTERA 11-30 DIAS / CARTERA TOTAL',
         sustentacion: 'QUINCENAL'
     },
     {
@@ -427,10 +448,17 @@ export const kpiDefinitions = [
         name: 'Valor de cartera / venta',
         area: 'cartera',
         objetivo: 'Garantizar los Flujos de las compañías',
-        meta: 'ALPINA / FAMILIA / UNILEVER',
+        meta: {
+            ALPINA: 15,
+            FAMILIA: 20,
+            UNILEVER: 18,
+            POLAR: 20,
+            ZENU: 15
+        },
         unit: '%',
         frecuencia: 'QUINCENAL',
         responsable: 'ANALISTA DE CARTERA',
+        formula: 'VALOR TOTAL CARTERA / VENTA TOTAL',
         sustentacion: 'QUINCENAL'
     },
 
@@ -532,11 +560,16 @@ export const kpiDefinitions = [
         name: 'Primer margen',
         area: 'comercial',
         objetivo: 'Garantizar el primer margen',
-        meta: 'Por marca',
+        meta: {
+            ALPINA: 12,
+            UNILEVER: 8,
+            POLAR: 10,
+            ZENU: 11
+        },
         unit: '%',
         frecuencia: 'QUINCENAL',
         responsable: 'COORDINADOR POR MARCA',
-        formula: '(ventas - costo de ventas) / ventas x 100',
+        formula: '(VENTAS - COSTO DE VENTAS) / VENTAS X 100',
         sustentacion: 'QUINCENAL'
     },
     {
@@ -555,10 +588,16 @@ export const kpiDefinitions = [
         name: '$ devolución mal estado / venta',
         area: 'comercial',
         objetivo: 'Reducir las devoluciones en mal estado',
-        meta: 'Por marca',
+        meta: {
+            ALPINA: 0.5,
+            UNILEVER: 0.3,
+            POLAR: 0.4,
+            ZENU: 0.5
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'COORDINADOR POR MARCA',
+        formula: 'VALOR DEVOLUCION MAL ESTADO / VENTA TOTAL',
         sustentacion: 'SEMANAL'
     },
     {
@@ -566,10 +605,16 @@ export const kpiDefinitions = [
         name: 'Ventas totales / # vendedores',
         area: 'comercial',
         objetivo: 'Garantizar el promedio de venta por vendedor',
-        meta: 'Por marca',
+        meta: {
+            ALPINA: 45000000,
+            UNILEVER: 55000000,
+            POLAR: 50000000,
+            ZENU: 48000000
+        },
         unit: '$',
         frecuencia: 'QUINCENAL',
         responsable: 'COORDINADOR POR MARCA',
+        formula: 'VENTAS TOTALES / NUMERO VENDEDORES',
         sustentacion: 'QUINCENAL'
     },
     {
@@ -577,10 +622,16 @@ export const kpiDefinitions = [
         name: 'Venta crédito / venta total',
         area: 'comercial',
         objetivo: 'Disminuir la participación de la venta de crédito',
-        meta: 'Por marca',
+        meta: {
+            ALPINA: 15,
+            UNILEVER: 10,
+            POLAR: 12,
+            ZENU: 15
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'COORDINADOR POR MARCA',
+        formula: 'VENTA CREDITO / VENTA TOTAL',
         sustentacion: 'SEMANAL'
     },
     {
@@ -588,10 +639,16 @@ export const kpiDefinitions = [
         name: 'Cartera vencida / total de cartera',
         area: 'comercial',
         objetivo: 'Ejecutar el cobro óptimo de la cartera',
-        meta: 'Por marca',
+        meta: {
+            ALPINA: 2,
+            UNILEVER: 1.5,
+            POLAR: 2,
+            ZENU: 2
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'COORDINADOR POR MARCA',
+        formula: 'CARTERA VENCIDA / TOTAL CARTERA',
         sustentacion: 'SEMANAL'
     },
 

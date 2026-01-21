@@ -65,40 +65,44 @@ const Sidebar = ({ currentUser, onLogout }) => {
                     })}
                 >
                     <Home size={20} />
-                    Inicio
+                    {currentUser.role === 'Gerente' ? 'Inicio' : 'Mis Indicadores'}
                 </NavLink>
 
-                <div style={{ padding: '0 0.75rem', marginTop: '2.5rem', marginBottom: '1.25rem' }}>
-                    <small style={{ fontSize: '0.65rem', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Áreas Estratégicas</small>
-                </div>
+                {currentUser.role === 'Gerente' && (
+                    <>
+                        <div style={{ padding: '0 0.75rem', marginTop: '2.5rem', marginBottom: '1.25rem' }}>
+                            <small style={{ fontSize: '0.65rem', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Áreas Estratégicas</small>
+                        </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', overflowY: 'auto', maxHeight: 'calc(100vh - 350px)' }}>
-                    {areas.map(area => {
-                        const isActive = location.pathname === `/area/${area.id}`;
-                        return (
-                            <NavLink
-                                key={area.id}
-                                to={`/area/${area.id}`}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '1rem',
-                                    padding: '0.65rem 1rem',
-                                    borderRadius: '10px',
-                                    fontSize: '0.85rem',
-                                    fontWeight: isActive ? 700 : 500,
-                                    color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
-                                    background: isActive ? 'rgba(255,255,255,0.05)' : 'transparent',
-                                    textDecoration: 'none',
-                                    transition: 'all 0.2s'
-                                }}
-                            >
-                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: area.color }}></div>
-                                {area.name}
-                            </NavLink>
-                        );
-                    })}
-                </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', overflowY: 'auto', maxHeight: 'calc(100vh - 350px)' }}>
+                            {areas.map(area => {
+                                const isActive = location.pathname === `/area/${area.id}`;
+                                return (
+                                    <NavLink
+                                        key={area.id}
+                                        to={`/area/${area.id}`}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '1rem',
+                                            padding: '0.65rem 1rem',
+                                            borderRadius: '10px',
+                                            fontSize: '0.85rem',
+                                            fontWeight: isActive ? 700 : 500,
+                                            color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
+                                            background: isActive ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                            textDecoration: 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: area.color }}></div>
+                                        {area.name}
+                                    </NavLink>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
             </nav>
 
             {/* FOOTER ACTIONS */}
