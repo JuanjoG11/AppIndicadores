@@ -1,0 +1,88 @@
+/* =========================
+   APP LAYOUT – EXECUTIVE
+   ========================= */
+
+#root {
+  min-height: 100vh;
+  background: var(--bg-app);
+}
+
+/* Layout principal */
+.app-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+}
+
+/* Header superior (opcional) */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.app-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.app-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* =========================
+   DASHBOARD LAYOUT
+   ========================= */
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* KPI cards wrapper */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+/* Section titles */
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+/* =========================
+   REMOVE DEMO STYLES
+   ========================= */
+
+.logo,
+.read-the-docs {
+  display: none;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 1200px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}

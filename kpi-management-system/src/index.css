@@ -1,0 +1,466 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================
+   DESIGN SYSTEM – PREMIUM EXECUTIVE
+   ========================= */
+:root {
+  /* Executive Slate Palette - Harmonious and Professional */
+  --bg-app: #f1f5f9;
+  /* Slate 100 - Soft neutral background */
+  --bg-card: #ffffff;
+  --bg-sidebar: #0f172a;
+  /* Slate 900 - Solid structure */
+  --bg-soft: #f8fafc;
+  --bg-hover: #e2e8f0;
+
+  --text-main: #1e293b;
+  /* Slate 800 */
+  --text-muted: #64748b;
+  /* Slate 500 */
+  --text-light: #94a3b8;
+  /* Slate 400 */
+
+  --border-soft: #e2e8f0;
+  --border-medium: #cbd5e1;
+
+  /* Brand Colors - Standard Corporate Blue */
+  --brand: #2563eb;
+  --brand-light: #60a5fa;
+  --brand-accent: #1d4ed8;
+  --brand-bg: #eff6ff;
+
+  /* Strict Red/Green Semaphore */
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+
+  /* Shadows - Balanced and clean */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================
+   TYPOGRAPHY
+   ========================= */
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+small {
+  color: var(--text-muted);
+}
+
+/* =========================
+   CARD – PREMIUM EXECUTIVE
+   ========================= */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* =========================
+   KPI NUMBER
+   ========================= */
+.kpi-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.kpi-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* =========================
+   STATUS DOT (SEMÁFORO PREMIUM)
+   ========================= */
+.status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+.status.success {
+  background: var(--success);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 8px rgba(5, 150, 105, 0.4);
+}
+
+.status.warning {
+  background: var(--warning);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 8px rgba(217, 119, 6, 0.4);
+}
+
+.status.danger {
+  background: var(--danger);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 8px rgba(220, 38, 38, 0.4);
+  animation: pulse-danger 2s ease-in-out infinite;
+}
+
+@keyframes pulse-danger {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* =========================
+   BADGE – SOBRIO
+   ========================= */
+.badge {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.badge.success {
+  background: rgba(21, 128, 61, 0.1);
+  color: var(--success);
+}
+
+.badge.warning {
+  background: rgba(180, 83, 9, 0.12);
+  color: var(--warning);
+}
+
+.badge.danger {
+  background: rgba(185, 28, 28, 0.12);
+  color: var(--danger);
+}
+
+/* =========================
+   BUTTONS – PREMIUM EXECUTIVE
+   ========================= */
+.btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-accent) 0%, var(--brand-accent-light) 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btn-ghost:hover {
+  color: var(--text-main);
+  background: var(--bg-soft);
+}
+
+/* =========================
+   PROGRESS – LIMPIO
+   ========================= */
+.progress {
+  height: 6px;
+  background: var(--bg-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress>div {
+  height: 100%;
+}
+
+.progress.success>div {
+  background: var(--success);
+}
+
+.progress.warning>div {
+  background: var(--warning);
+}
+
+.progress.danger>div {
+  background: var(--danger);
+}
+
+/* =========================
+   TABLE – PREMIUM EXECUTIVE
+   ========================= */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.875rem 1rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg-card) 100%);
+  border-bottom: 2px solid var(--border-medium);
+}
+
+.table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border-soft);
+  transition: all 0.2s;
+}
+
+.table tbody tr {
+  transition: all 0.2s;
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(248, 249, 252, 0.5);
+}
+
+.table tbody tr:hover {
+  background: var(--bg-soft);
+  box-shadow: 0 2px 8px rgba(15, 41, 66, 0.06);
+  transform: scale(1.001);
+}
+
+/* =========================
+   GRID
+   ========================= */
+.grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 900px) {
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   AREA CARD – DYNAMIC ENHANCEMENTS
+   ========================= */
+.area-card {
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  border-left: 4px solid var(--border-soft);
+}
+
+.area-card:hover {
+  transform: scale(1.02) translateY(-5px) !important;
+  box-shadow: var(--shadow-xl) !important;
+  z-index: 10;
+}
+
+.area-card.expanded {
+  grid-column: span 1;
+  background: white !important;
+}
+
+.sparkline-container {
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.area-card:hover .sparkline-container {
+  opacity: 1;
+}
+
+/* =========================
+   METRIC SUMMARY – ANIMATED
+   ========================= */
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card .icon-bg {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  font-size: 5rem;
+  opacity: 0.05;
+  transform: rotate(-15deg);
+  transition: transform 0.5s ease;
+}
+
+.metric-card:hover .icon-bg {
+  transform: rotate(0deg) scale(1.1);
+  opacity: 0.08;
+}
+
+/* =========================
+   ANIMATIONS
+   ========================= */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease forwards;
+}
+
+.delay-1 {
+  animation-delay: 0.1s;
+}
+
+.delay-2 {
+  animation-delay: 0.2s;
+}
+
+.delay-3 {
+  animation-delay: 0.3s;
+}
+
+.delay-4 {
+  animation-delay: 0.4s;
+}
+
+/* Custom status colors for area cards */
+.area-border-success {
+  border-left-color: var(--success) !important;
+}
+
+.area-border-warning {
+  border-left-color: var(--warning) !important;
+}
+
+.area-border-danger {
+  border-left-color: var(--danger) !important;
+}
+
+/* =========================
+   ANIMATION (SUBTLE)
+   ========================= */
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
