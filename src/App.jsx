@@ -102,10 +102,16 @@ function App() {
           ...newData
         };
 
-        // ... (Lógica de cálculo idéntica a la anterior)
         const d = updatedAdditionalData;
         let newValue = kpi.currentValue;
         let targetMeta = kpi.targetMeta;
+
+        // Preserve history per company and brand
+        const currentBrand = d.brand || 'GLOBAL';
+        const currentCompany = d.company || 'GLOBAL';
+        const dataKey = `${currentCompany}-${currentBrand}`;
+
+        const brandValues = kpi.brandValues || {};
 
         try {
           if (kpiId === 'pedidos-devueltos') newValue = (d.pedidosDevueltos / d.pedidosFacturados) * 100;
@@ -149,8 +155,9 @@ function App() {
           console.error("Error calculating KPI:", e);
         }
 
-        if (typeof kpi.meta === 'object' && d.brand) {
-          targetMeta = kpi.meta[d.brand];
+        // Determinar meta basada en marca o empresa
+        if (typeof kpi.meta === 'object') {
+          targetMeta = kpi.meta[d.brand] || kpi.meta[d.company] || Object.values(kpi.meta)[0];
         }
 
         newValue = parseFloat((newValue || 0).toFixed(2));
@@ -180,6 +187,17 @@ function App() {
           else semaphore = 'red';
         }
 
+        // Update brand/company values history
+        brandValues[dataKey] = {
+          value: newValue,
+          meta: targetMeta,
+          compliance,
+          semaphore,
+          additionalData: updatedAdditionalData,
+          company: currentCompany,
+          brand: currentBrand
+        };
+
         // Si la actualización viene del usuario (local), persistir en Supabase
         if (shouldPersist) {
           persistUpdate(kpiId, updatedAdditionalData, newValue);
@@ -193,6 +211,7 @@ function App() {
           semaphore,
           hasData: true,
           additionalData: updatedAdditionalData,
+          brandValues,
           history: kpi.history.map((h, i) => i === kpi.history.length - 1 ? { ...h, value: newValue } : h)
         };
       }
@@ -214,6 +233,26 @@ function App() {
   };
 
   const handleUpdateKPI = (kpiId, newData) => {
+    // Validar permisos antes de actualizar
+    const kpi = kpiData.find(k => k.id === kpiId);
+
+    if (!kpi) {
+      console.error('KPI no encontrado:', kpiId);
+      return;
+    }
+
+    // Verificar que el usuario tiene permiso para actualizar este KPI
+    if (kpi.responsable !== currentUser?.cargo) {
+      console.error('Permiso denegado:', {
+        kpi: kpi.name,
+        responsable: kpi.responsable,
+        usuario: currentUser?.cargo
+      });
+      alert(`No tienes permiso para actualizar este indicador.\n\nIndicador: ${kpi.name}\nResponsable: ${kpi.responsable}\nTu cargo: ${currentUser?.cargo}`);
+      return;
+    }
+
+    // Si tiene permiso, proceder con la actualización
     applyKPIUpdate(kpiId, newData, true);
   };
 

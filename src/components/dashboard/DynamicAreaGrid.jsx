@@ -60,7 +60,7 @@ const AreaMiniCard = ({ area, score, kpiData }) => {
             </div>
 
             <div style={{ height: '40px', marginTop: '1rem' }}>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <AreaChart data={history}>
                         <Area
                             type="monotone"

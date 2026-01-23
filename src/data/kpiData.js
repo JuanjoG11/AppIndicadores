@@ -276,6 +276,7 @@ export const kpiDefinitions = [
             TYM: 5,
             TAT: 5
         },
+        brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'JEFE DE TALENTO HUMANO',
@@ -292,6 +293,7 @@ export const kpiDefinitions = [
             TYM: 2.5,
             TAT: 2.5
         },
+        brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'JEFE DE TALENTO HUMANO',
@@ -321,6 +323,7 @@ export const kpiDefinitions = [
             TYM: 3,
             TAT: 3
         },
+        brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -337,6 +340,7 @@ export const kpiDefinitions = [
             TYM: 11,
             TAT: 11 // Adjusted per user instruction or kept consistent validation needed
         },
+        brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',

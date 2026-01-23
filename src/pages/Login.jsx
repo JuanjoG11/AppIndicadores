@@ -1,31 +1,46 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, LayoutGrid, Users } from 'lucide-react';
+import { Shield, LayoutGrid, Users, Lock, ChevronLeft } from 'lucide-react';
 
 const Login = ({ onLogin }) => {
+    const [selectedCompany, setSelectedCompany] = useState(null);
+    const [selectedRole, setSelectedRole] = useState(null);
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
     const roles = [
-        { id: 'Gerente', name: 'Gerente General', desc: 'Acceso total y reportes estratégicos', icon: <LayoutGrid size={24} /> },
-        { id: 'APRENDIZ DEVOLUCIONES', name: 'Aprendiz Devoluciones', desc: 'Pedidos devueltos, promedio por auxiliar/carro', icon: <Users size={24} /> },
-        { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo', icon: <Users size={24} /> },
-        { id: 'JEFE DE TALENTO HUMANO', name: 'Jefe de Talento Humano', desc: 'Rotación, ausentismo, calificación auditoría', icon: <Users size={24} /> },
-        { id: 'CONTADOR', name: 'Contador', desc: 'Gasto de fletes y rentabilidad', icon: <Users size={24} /> },
-        { id: 'ANALISTA DE INFORMACIÓN', name: 'Analista de Información', desc: 'Picking, segundos/unidad, pedidos/hombre', icon: <Users size={24} /> },
-        { id: 'LOGISTICA INVERSA', name: 'Logística Inversa', desc: 'Embalajes y control de canastillas', icon: <Users size={24} /> },
-        { id: 'CONTROLLER', name: 'Controller', desc: 'Arqueos de caja y planillas', icon: <Users size={24} /> },
-        { id: 'ANALISTA DE CARTERA', name: 'Analista de Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} /> },
-        { id: 'CONTADORA', name: 'Contadora', desc: 'Diferencia en cierres y activos', icon: <Users size={24} /> },
-        { id: 'COORDINADOR POR MARCA', name: 'Coordinador por Marca', desc: 'Ventas, margen y devoluciones comercial', icon: <Users size={24} /> },
-        { id: 'ANALISTA DE INVENTARIOS', name: 'Analista de Inventarios', desc: 'Fiabilidad, quiebres y obsolescencia', icon: <Users size={24} /> },
+        { id: 'Gerente', name: 'Marco Parra', desc: 'Gerente General - Acceso total', icon: <LayoutGrid size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'APRENDIZ DEVOLUCIONES', name: 'Aprendiz Devoluciones', desc: 'Pedidos devueltos, promedio por auxiliar/carro', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'JEFE DE TALENTO HUMANO', name: 'Jefe de Talento Humano', desc: 'Rotación, ausentismo, calificación auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'CONTADOR', name: 'Contador', desc: 'Gasto de fletes y rentabilidad', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'ANALISTA DE INFORMACIÓN', name: 'Analista de Información', desc: 'Picking, segundos/unidad, pedidos/hombre', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'LOGISTICA INVERSA', name: 'Logística Inversa', desc: 'Embalajes y control de canastillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'CONTROLLER', name: 'Controller', desc: 'Arqueos de caja y planillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'ANALISTA DE CARTERA', name: 'Analista de Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'CONTADORA', name: 'Contadora', desc: 'Diferencia en cierres y activos', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'COORDINADOR POR MARCA', name: 'Coordinador por Marca', desc: 'Ventas, margen y devoluciones comercial', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'ANALISTA DE INVENTARIOS', name: 'Analista de Inventarios', desc: 'Fiabilidad, quiebres y obsolescencia', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'SST', name: 'SST', desc: 'Sistema de Gestión y Auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
     ];
 
     const navigate = useNavigate();
 
-    const handleLogin = (roleId) => {
-        const role = roles.find(r => r.id === roleId);
+    const handleRoleSelection = (role) => {
+        if (role.id === 'Gerente') {
+            setSelectedRole(role);
+            setError('');
+        } else {
+            completeLogin(role);
+        }
+    };
+
+    const completeLogin = (role) => {
         const user = {
             name: role.name,
             role: role.id === 'Gerente' ? 'Gerente' : 'Analista',
-            cargo: role.id
+            cargo: role.id,
+            company: selectedCompany
         };
         onLogin(user);
         if (role.id === 'Gerente') {
@@ -35,18 +50,31 @@ const Login = ({ onLogin }) => {
         }
     };
 
+    const handlePasswordSubmit = (e) => {
+        e.preventDefault();
+        // Contraseña genérica profesional solicitada: admin2026
+        if (password === 'admin2026') {
+            completeLogin(selectedRole);
+        } else {
+            setError('Contraseña incorrecta. Por favor intente de nuevo.');
+            setPassword('');
+        }
+    };
+
     return (
         <div style={{
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', padding: '2rem'
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '2rem'
         }}>
             <div className="card fade-in" style={{
-                maxWidth: '800px', width: '100%', padding: '2.5rem',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', borderRadius: '24px'
+                maxWidth: selectedRole ? '450px' : '800px', width: '100%', padding: '2.5rem',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', borderRadius: '24px',
+                background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white'
             }}>
                 <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                     <div style={{
-                        width: '72px', height: '72px', background: 'var(--brand)',
+                        width: '72px', height: '72px', background: 'var(--brand, #2563eb)',
                         color: 'white', borderRadius: '20px', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto',
                         boxShadow: '0 10px 20px rgba(37, 99, 235, 0.3)',
@@ -54,67 +82,219 @@ const Login = ({ onLogin }) => {
                     }}>
                         <Shield size={38} strokeWidth={2.5} />
                     </div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 900, color: '#1e293b', marginBottom: '0.5rem' }}>
-                        Indicadores TYM/TAT 2026
+                    <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'white', marginBottom: '0.5rem' }}>
+                        {selectedRole ? 'Acceso Seguro' : 'Indicadores TYM/TAT'}
                     </h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
-                        Seleccione su cargo para alimentar el sistema
+                    <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '1rem' }}>
+                        {selectedRole
+                            ? `Ingrese la clave de ${selectedRole.name}`
+                            : (!selectedCompany ? 'Seleccione su empresa' : `Seleccione su cargo en ${selectedCompany}`)}
                     </p>
                 </div>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
-                    gap: '1rem',
-                    marginBottom: '2rem'
-                }}>
-                    {roles.map((role) => (
-                        <button
-                            key={role.id}
-                            onClick={() => handleLogin(role.id)}
-                            style={{
-                                padding: '1.25rem',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                border: '1px solid var(--border-soft)',
-                                background: 'white',
-                                borderRadius: '16px',
-                                transition: 'all 0.2s',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '0.75rem'
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.borderColor = 'var(--brand)';
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.borderColor = 'var(--border-soft)';
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = 'none';
-                            }}
-                        >
-                            <div style={{
-                                color: role.id === 'Gerente' ? 'var(--brand)' : 'var(--text-muted)',
-                                opacity: 0.8
-                            }}>
-                                {role.icon}
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem', marginBottom: '0.25rem' }}>
-                                    {role.name}
-                                </div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                                    {role.desc}
-                                </div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
+                {/* Password Form for Manager */}
+                {selectedRole ? (
+                    <form onSubmit={handlePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div style={{ position: 'relative' }}>
+                            <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255, 255, 255, 0.4)' }} size={20} />
+                            <input
+                                autoFocus
+                                type="password"
+                                placeholder="Contraseña de Gerencia"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '1rem 1rem 1rem 3rem',
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    color: 'white',
+                                    fontSize: '1rem',
+                                    outline: 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            />
+                        </div>
+                        {error && <div style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>{error}</div>}
 
-                <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                    Al ingresar, el sistema le mostrará únicamente los indicadores bajo su responsabilidad.
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => { setSelectedRole(null); setPassword(''); setError(''); }}
+                                style={{
+                                    flex: 1,
+                                    padding: '1rem',
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    background: 'transparent',
+                                    color: 'white',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                style={{
+                                    flex: 2,
+                                    padding: '1rem',
+                                    borderRadius: '12px',
+                                    border: 'none',
+                                    background: 'var(--brand, #2563eb)',
+                                    color: 'white',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
+                                }}
+                            >
+                                Entrar al Dashboard
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <>
+                        {/* Company Selection */}
+                        {!selectedCompany ? (
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, 1fr)',
+                                gap: '2rem',
+                                marginBottom: '2rem'
+                            }}>
+                                {['TYM', 'TAT'].map((company) => (
+                                    <button
+                                        key={company}
+                                        onClick={() => setSelectedCompany(company)}
+                                        style={{
+                                            padding: '4rem 2rem',
+                                            textAlign: 'center',
+                                            cursor: 'pointer',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            borderRadius: '24px',
+                                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '1rem'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(-12px) scale(1.02)';
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.borderColor = 'var(--brand, #2563eb)';
+                                            e.currentTarget.style.boxShadow = '0 20px 40px -12px rgba(37, 99, 235, 0.4)';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.boxShadow = 'none';
+                                        }}
+                                    >
+                                        <div style={{
+                                            fontSize: '4rem',
+                                            fontWeight: 950,
+                                            letterSpacing: '-2px',
+                                            background: 'linear-gradient(to bottom, #fff, #94a3b8)',
+                                            WebkitBackgroundClip: 'text',
+                                            WebkitTextFillColor: 'transparent',
+                                            lineHeight: 1
+                                        }}>
+                                            {company}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <>
+                                {/* Back Button */}
+                                <button
+                                    onClick={() => setSelectedCompany(null)}
+                                    style={{
+                                        marginBottom: '1.5rem',
+                                        padding: '0.6rem 1rem',
+                                        background: 'rgba(255, 255, 255, 0.05)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '10px',
+                                        color: 'rgba(255, 255, 255, 0.7)',
+                                        fontWeight: 600,
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                                >
+                                    <ChevronLeft size={16} /> Cambiar Empresa
+                                </button>
+
+                                {/* Role Selection */}
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+                                    gap: '1rem',
+                                    marginBottom: '2rem',
+                                    maxHeight: '400px',
+                                    overflowY: 'auto',
+                                    paddingRight: '0.5rem'
+                                }}>
+                                    {roles.map((role) => (
+                                        <button
+                                            key={role.id}
+                                            onClick={() => handleRoleSelection(role)}
+                                            style={{
+                                                padding: '1.25rem',
+                                                textAlign: 'left',
+                                                cursor: 'pointer',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                background: role.id === 'Gerente' ? 'rgba(37, 99, 235, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                                                borderRadius: '16px',
+                                                transition: 'all 0.2s',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '0.75rem',
+                                                color: 'white'
+                                            }}
+                                            onMouseOver={(e) => {
+                                                e.currentTarget.style.borderColor = 'var(--brand, #2563eb)';
+                                                e.currentTarget.style.transform = 'translateY(-4px)';
+                                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                                            }}
+                                            onMouseOut={(e) => {
+                                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                                e.currentTarget.style.transform = 'translateY(0)';
+                                                e.currentTarget.style.background = role.id === 'Gerente' ? 'rgba(37, 99, 235, 0.1)' : 'rgba(255, 255, 255, 0.03)';
+                                            }}
+                                        >
+                                            <div style={{
+                                                color: role.id === 'Gerente' ? 'var(--brand, #2563eb)' : 'rgba(255, 255, 255, 0.5)',
+                                            }}>
+                                                {role.icon}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: 800, color: 'white', fontSize: '1rem', marginBottom: '0.25rem' }}>
+                                                    {role.name}
+                                                </div>
+                                                <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', lineHeight: '1.4' }}>
+                                                    {role.desc}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </>
+                )}
+
+                <div style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.8rem' }}>
+                    Sistema de Gestión de Indicadores 2026
                 </div>
             </div>
         </div>

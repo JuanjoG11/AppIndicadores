@@ -14,16 +14,27 @@ import {
     Activity
 } from 'lucide-react';
 
-const KPIDataForm = ({ kpi, onSave, onCancel }) => {
+const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
+    // Determinar si el KPI tiene metas por marca o empresa
+    const hasMultipleMetas = typeof kpi.meta === 'object';
+
+    // Filtrar las marcas/empresas disponibles según la empresa del usuario
+    let brands = hasMultipleMetas ? Object.keys(kpi.meta) : [];
+
+    // Si la empresa del usuario es TYM o TAT, y estas están en las opciones, filtrar solo la del usuario
+    if (currentUser?.company && brands.includes(currentUser.company)) {
+        brands = [currentUser.company];
+    } else if (kpi.brands && currentUser?.company) {
+        // Si el KPI tiene una lista de marcas permitidas explícita y estamos filtrando por empresa
+        // (Esto es por si acaso hay una lógica cruzada, pero por ahora simplificamos)
+    }
+
     // Inicializar con datos previos si existen
     const [formData, setFormData] = useState({
-        brand: kpi.additionalData?.brand || (typeof kpi.meta === 'object' ? Object.keys(kpi.meta)[0] : null),
+        brand: kpi.additionalData?.brand || (brands.length > 0 ? brands[0] : null),
+        company: currentUser?.company || kpi.additionalData?.company || null,
         ...kpi.additionalData
     });
-
-    // Determinar si el KPI tiene metas por marca
-    const hasMultipleMetas = typeof kpi.meta === 'object';
-    const brands = hasMultipleMetas ? Object.keys(kpi.meta) : [];
 
     // Mapeo de iconos por área para el diseño
     const areaIcons = {

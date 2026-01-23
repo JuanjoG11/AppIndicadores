@@ -211,6 +211,7 @@ const AreaDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
             {editingKPI && (
                 <KPIDataForm
                     kpi={editingKPI}
+                    currentUser={currentUser}
                     onSave={handleSaveKPI}
                     onCancel={() => setEditingKPI(null)}
                 />

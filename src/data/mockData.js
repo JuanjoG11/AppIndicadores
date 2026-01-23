@@ -235,29 +235,45 @@ export const calculateOverallScore = (data) => {
 export const getCriticalAlerts = (data) => {
     return data
         .filter(kpi => kpi.semaphore === 'red' && kpi.hasData)
-        .map(kpi => ({
-            id: kpi.id,
-            kpiName: kpi.name,
-            area: kpi.area,
-            currentValue: kpi.currentValue,
-            meta: kpi.meta,
-            unit: kpi.unit,
-            severity: 'critical',
-            message: `${kpi.name} está en ${kpi.currentValue}${kpi.unit === '%' ? '%' : ''}, meta: ${kpi.meta}${kpi.unit === '%' ? '%' : ''}`
-        }));
+        .map(kpi => {
+            let metaDisplay = kpi.meta;
+            if (typeof kpi.meta === 'object') {
+                // If meta is an object (brand specific), verify if we have targetMeta populated or just grab the first value/brand
+                // Ideally we use the 'targetMeta' property we added in generateMockData
+                metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
+            }
+
+            return {
+                id: kpi.id,
+                kpiName: kpi.name,
+                area: kpi.area,
+                currentValue: kpi.currentValue,
+                meta: metaDisplay,
+                unit: kpi.unit,
+                severity: 'critical',
+                message: `${kpi.name} está en ${kpi.currentValue}${kpi.unit === '%' ? '%' : ''} (Meta: ${metaDisplay}${kpi.unit === '%' ? '%' : ''})`
+            };
+        });
 };
 
 export const getWarningAlerts = (data) => {
     return data
         .filter(kpi => kpi.semaphore === 'yellow' && kpi.hasData)
-        .map(kpi => ({
-            id: kpi.id,
-            kpiName: kpi.name,
-            area: kpi.area,
-            currentValue: kpi.currentValue,
-            meta: kpi.meta,
-            unit: kpi.unit,
-            severity: 'medium',
-            message: `${kpi.name} requiere atención`
-        }));
+        .map(kpi => {
+            let metaDisplay = kpi.meta;
+            if (typeof kpi.meta === 'object') {
+                metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
+            }
+
+            return {
+                id: kpi.id,
+                kpiName: kpi.name,
+                area: kpi.area,
+                currentValue: kpi.currentValue,
+                meta: metaDisplay,
+                unit: kpi.unit,
+                severity: 'medium',
+                message: `${kpi.name} requiere atención (Meta: ${metaDisplay}${kpi.unit === '%' ? '%' : ''})`
+            };
+        });
 };

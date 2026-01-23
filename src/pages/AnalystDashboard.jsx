@@ -18,8 +18,36 @@ import KPIDataForm from '../components/forms/KPIDataForm';
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const [editingKPI, setEditingKPI] = useState(null);
 
-    // Filtrar indicadores bajo la responsabilidad del usuario actual
-    const myKPIs = kpiData.filter(kpi => kpi.responsable === currentUser.cargo);
+    // Filtrar indicadores bajo la responsabilidad del usuario actual y normalizar datos según empresa
+    const myKPIs = kpiData
+        .filter(kpi => kpi.responsable === currentUser.cargo)
+        .map(kpi => {
+            // Buscar datos específicos de la empresa del usuario
+            const companyKeys = kpi.brandValues ? Object.keys(kpi.brandValues).filter(key => key.startsWith(`${currentUser.company}-`)) : [];
+
+            if (companyKeys.length > 0) {
+                // Priorizar el global de la empresa o el primero disponible
+                const globalKey = `${currentUser.company}-GLOBAL`;
+                const mainKey = companyKeys.includes(globalKey) ? globalKey : companyKeys[0];
+
+                return {
+                    ...kpi,
+                    ...kpi.brandValues[mainKey]
+                };
+            }
+
+            // Si no hay datos, ajustar la meta para mostrar la de la empresa
+            let targetMeta = kpi.meta;
+            if (typeof kpi.meta === 'object') {
+                targetMeta = kpi.meta[currentUser.company] || Object.values(kpi.meta)[0] || 0;
+            }
+
+            return {
+                ...kpi,
+                targetMeta,
+                hasData: false
+            };
+        });
 
     const handleSaveKPI = (kpiId, data) => {
         if (onUpdateKPI) {
@@ -205,6 +233,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
             {editingKPI && (
                 <KPIDataForm
                     kpi={editingKPI}
+                    currentUser={currentUser}
                     onSave={(id, data) => handleSaveKPI(id, data)}
                     onCancel={() => setEditingKPI(null)}
                 />

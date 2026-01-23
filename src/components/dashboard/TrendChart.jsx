@@ -8,7 +8,7 @@ const TrendChart = ({ data, kpiName, unit, target }) => {
                 <h4 className="card-title">{kpiName} - Tendencia (6 meses)</h4>
             </div>
             <div className="card-body">
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={300} minWidth={0}>
                     <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                         <XAxis

@@ -1,102 +1,307 @@
-import React, { useState } from 'react';
-import { Bell, User, LogOut, Menu, X } from 'lucide-react';
-import { getCriticalAlerts, getWarningAlerts } from '../../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { Bell, User, LogOut, CheckCircle2, AlertCircle, AlertTriangle, X } from 'lucide-react';
 
 const Header = ({ kpiData, currentUser, onLogout }) => {
     const [showNotifications, setShowNotifications] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [alerts, setAlerts] = useState({ critical: [], warning: [] });
 
-    const criticalAlerts = getCriticalAlerts(kpiData);
-    const warningAlerts = getWarningAlerts(kpiData);
-    const totalAlerts = criticalAlerts.length + warningAlerts.length;
+    // Generate real-time alerts based on KPI status
+    useEffect(() => {
+        if (!kpiData) return;
+
+        // User requested STRICT Red/Green logic. 
+        // Treating anything NOT Green (i.e., Red or Yellow) as a Critical Alert (Red).
+        const critical = kpiData.filter(k => k.semaphore !== 'green').map(k => ({
+            id: k.id,
+            kpiName: k.name,
+            value: k.currentValue,
+            meta: typeof k.meta === 'object' && k.brandValues ? k.brandValues.currentMeta : (typeof k.meta === 'number' ? k.meta : 0),
+            unit: k.unit,
+            // If it was yellow (close to meta), we still mark it as Critical per user request for binary Green/Red
+            message: k.semaphore === 'yellow' ? 'Atención: Desempeño por debajo de la meta' : 'Crítico: Desempeño deficiente'
+        }));
+
+        setAlerts({ critical, warning: [] }); // No warnings, only Critical (Red) or OK (Green)
+    }, [kpiData]);
+
+    const totalAlerts = alerts.critical.length;
 
     return (
-        <header className="bg-primary sticky top-0 z-50" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-            <div className="flex items-center justify-between px-6 py-4">
+        <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-white/20 shadow-sm"
+            style={{
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                borderBottom: '1px solid rgba(226, 232, 240, 0.8)'
+            }}>
+            <div className="flex items-center justify-between px-6 py-3">
+                {/* Logo & Title */}
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                            <span className="text-2xl">📊</span>
+                    <div className="flex items-center gap-3 group cursor-pointer transition-transform hover:scale-105">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                            <span className="text-xl">📊</span>
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">Sistema de Gestión KPI</h1>
-                            <p className="text-xs text-white opacity-80">TYM/TAT 2026</p>
+                            <h1 className="text-lg font-bold text-slate-800 tracking-tight leading-tight">
+                                Sistema de Gestión
+                            </h1>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                    TYM/TAT 2026
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    {/* Notifications */}
-                    <div className="relative">
+                <div className="flex items-center gap-3">
+                    {/* Notifications Button */}
+                    <div className="relative z-50 cursor-pointer pointer-events-auto border-4 border-red-600 rounded-full">
                         <button
-                            className="relative p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition"
-                            onClick={() => setShowNotifications(!showNotifications)}
+                            className={`relative p-2.5 rounded-xl transition-all duration-300 ${showNotifications ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                // console.log('Bell clicked!');
+                                // window.alert('DEBUG: Click detectado!'); 
+                                setShowNotifications(prev => !prev);
+                            }}
                         >
-                            <Bell size={20} />
+                            <Bell size={20} strokeWidth={showNotifications ? 2.5 : 2} />
                             {totalAlerts > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-danger-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm border border-white">
                                     {totalAlerts}
                                 </span>
                             )}
                         </button>
 
+                        {/* Notifications Panel - Clean & Professional */}
                         {showNotifications && (
-                            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 animate-fade-in">
-                                <div className="p-4 border-b border-gray-200">
-                                    <h3 className="font-semibold text-primary">Notificaciones</h3>
-                                </div>
-                                <div className="max-h-96 overflow-y-auto">
-                                    {criticalAlerts.map(alert => (
-                                        <div key={alert.id} className="p-4 border-b border-gray-100 hover:bg-gray-50">
-                                            <div className="flex items-start gap-2">
-                                                <span className="text-danger-500">🔴</span>
-                                                <div className="flex-1">
-                                                    <p className="text-sm font-semibold text-primary">{alert.kpiName}</p>
-                                                    <p className="text-xs text-secondary mt-1">{alert.message}</p>
-                                                </div>
-                                            </div>
+                            <div
+                                style={{
+                                    position: 'fixed',
+                                    top: '70px',
+                                    right: '20px',
+                                    width: '400px',
+                                    maxHeight: '600px',
+                                    background: '#ffffff',
+                                    zIndex: 99999,
+                                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                                    borderRadius: '16px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    overflow: 'hidden',
+                                    border: '1px solid #e5e7eb'
+                                }}
+                            >
+                                {/* Header */}
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                    padding: '20px',
+                                    color: 'white'
+                                }}>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h3 className="font-bold text-lg">Notificaciones</h3>
+                                            {totalAlerts > 0 && (
+                                                <p className="text-sm text-white/90 mt-1">
+                                                    {totalAlerts} {totalAlerts === 1 ? 'alerta' : 'alertas'} activas
+                                                </p>
+                                            )}
                                         </div>
-                                    ))}
-                                    {warningAlerts.map(alert => (
-                                        <div key={alert.id} className="p-4 border-b border-gray-100 hover:bg-gray-50">
-                                            <div className="flex items-start gap-2">
-                                                <span className="text-warning-500">🟡</span>
-                                                <div className="flex-1">
-                                                    <p className="text-sm font-semibold text-primary">{alert.kpiName}</p>
-                                                    <p className="text-xs text-secondary mt-1">{alert.message}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setShowNotifications(false); }}
+                                            className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
                                 </div>
+
+                                {/* Content */}
+                                <div className="overflow-y-auto" style={{
+                                    flex: 1,
+                                    background: '#f9fafb',
+                                    padding: totalAlerts === 0 ? '40px 20px' : '16px'
+                                }}>
+                                    {totalAlerts === 0 ? (
+                                        <div className="flex flex-col items-center justify-center text-center py-8">
+                                            <div style={{
+                                                width: '80px',
+                                                height: '80px',
+                                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                borderRadius: '50%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginBottom: '16px'
+                                            }}>
+                                                <CheckCircle2 size={40} color="white" strokeWidth={2.5} />
+                                            </div>
+                                            <h4 className="font-bold text-slate-800 text-lg mb-2">Todo en orden</h4>
+                                            <p className="text-sm text-slate-500">
+                                                No hay alertas en este momento
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {alerts.critical.map((alert, idx) => (
+                                                <div
+                                                    key={`crit-${idx}`}
+                                                    style={{
+                                                        background: 'white',
+                                                        borderRadius: '12px',
+                                                        padding: '16px',
+                                                        border: '1px solid #fee2e2',
+                                                        borderLeft: '4px solid #ef4444',
+                                                        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+                                                    }}
+                                                    className="hover:shadow-md transition-shadow"
+                                                >
+                                                    <div className="flex gap-3">
+                                                        {/* Icon */}
+                                                        <div style={{
+                                                            width: '40px',
+                                                            height: '40px',
+                                                            background: '#fef2f2',
+                                                            borderRadius: '10px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            flexShrink: 0
+                                                        }}>
+                                                            <AlertCircle size={24} color="#ef4444" strokeWidth={2.5} />
+                                                        </div>
+
+                                                        {/* Content */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-start justify-between gap-2 mb-2">
+                                                                <h4 className="font-bold text-slate-900 text-sm">
+                                                                    {alert.kpiName}
+                                                                </h4>
+                                                                <span style={{
+                                                                    background: '#ef4444',
+                                                                    color: 'white',
+                                                                    fontSize: '10px',
+                                                                    fontWeight: '700',
+                                                                    padding: '4px 8px',
+                                                                    borderRadius: '6px',
+                                                                    whiteSpace: 'nowrap'
+                                                                }}>
+                                                                    CRÍTICO
+                                                                </span>
+                                                            </div>
+
+                                                            <p className="text-xs text-slate-600 mb-3 leading-relaxed">
+                                                                {alert.message}
+                                                            </p>
+
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <div style={{
+                                                                    background: '#f1f5f9',
+                                                                    padding: '6px 12px',
+                                                                    borderRadius: '8px',
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '6px'
+                                                                }}>
+                                                                    <span className="text-xs font-semibold text-slate-500">
+                                                                        Actual:
+                                                                    </span>
+                                                                    <span className="text-sm font-bold text-slate-900">
+                                                                        {alert.value}{alert.unit}
+                                                                    </span>
+                                                                </div>
+                                                                {alert.meta !== undefined && alert.meta !== 0 && (
+                                                                    <div style={{
+                                                                        background: '#eff6ff',
+                                                                        padding: '6px 12px',
+                                                                        borderRadius: '8px',
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '6px'
+                                                                    }}>
+                                                                        <span className="text-xs font-semibold text-blue-600">
+                                                                            Meta:
+                                                                        </span>
+                                                                        <span className="text-sm font-bold text-blue-900">
+                                                                            {alert.meta}{alert.unit}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Footer */}
+                                {totalAlerts > 0 && (
+                                    <div style={{
+                                        padding: '16px',
+                                        borderTop: '1px solid #e5e7eb',
+                                        background: 'white'
+                                    }}>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setShowNotifications(false); }}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                background: '#3b82f6',
+                                                color: 'white',
+                                                fontWeight: '600',
+                                                fontSize: '14px',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                cursor: 'pointer'
+                                            }}
+                                            className="hover:bg-blue-600 transition-colors"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
 
                     {/* User Menu */}
-                    <div className="relative">
+                    <div className="relative border-l border-slate-200 pl-3 ml-1">
                         <button
-                            className="flex items-center gap-2 px-3 py-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition"
+                            className="flex items-center gap-3 p-1 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
                             onClick={() => setShowUserMenu(!showUserMenu)}
                         >
-                            <div className="w-8 h-8 bg-white bg-opacity-30 rounded-full flex items-center justify-center">
-                                <User size={16} />
+                            <div className="text-right hidden md:block">
+                                <div className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
+                                    {currentUser?.name || 'Usuario'}
+                                </div>
+                                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                    {currentUser?.role || 'Invitado'}
+                                </div>
                             </div>
-                            <div className="text-left">
-                                <div className="text-sm font-semibold">{currentUser.name}</div>
-                                <div className="text-xs opacity-80">{currentUser.role}</div>
+                            <div className="w-9 h-9 bg-slate-200 text-slate-600 rounded-lg flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
+                                {currentUser?.avatar ? (
+                                    <img src={currentUser.avatar} alt="user" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User size={18} strokeWidth={2.5} />
+                                )}
                             </div>
                         </button>
 
                         {showUserMenu && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 animate-fade-in">
-                                <button
-                                    className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-gray-50 text-danger-600"
-                                    onClick={onLogout}
-                                >
-                                    <LogOut size={16} />
-                                    <span className="text-sm font-medium">Cerrar sesión</span>
-                                </button>
+                            <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-slate-100 animate-slide-up-fade overflow-hidden z-50">
+                                <div className="p-2">
+                                    <button
+                                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-slate-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                                        onClick={onLogout}
+                                    >
+                                        <LogOut size={16} strokeWidth={2.5} />
+                                        <span className="text-sm font-bold">Cerrar sesión</span>
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>

@@ -67,7 +67,7 @@ const MetricSummary = ({ kpiData, horizontal }) => {
                     </div>
 
                     <div style={{ height: '200px', width: '100%', marginTop: '-1rem' }}>
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                             <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                                 <PolarGrid stroke="var(--border-soft)" />
                                 <PolarAngleAxis
@@ -92,7 +92,7 @@ const MetricSummary = ({ kpiData, horizontal }) => {
                 </div>
 
                 <div style={{ width: '220px', height: '220px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <RadialBarChart
                             innerRadius="70%"
                             outerRadius="100%"
