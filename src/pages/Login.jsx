@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, LayoutGrid, Users, Lock, ChevronLeft } from 'lucide-react';
+import { LayoutGrid, Users, Lock, ChevronLeft } from 'lucide-react';
+import Logo from '../components/common/Logo';
 
 const Login = ({ onLogin }) => {
     const [selectedCompany, setSelectedCompany] = useState(null);
@@ -9,19 +10,19 @@ const Login = ({ onLogin }) => {
     const [error, setError] = useState('');
 
     const roles = [
-        { id: 'Gerente', name: 'Marco Parra', desc: 'Gerente General - Acceso total', icon: <LayoutGrid size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'APRENDIZ DEVOLUCIONES', name: 'Aprendiz Devoluciones', desc: 'Pedidos devueltos, promedio por auxiliar/carro', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'JEFE DE TALENTO HUMANO', name: 'Jefe de Talento Humano', desc: 'Rotación, ausentismo, calificación auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'CONTADOR', name: 'Contador', desc: 'Gasto de fletes y rentabilidad', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'ANALISTA DE INFORMACIÓN', name: 'Analista de Información', desc: 'Picking, segundos/unidad, pedidos/hombre', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'LOGISTICA INVERSA', name: 'Logística Inversa', desc: 'Embalajes y control de canastillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'CONTROLLER', name: 'Controller', desc: 'Arqueos de caja y planillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'ANALISTA DE CARTERA', name: 'Analista de Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'CONTADORA', name: 'Contadora', desc: 'Diferencia en cierres y activos', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'COORDINADOR POR MARCA', name: 'Coordinador por Marca', desc: 'Ventas, margen y devoluciones comercial', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'ANALISTA DE INVENTARIOS', name: 'Analista de Inventarios', desc: 'Fiabilidad, quiebres y obsolescencia', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
-        { id: 'SST', name: 'SST', desc: 'Sistema de Gestión y Auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'] },
+        { id: 'Gerente', name: 'Marco Parra', desc: 'Gerente General - Acceso total', icon: <LayoutGrid size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['all'] },
+        { id: 'APRENDIZ DEVOLUCIONES', name: 'Aprendiz Devoluciones', desc: 'Pedidos devueltos, promedio por auxiliar/carro', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-entrega', 'logistica-picking', 'logistica-deposito'] },
+        { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano', 'logistica-entrega', 'logistica-picking', 'logistica-deposito'] },
+        { id: 'JEFE DE TALENTO HUMANO', name: 'Jefe de Talento Humano', desc: 'Rotación, ausentismo, calificación auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'] },
+        { id: 'CONTADOR', name: 'Contador', desc: 'Gasto de fletes y rentabilidad', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-entrega'] },
+        { id: 'ANALISTA DE INFORMACIÓN', name: 'Analista de Información', desc: 'Picking, segundos/unidad, pedidos/hombre', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-picking'] },
+        { id: 'LOGISTICA INVERSA', name: 'Logística Inversa', desc: 'Embalajes y control de canastillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-deposito'] },
+        { id: 'CONTROLLER', name: 'Controller', desc: 'Arqueos de caja y planillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['caja'] },
+        { id: 'ANALISTA DE CARTERA', name: 'Analista de Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['cartera'] },
+        { id: 'CONTADORA', name: 'Contadora', desc: 'Diferencia en cierres y activos', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['contabilidad'] },
+        { id: 'COORDINADOR POR MARCA', name: 'Coordinador por Marca', desc: 'Ventas, margen y devoluciones comercial', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['comercial'] },
+        { id: 'ANALISTA DE INVENTARIOS', name: 'Analista de Inventarios', desc: 'Fiabilidad, quiebres y obsolescencia', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['administrativo'] },
+        { id: 'SST', name: 'SST', desc: 'Sistema de Gestión y Auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'] },
     ];
 
     const navigate = useNavigate();
@@ -40,7 +41,8 @@ const Login = ({ onLogin }) => {
             name: role.name,
             role: role.id === 'Gerente' ? 'Gerente' : 'Analista',
             cargo: role.id,
-            company: selectedCompany
+            company: selectedCompany,
+            authorizedAreas: role.allowedAreas
         };
         onLogin(user);
         if (role.id === 'Gerente') {
@@ -73,22 +75,19 @@ const Login = ({ onLogin }) => {
                 border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white'
             }}>
                 <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                    <div style={{
-                        width: '72px', height: '72px', background: 'var(--brand, #2563eb)',
-                        color: 'white', borderRadius: '20px', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto',
-                        boxShadow: '0 10px 20px rgba(37, 99, 235, 0.3)',
-                        transform: 'rotate(-5deg)'
-                    }}>
-                        <Shield size={38} strokeWidth={2.5} />
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                        <Logo size="xl" />
                     </div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'white', marginBottom: '0.5rem' }}>
-                        {selectedRole ? 'Acceso Seguro' : 'Indicadores TYM/TAT'}
+                    <h1 style={{ fontSize: '3rem', fontWeight: 950, color: 'white', marginBottom: '0.2rem', letterSpacing: '-0.05em' }}>
+                        ZENTRA
                     </h1>
+                    <p style={{ color: 'var(--brand-light, #38bdf8)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '2rem', opacity: 0.9 }}>
+                        Potenciando la Excelencia Operativa
+                    </p>
                     <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '1rem' }}>
                         {selectedRole
                             ? `Ingrese la clave de ${selectedRole.name}`
-                            : (!selectedCompany ? 'Seleccione su empresa' : `Seleccione su cargo en ${selectedCompany}`)}
+                            : (!selectedCompany ? 'Seleccione su empresa para comenzar' : `Seleccione su cargo en ${selectedCompany}`)}
                     </p>
                 </div>
 
@@ -293,8 +292,8 @@ const Login = ({ onLogin }) => {
                     </>
                 )}
 
-                <div style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.8rem' }}>
-                    Sistema de Gestión de Indicadores 2026
+                <div style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+                    ZENTRA INDICADORES &copy; 2026
                 </div>
             </div>
         </div>

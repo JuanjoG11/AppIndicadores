@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, User, LogOut, CheckCircle2, AlertCircle, AlertTriangle, X } from 'lucide-react';
+import Logo from '../common/Logo';
 
 const Header = ({ kpiData, currentUser, onLogout }) => {
     const [showNotifications, setShowNotifications] = useState(false);
@@ -37,17 +38,15 @@ const Header = ({ kpiData, currentUser, onLogout }) => {
             <div className="flex items-center justify-between px-6 py-3">
                 {/* Logo & Title */}
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 group cursor-pointer transition-transform hover:scale-105">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-                            <span className="text-xl">📊</span>
-                        </div>
+                    <div className="flex items-center gap-3 group cursor-pointer">
+                        <Logo size="md" className="transition-transform duration-500 hover:rotate-[360deg]" />
                         <div>
-                            <h1 className="text-lg font-bold text-slate-800 tracking-tight leading-tight">
-                                Sistema de Gestión
+                            <h1 className="text-xl font-black text-slate-800 tracking-tight leading-tight">
+                                ZENTRA
                             </h1>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                                    TYM/TAT 2026
+                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                    Intelligence System
                                 </span>
                             </div>
                         </div>
