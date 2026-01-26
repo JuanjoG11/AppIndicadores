@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-    RadarChart, Radar, PolarGrid, PolarAngleAxis, Tooltip, ResponsiveContainer, Cell, LabelList,
-    RadialBarChart, RadialBar, Legend as RechartsLegend
+    RadarChart, Radar, PolarGrid, PolarAngleAxis, Tooltip, ResponsiveContainer, Cell,
+    RadialBarChart, RadialBar, AreaChart, Area
 } from 'recharts';
 import { calculateOverallScore, calculateAreaScore } from '../../data/mockData';
 import { areas } from '../../data/areas';
@@ -18,10 +18,35 @@ const MetricSummary = ({ kpiData, horizontal }) => {
         color: area.color
     })).sort((a, b) => b.score - a.score);
 
+    // Mock history for sparklines
+    const mockHistory = (baseValue, variance) => {
+        return Array.from({ length: 6 }, (_, i) => ({
+            value: baseValue + (Math.random() * variance * 2 - variance)
+        }));
+    };
+
     const metrics = [
-        { title: 'Cumplimiento Total', value: overallScore ? `${overallScore}%` : '0%', color: 'var(--brand)', icon: <Activity size={18} /> },
-        { title: 'KPIs en Verde', value: kpiData.filter(k => k.semaphore === 'green').length, color: 'var(--success)', icon: <ShieldCheck size={18} /> },
-        { title: 'Indicadores en Rojo', value: kpiData.filter(k => k.semaphore === 'red').length, color: 'var(--danger)', icon: <AlertTriangle size={18} /> }
+        {
+            title: 'Cumplimiento Total',
+            value: overallScore ? `${overallScore}%` : '0%',
+            color: 'var(--brand)',
+            icon: <Activity size={18} />,
+            history: mockHistory(overallScore || 0, 5)
+        },
+        {
+            title: 'KPIs en Verde',
+            value: kpiData.filter(k => k.semaphore === 'green').length,
+            color: 'var(--success)',
+            icon: <ShieldCheck size={18} />,
+            history: mockHistory(kpiData.filter(k => k.semaphore === 'green').length, 2)
+        },
+        {
+            title: 'Indicadores en Rojo',
+            value: kpiData.filter(k => k.semaphore === 'red').length,
+            color: 'var(--danger)',
+            icon: <AlertTriangle size={18} />,
+            history: mockHistory(kpiData.filter(k => k.semaphore === 'red').length, 1)
+        }
     ];
 
     const radialData = [
@@ -46,6 +71,24 @@ const MetricSummary = ({ kpiData, horizontal }) => {
         return null;
     };
 
+    const Sparkline = ({ data, color }) => (
+        <div style={{ height: '30px', width: '80px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data}>
+                    <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke={color}
+                        fill={color}
+                        fillOpacity={0.1}
+                        strokeWidth={1.5}
+                        isAnimationActive={false}
+                    />
+                </AreaChart>
+            </ResponsiveContainer>
+        </div>
+    );
+
     if (horizontal) {
         return (
             <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '2rem' }}>
@@ -59,8 +102,9 @@ const MetricSummary = ({ kpiData, horizontal }) => {
                                     </div>
                                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{m.title}</span>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', paddingLeft: '0.2rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingLeft: '0.2rem' }}>
                                     <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)' }}>{m.value}</span>
+                                    <Sparkline data={m.history} color={m.color} />
                                 </div>
                             </div>
                         ))}
@@ -122,11 +166,18 @@ const MetricSummary = ({ kpiData, horizontal }) => {
         <div className="grid grid-3">
             {metrics.map((m, i) => (
                 <div key={i} className="card" style={{ background: 'white' }}>
-                    <div className="card-header" style={{ marginBottom: '0.75rem' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{m.title}</span>
-                        <div style={{ color: m.color }}>{m.icon}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <div className="card-header" style={{ marginBottom: 0, padding: 0, border: 'none', boxShadow: 'none' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{m.title}</span>
+                                <div style={{ color: m.color, background: `${m.color}15`, padding: '0.4rem', borderRadius: '8px', display: 'flex' }}>
+                                    {React.cloneElement(m.icon, { size: 16 })}
+                                </div>
+                            </div>
+                            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1 }}>{m.value}</div>
+                        </div>
+                        <Sparkline data={m.history} color={m.color} />
                     </div>
-                    <div style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-main)' }}>{m.value}</div>
                 </div>
             ))}
         </div>

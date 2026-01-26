@@ -4,17 +4,18 @@ import { getAreaById } from '../data/areas';
 import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import {
+    ResponsiveContainer,
+    RadarChart,
+    Radar,
+    PolarGrid,
+    PolarAngleAxis,
+    Tooltip,
     BarChart,
     Bar,
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell,
-    Legend
+    Cell
 } from 'recharts';
 import {
     ArrowLeft,
@@ -52,11 +53,11 @@ const AreaDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const redCount = areaKPIs.filter(kpi => kpi.semaphore !== 'green' && kpi.hasData).length;
     const pendingCount = areaKPIs.filter(kpi => !kpi.hasData).length;
 
-    const distributionData = [
-        { name: 'Cumple', value: greenCount, color: '#059669' },
-        { name: 'Crítico', value: redCount, color: '#ef4444' },
-        { name: 'Pendiente', value: pendingCount, color: '#cbd5e1' }
-    ].filter(item => item.value > 0);
+    const radarData = areaKPIs.map(kpi => ({
+        subject: kpi.name.length > 20 ? kpi.name.substring(0, 17) + '...' : kpi.name,
+        fullValue: kpi.name,
+        value: kpi.compliance || 0
+    }));
 
     const complianceData = kpisWithData
         .filter(kpi => kpi.compliance)
@@ -132,29 +133,45 @@ const AreaDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', marginBottom: '3rem' }}>
                 <div className="card premium-shadow" style={{ padding: '2rem', borderRadius: '32px', background: 'white', border: '1px solid #f1f5f9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                        <div style={{ color: 'var(--brand)' }}><PieIcon size={20} /></div>
-                        <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 900, color: '#1e293b', textTransform: 'uppercase' }}>Distribución de Estado</h4>
+                        <div style={{ color: 'var(--brand)' }}><Activity size={20} /></div>
+                        <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 900, color: '#1e293b', textTransform: 'uppercase' }}>Equilibrio de Indicadores</h4>
                     </div>
-                    <ResponsiveContainer width="100%" height={220} minWidth={0} debounce={50}>
-                        <PieChart>
-                            <Pie
-                                data={distributionData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={70}
-                                outerRadius={90}
-                                paddingAngle={8}
-                                dataKey="value"
-                            >
-                                {distributionData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                            </Pie>
-                            <Tooltip
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)', fontWeight: 700 }}
+                    <ResponsiveContainer width="100%" height={220}>
+                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                            <PolarGrid stroke="#e2e8f0" />
+                            <PolarAngleAxis
+                                dataKey="subject"
+                                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
                             />
-                            <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 700, paddingTop: '20px' }} />
-                        </PieChart>
+                            <Tooltip
+                                content={({ active, payload }) => {
+                                    if (active && payload && payload.length) {
+                                        return (
+                                            <div style={{
+                                                background: 'white',
+                                                padding: '0.75rem',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '12px',
+                                                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                                                fontSize: '0.8rem'
+                                            }}>
+                                                <p style={{ margin: 0, fontWeight: 700, color: '#1e293b' }}>{payload[0].payload.fullValue}</p>
+                                                <p style={{ margin: 0, color: area.color, fontWeight: 800 }}>{payload[0].value}%</p>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                }}
+                            />
+                            <Radar
+                                name={area.name}
+                                dataKey="value"
+                                stroke={area.color}
+                                fill={area.color}
+                                fillOpacity={0.3}
+                                animationDuration={1000}
+                            />
+                        </RadarChart>
                     </ResponsiveContainer>
                 </div>
 
