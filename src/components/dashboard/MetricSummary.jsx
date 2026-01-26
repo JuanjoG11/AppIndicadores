@@ -41,7 +41,7 @@ const MetricSummary = ({ kpiData, horizontal }) => {
             history: mockHistory(kpiData.filter(k => k.semaphore === 'green').length, 2)
         },
         {
-            title: 'Indicadores en Rojo',
+            title: 'KPIs en Rojo',
             value: kpiData.filter(k => k.semaphore === 'red').length,
             color: 'var(--danger)',
             icon: <AlertTriangle size={18} />,
