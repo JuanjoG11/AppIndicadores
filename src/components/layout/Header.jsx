@@ -46,7 +46,7 @@ const Header = ({ kpiData, currentUser, onLogout }) => {
                             </h1>
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                    Intelligence System
+                                    Analytics
                                 </span>
                             </div>
                         </div>

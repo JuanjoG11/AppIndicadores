@@ -32,7 +32,7 @@ const Sidebar = ({ currentUser, onLogout }) => {
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-0.04em', lineHeight: 1 }}>
                         ZENTRA
                     </h3>
-                    <small style={{ fontSize: '0.65rem', color: 'var(--brand-light)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Intelligence System</small>
+                    <small style={{ fontSize: '0.65rem', color: 'var(--brand-light)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Analytics</small>
                 </div>
             </div>
 
