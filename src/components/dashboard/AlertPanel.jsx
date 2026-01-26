@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { getCriticalAlerts, getWarningAlerts } from '../../data/mockData';
 import { formatKPIValue, formatPercent } from '../../utils/formatters';
 import { areas } from '../../data/areas';
 
 const AlertPanel = ({ kpiData }) => {
+    const navigate = useNavigate();
     const criticalAlerts = getCriticalAlerts(kpiData);
     const warningAlerts = getWarningAlerts(kpiData).slice(0, 3); // Top 3 warnings
 
@@ -31,13 +33,27 @@ const AlertPanel = ({ kpiData }) => {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {criticalAlerts.map((alert, idx) => (
-                                <div key={alert.id} className="animate-slide-up" style={{
-                                    padding: '1rem',
-                                    background: 'var(--danger-bg)',
-                                    borderLeft: '4px solid var(--danger)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    animationDelay: `${idx * 0.1}s`
-                                }}>
+                                <div key={alert.id}
+                                    className="animate-slide-up"
+                                    onClick={() => navigate(`/area/${alert.area}`)}
+                                    style={{
+                                        padding: '1rem',
+                                        background: 'var(--danger-bg)',
+                                        borderLeft: '4px solid var(--danger)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        animationDelay: `${idx * 0.1}s`,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseOver={e => {
+                                        e.currentTarget.style.transform = 'translateX(5px)';
+                                        e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                                    }}
+                                    onMouseOut={e => {
+                                        e.currentTarget.style.transform = 'translateX(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                >
                                     <div style={{ display: 'flex', justifySelf: 'space-between', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                                         <div>
                                             <h5 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--brand)', margin: 0 }}>{alert.kpiName}</h5>
@@ -71,13 +87,27 @@ const AlertPanel = ({ kpiData }) => {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {warningAlerts.map((alert, idx) => (
-                                <div key={alert.id} className="animate-slide-up" style={{
-                                    padding: '1rem',
-                                    background: 'var(--warning-bg)',
-                                    borderLeft: '4px solid var(--warning)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    animationDelay: `${(criticalAlerts.length + idx) * 0.1}s`
-                                }}>
+                                <div key={alert.id}
+                                    className="animate-slide-up"
+                                    onClick={() => navigate(`/area/${alert.area}`)}
+                                    style={{
+                                        padding: '1rem',
+                                        background: 'var(--warning-bg)',
+                                        borderLeft: '4px solid var(--warning)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        animationDelay: `${(criticalAlerts.length + idx) * 0.1}s`,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseOver={e => {
+                                        e.currentTarget.style.transform = 'translateX(5px)';
+                                        e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                                    }}
+                                    onMouseOut={e => {
+                                        e.currentTarget.style.transform = 'translateX(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                >
                                     <h5 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--brand)', margin: 0 }}>{alert.kpiName}</h5>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
                                         <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{getAreaName(alert.area)}</small>

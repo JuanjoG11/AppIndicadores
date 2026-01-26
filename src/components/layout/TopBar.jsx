@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCriticalAlerts } from '../../data/mockData';
 import { Bell, Settings, User, X, CheckCircle2, AlertCircle, LogOut } from 'lucide-react';
 
 const TopBar = ({ currentUser, kpiData, onLogout }) => {
+    const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
 
     // Get alerts
     const criticalAlerts = kpiData ? getCriticalAlerts(kpiData) : [];
     const hasAlerts = criticalAlerts.length > 0;
+
+    const handleAlertClick = (areaId) => {
+        navigate(`/area/${areaId}`);
+        setShowNotifications(false);
+    };
 
     return (
         <div style={{
@@ -123,6 +130,7 @@ const TopBar = ({ currentUser, kpiData, onLogout }) => {
                                             {criticalAlerts.map((alert, idx) => (
                                                 <div
                                                     key={`alert-${idx}`}
+                                                    onClick={() => handleAlertClick(alert.area)}
                                                     style={{
                                                         background: 'white',
                                                         padding: '0.75rem',
@@ -134,8 +142,16 @@ const TopBar = ({ currentUser, kpiData, onLogout }) => {
                                                         cursor: 'pointer',
                                                         transition: 'all 0.2s'
                                                     }}
-                                                    onMouseOver={e => e.currentTarget.style.borderColor = '#cbd5e1'}
-                                                    onMouseOut={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+                                                    onMouseOver={e => {
+                                                        e.currentTarget.style.borderColor = '#ef4444';
+                                                        e.currentTarget.style.background = '#fef2f2';
+                                                        e.currentTarget.style.transform = 'translateX(4px)';
+                                                    }}
+                                                    onMouseOut={e => {
+                                                        e.currentTarget.style.borderColor = '#e2e8f0';
+                                                        e.currentTarget.style.background = 'white';
+                                                        e.currentTarget.style.transform = 'translateX(0)';
+                                                    }}
                                                 >
                                                     <div style={{ flex: 1, minWidth: 0 }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
