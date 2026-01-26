@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getAreaById } from '../data/areas';
 import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
+import { filterKPIsByEntity } from '../utils/kpiHelpers';
 import {
     ResponsiveContainer,
     RadarChart,
@@ -27,7 +28,7 @@ import {
     AlertCircle
 } from 'lucide-react';
 
-const AreaDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
+const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => {
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
@@ -46,7 +47,9 @@ const AreaDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         );
     }
 
-    const areaKPIs = kpiData.filter(kpi => kpi.area === areaId);
+    // Filter data by company FIRST, then by area
+    const companyKPIs = filterKPIsByEntity(kpiData, activeCompany || 'TYM');
+    const areaKPIs = companyKPIs.filter(kpi => kpi.area === areaId);
     const kpisWithData = areaKPIs.filter(kpi => kpi.hasData);
 
     const greenCount = areaKPIs.filter(kpi => kpi.semaphore === 'green').length;
@@ -78,9 +81,9 @@ const AreaDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const groupCompliance = areaKPIs.length > 0 ? Math.round((greenCount / areaKPIs.length) * 100) : 0;
 
     return (
-        <div style={{ padding: '2rem 3rem', background: 'var(--bg-app)', minHeight: 'calc(100vh - 64px)' }}>
+        <div style={{ padding: 'clamp(1rem, 5vw, 2rem) clamp(1rem, 5vw, 3rem)', background: 'var(--bg-app)', minHeight: 'calc(100vh - 64px)' }}>
             {/* Header with Navigation */}
-            <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div className="area-dashboard-header" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <button
                         onClick={() => navigate('/')}
@@ -130,7 +133,7 @@ const AreaDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
             </div>
 
             {/* Top Analytics Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', marginBottom: '3rem' }}>
+            <div className="radar-container" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', marginBottom: '3rem' }}>
                 <div className="card premium-shadow" style={{ padding: '2rem', borderRadius: '32px', background: 'white', border: '1px solid #f1f5f9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                         <div style={{ color: 'var(--brand)' }}><Activity size={20} /></div>

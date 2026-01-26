@@ -1,39 +1,11 @@
 import React from 'react';
 import MetricSummary from '../components/dashboard/MetricSummary';
 import DynamicAreaGrid from '../components/dashboard/DynamicAreaGrid';
+import { filterKPIsByEntity } from '../utils/kpiHelpers';
 
-const ExecutiveDashboard = ({ kpiData }) => {
-    const [selectedEntity, setSelectedEntity] = React.useState('TYM');
-
-    // Filter KPIs based on selected entity
-    const filteredKPIs = kpiData.map(kpi => {
-        // Look for keys that start with the selected entity (e.g., "TYM-")
-        const entityKeys = kpi.brandValues ? Object.keys(kpi.brandValues).filter(key => key.startsWith(`${selectedEntity}-`)) : [];
-
-        // If we have specific data for this entity
-        if (entityKeys.length > 0) {
-            // Priority: Total/Global for that entity, or first available
-            const globalKey = `${selectedEntity}-GLOBAL`;
-            const mainKey = entityKeys.includes(globalKey) ? globalKey : entityKeys[0];
-
-            return {
-                ...kpi,
-                ...kpi.brandValues[mainKey]
-            };
-        }
-
-        // Fallback: If no specific data in brandValues, check if we need to adjust TARGET only
-        let targetMeta = kpi.meta;
-        if (typeof kpi.meta === 'object') {
-            targetMeta = kpi.meta[selectedEntity] || Object.values(kpi.meta)[0] || 0;
-        }
-
-        return {
-            ...kpi,
-            targetMeta,
-            hasData: false // Marcar como sin datos si no hay registro específico para esta empresa
-        };
-    });
+const ExecutiveDashboard = ({ kpiData, activeCompany, setActiveCompany }) => {
+    // Filter KPIs based on selected entity using the utility
+    const filteredKPIs = filterKPIsByEntity(kpiData, activeCompany);
 
     return (
         <div className="dashboard fade-in" style={{
@@ -46,12 +18,12 @@ const ExecutiveDashboard = ({ kpiData }) => {
             background: 'var(--bg-app)'
         }}>
             {/* 1. STRATEGIC HEADER */}
-            <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>
+                    <h2 style={{ margin: 0, fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: 800, color: 'var(--text-main)' }}>
                         Tablero de Control Gerencial
                     </h2>
-                    <p style={{ margin: '0.25rem 0 0 0', color: '#64748b' }}>
+                    <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                         Supervisión estratégica unificada
                     </p>
                 </div>
@@ -68,7 +40,7 @@ const ExecutiveDashboard = ({ kpiData }) => {
                     {['TYM', 'TAT'].map(entity => (
                         <button
                             key={entity}
-                            onClick={() => setSelectedEntity(entity)}
+                            onClick={() => setActiveCompany(entity)}
                             style={{
                                 padding: '0.5rem 1.5rem',
                                 borderRadius: '10px',
@@ -76,10 +48,10 @@ const ExecutiveDashboard = ({ kpiData }) => {
                                 fontWeight: 700,
                                 fontSize: '0.9rem',
                                 cursor: 'pointer',
-                                background: selectedEntity === entity ? 'var(--brand)' : 'transparent',
-                                color: selectedEntity === entity ? 'white' : '#64748b',
+                                background: activeCompany === entity ? 'var(--brand)' : 'transparent',
+                                color: activeCompany === entity ? 'white' : '#64748b',
                                 transition: 'all 0.2s ease',
-                                boxShadow: selectedEntity === entity ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none'
+                                boxShadow: activeCompany === entity ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none'
                             }}
                         >
                             {entity}

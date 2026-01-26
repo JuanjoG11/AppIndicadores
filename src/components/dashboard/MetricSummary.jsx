@@ -92,8 +92,8 @@ const MetricSummary = ({ kpiData, horizontal }) => {
     if (horizontal) {
         return (
             <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '2rem' }}>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem', minWidth: 0 }}>
+                    <div className="metric-card-container" style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
                         {metrics.map((m, i) => (
                             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -135,7 +135,7 @@ const MetricSummary = ({ kpiData, horizontal }) => {
                     </div>
                 </div>
 
-                <div style={{ width: '220px', height: '220px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="radial-chart-container" style={{ width: '220px', height: '220px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <RadialBarChart
                             innerRadius="70%"

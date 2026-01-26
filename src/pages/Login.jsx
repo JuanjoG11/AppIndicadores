@@ -68,11 +68,12 @@ const Login = ({ onLogin }) => {
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '2rem'
         }}>
-            <div className="card fade-in" style={{
+            <div className="card fade-in login-card-inner" style={{
                 maxWidth: selectedRole ? '450px' : '800px', width: '100%', padding: '2.5rem',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', borderRadius: '24px',
                 background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white'
+                border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white',
+                margin: '1rem'
             }}>
                 <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
@@ -156,7 +157,7 @@ const Login = ({ onLogin }) => {
                     <>
                         {/* Company Selection */}
                         {!selectedCompany ? (
-                            <div style={{
+                            <div className="company-grid" style={{
                                 display: 'grid',
                                 gridTemplateColumns: 'repeat(2, 1fr)',
                                 gap: '2rem',
@@ -167,11 +168,11 @@ const Login = ({ onLogin }) => {
                                         key={company}
                                         onClick={() => setSelectedCompany(company)}
                                         style={{
-                                            padding: '4rem 2rem',
+                                            padding: window.innerWidth <= 600 ? '2rem' : '4rem 2rem',
                                             textAlign: 'center',
                                             cursor: 'pointer',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            background: 'rgba(255, 255, 255, 0.1)',
                                             borderRadius: '24px',
                                             transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                                             display: 'flex',
@@ -194,13 +195,12 @@ const Login = ({ onLogin }) => {
                                         }}
                                     >
                                         <div style={{
-                                            fontSize: '4rem',
+                                            fontSize: 'clamp(2.5rem, 8vw, 4rem)',
                                             fontWeight: 950,
                                             letterSpacing: '-2px',
-                                            background: 'linear-gradient(to bottom, #fff, #94a3b8)',
-                                            WebkitBackgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
-                                            lineHeight: 1
+                                            color: 'white',
+                                            lineHeight: 1,
+                                            textShadow: '0 4px 12px rgba(0,0,0,0.3)'
                                         }}>
                                             {company}
                                         </div>

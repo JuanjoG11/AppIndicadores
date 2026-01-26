@@ -15,31 +15,20 @@ import {
     Shield
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
+import { filterKPIsByEntity } from '../utils/kpiHelpers';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const [editingKPI, setEditingKPI] = useState(null);
     const [activeTab, setActiveTab] = useState('all');
 
-    // Filtrar indicadores bajo la responsabilidad del usuario actual y normalizar datos segun empresa
-    const myKPIs = kpiData
-        .filter(kpi =>
-            currentUser.authorizedAreas?.includes('all') ||
-            currentUser.authorizedAreas?.includes(kpi.area) ||
-            kpi.responsable === currentUser.cargo
-        )
-        .map(kpi => {
-            const companyKeys = kpi.brandValues ? Object.keys(kpi.brandValues).filter(key => key.startsWith(`${currentUser.company}-`)) : [];
-            if (companyKeys.length > 0) {
-                const globalKey = `${currentUser.company}-GLOBAL`;
-                const mainKey = companyKeys.includes(globalKey) ? globalKey : companyKeys[0];
-                return { ...kpi, ...kpi.brandValues[mainKey] };
-            }
-            let targetMeta = kpi.meta;
-            if (typeof kpi.meta === 'object') {
-                targetMeta = kpi.meta[currentUser.company] || Object.values(kpi.meta)[0] || 0;
-            }
-            return { ...kpi, targetMeta, hasData: kpi.hasData || false };
-        });
+    // Filter by company FIRST, then by user permissions
+    const companyKPIs = filterKPIsByEntity(kpiData, currentUser.company);
+
+    const myKPIs = companyKPIs.filter(kpi =>
+        currentUser.authorizedAreas?.includes('all') ||
+        currentUser.authorizedAreas?.includes(kpi.area) ||
+        kpi.responsable === currentUser.cargo
+    );
 
     const totalKPIs = myKPIs.length;
     const completedKPIs = myKPIs.filter(k => k.hasData).length;

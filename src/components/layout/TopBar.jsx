@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCriticalAlerts } from '../../data/mockData';
-import { Bell, Settings, User, X, CheckCircle2, AlertCircle, LogOut } from 'lucide-react';
+import { Bell, Settings, User, X, CheckCircle2, AlertCircle, LogOut, Menu } from 'lucide-react';
 
-const TopBar = ({ currentUser, kpiData, onLogout }) => {
+const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuToggle, onLogout }) => {
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -31,9 +31,27 @@ const TopBar = ({ currentUser, kpiData, onLogout }) => {
             zIndex: 50 // Increased z-index for dropdown
         }}>
             {/* Left Section */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    <span style={{ opacity: 0.5 }}>Plataforma</span> <span style={{ margin: '0 0.5rem' }}>/</span> <span style={{ color: '#38bdf8' }}>Consola de Mando Directivo</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button
+                    onClick={onMenuToggle}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: '4px',
+                        cursor: 'pointer',
+                        color: 'var(--text-main)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    <Menu size={24} />
+                </button>
+                <span className="breadcrumb-text" style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span style={{ opacity: 0.5 }}>Plataforma</span> <span style={{ margin: '0 0.5rem' }}>/</span>
+                    <span style={{ color: '#38bdf8' }}>
+                        Consola de Mando {currentUser?.role === 'Gerente' ? `${activeCompany || 'TYM'}` : 'Analista'}
+                    </span>
                 </span>
             </div>
 
@@ -207,8 +225,12 @@ const TopBar = ({ currentUser, kpiData, onLogout }) => {
                     </div>
                 )}
 
-                {/* Settings Icon (Visual only for now) */}
-                <div style={{ cursor: 'pointer', opacity: 0.6 }} className="hover:opacity-100 transition-opacity">
+                {/* Settings Icon */}
+                <div
+                    style={{ cursor: 'pointer', opacity: 0.6 }}
+                    className="hover:opacity-100 transition-opacity"
+                    onClick={onOpenSettings}
+                >
                     <Settings size={20} className="text-slate-600" />
                 </div>
 

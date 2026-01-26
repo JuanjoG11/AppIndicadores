@@ -8,32 +8,48 @@ import AnalystDashboard from './pages/AnalystDashboard';
 import Login from './pages/Login';
 import { mockKPIData } from './data/mockData';
 import { supabase } from './lib/supabase';
+import { filterKPIsByEntity } from './utils/kpiHelpers';
+import SettingsModal from './components/layout/SettingsModal';
 import './index.css';
 import './App.css';
 
-const AppContent = ({ currentUser, kpiData, handleLogin, handleLogout, onUpdateKPI }) => {
+const AppContent = ({ currentUser, kpiData, activeCompany, setActiveCompany, theme, toggleTheme, showSettings, setShowSettings, isSidebarOpen, setIsSidebarOpen, handleLogin, handleLogout, onUpdateKPI }) => {
   if (!currentUser) {
     return <Login onLogin={handleLogin} />;
   }
 
   return (
     <div style={{ display: 'flex', background: 'var(--bg-app)', minHeight: '100vh', color: 'var(--text-main)' }}>
-      <Sidebar currentUser={currentUser} onLogout={handleLogout} />
-      <main style={{ marginLeft: '260px', flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <TopBar currentUser={currentUser} kpiData={kpiData} />
+      <Sidebar currentUser={currentUser} onLogout={handleLogout} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <main style={{
+        marginLeft: isSidebarOpen && window.innerWidth > 900 ? '260px' : '0',
+        flex: 1,
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'margin-left 0.3s ease',
+        width: '100%'
+      }}>
+        <TopBar
+          currentUser={currentUser}
+          kpiData={kpiData}
+          activeCompany={activeCompany}
+          onOpenSettings={() => setShowSettings(true)}
+          onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
         <div className="app-container" style={{ padding: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Routes>
             <Route
               path="/"
               element={
                 currentUser.role === 'Gerente'
-                  ? <ExecutiveDashboard kpiData={kpiData} />
+                  ? <ExecutiveDashboard kpiData={kpiData} activeCompany={activeCompany} setActiveCompany={setActiveCompany} />
                   : <Navigate to="/mis-indicadores" />
               }
             />
             <Route
               path="/area/:areaId"
-              element={<AreaDashboard kpiData={kpiData} currentUser={currentUser} onUpdateKPI={onUpdateKPI} />}
+              element={<AreaDashboard kpiData={kpiData} activeCompany={activeCompany} currentUser={currentUser} onUpdateKPI={onUpdateKPI} />}
             />
             <Route
               path="/mis-indicadores"
@@ -43,13 +59,46 @@ const AppContent = ({ currentUser, kpiData, handleLogin, handleLogout, onUpdateK
           </Routes>
         </div>
       </main>
+
+      {showSettings && (
+        <SettingsModal
+          currentUser={currentUser}
+          kpiData={kpiData}
+          onUpdateKPI={onUpdateKPI}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 };
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [activeCompany, setActiveCompany] = useState('TYM');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [showSettings, setShowSettings] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 900);
   const [kpiData, setKpiData] = useState(mockKPIData);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 900) setIsSidebarOpen(true);
+      else setIsSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   // 1. Cargar datos iniciales de Supabase y Suscribirse a cambios
   useEffect(() => {
@@ -87,6 +136,9 @@ function App() {
 
   const handleLogin = (user) => {
     setCurrentUser(user);
+    if (user.company) {
+      setActiveCompany(user.company);
+    }
   };
 
   const handleLogout = () => {
@@ -261,6 +313,14 @@ function App() {
       <AppContent
         currentUser={currentUser}
         kpiData={kpiData}
+        activeCompany={activeCompany}
+        setActiveCompany={setActiveCompany}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
         handleLogin={handleLogin}
         handleLogout={handleLogout}
         onUpdateKPI={handleUpdateKPI}

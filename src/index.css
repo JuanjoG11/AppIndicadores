@@ -65,6 +65,25 @@
   --radius-xl: 24px;
 }
 
+/* Dark Mode Overrides */
+[data-theme='dark'] {
+  --bg-app: #0f172a;
+  --bg-card: #1e293b;
+  --bg-sidebar: #020617;
+  --bg-soft: #1e293b;
+  --bg-hover: #334155;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+
+  --border-soft: #334155;
+  --border-medium: #475569;
+
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--bg-app);
@@ -541,4 +560,51 @@ small {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #764ba2 0%, #f093fb 100%);
+}
+
+/* =========================
+   RESPONSIVE OVERRIDES
+   ========================= */
+
+@media (max-width: 900px) {
+  .breadcrumb-text {
+    display: none;
+  }
+
+  .dashboard {
+    padding: 1rem !important;
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .area-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1.5rem;
+  }
+
+  .radar-container {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .kpi-value {
+    font-size: 1.75rem;
+  }
+
+  .metric-card-container {
+    gap: 1rem !important;
+  }
+
+  .login-card-inner {
+    padding: 1.5rem !important;
+  }
+
+  .company-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
 }
