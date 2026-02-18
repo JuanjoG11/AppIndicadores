@@ -54,7 +54,7 @@ export const kpiDefinitions = [
     {
         id: 'gasto-nomina-venta',
         name: '(Gasto de nomina /Venta total)',
-        area: 'logistica',
+        area: 'talento-humano',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 3.4,
@@ -64,7 +64,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'GESTION HUMANA',
+        responsable: 'GESTIÓN HUMANA',
         formula: 'NOMINA LOGISTICA / VENTA TOTAL',
         sustentacion: 'MENSUAL',
         fuente: 'SYT / MAN GO'
@@ -90,7 +90,7 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-auxiliares',
         name: 'Numero de horas extras trabajadas en el periodo / Auxiliares',
-        area: 'logistica',
+        area: 'talento-humano',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 1.5,
@@ -99,7 +99,7 @@ export const kpiDefinitions = [
             ZENU: 1
         },
         unit: 'horas',
-        frecuencia: 'QUINCENAL',
+        frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'TOTAL HORAS EXTRAS / AUXILIARES',
         sustentacion: 'SEMANAL',
@@ -175,7 +175,7 @@ export const kpiDefinitions = [
     {
         id: 'nomina-venta-picking',
         name: '$ Nómina / Total de la venta',
-        area: 'logistica',
+        area: 'talento-humano',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
@@ -192,14 +192,14 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-venta-picking',
         name: '# De horas extras trabajada / Venta',
-        area: 'logistica',
+        area: 'talento-humano',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             TYM: 0.05,
             TAT: 0.05
         },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'HORAS EXTRAS / VENTA TOTAL',
         sustentacion: 'SEMANAL',
@@ -223,11 +223,11 @@ export const kpiDefinitions = [
     {
         id: 'nomina-compra-deposito',
         name: 'Gasto de nómina / Total de la compra',
-        area: 'logistica',
+        area: 'talento-humano',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             TYM: 0.4,
-            TAT: 0.4
+            TAT: 0.3
         },
         unit: '%',
         frecuencia: 'MENSUAL',
@@ -239,7 +239,7 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-venta-deposito',
         name: '# De horas extras trabajada / Venta',
-        area: 'logistica',
+        area: 'talento-humano',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             TYM: 0.05,
