@@ -265,8 +265,10 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
                                     <tbody>
                                         {[
                                             { name: 'Gerencia', role: 'Gerencia', co: 'TYM/TAT' },
-                                            { name: 'SST', role: 'Contabilidad', co: 'TYM' },
-                                            { name: 'Contabilidad', role: 'Contabilidad', co: 'TYM/TAT' }
+                                            { name: 'Información/Inventario', role: 'Información/Inventario', co: 'TYM' },
+                                            { name: 'Contabilidad', role: 'Contabilidad', co: 'TYM/TAT' },
+                                            { name: 'Caja', role: 'Caja', co: 'TYM/TAT' },
+                                            { name: 'Cartera', role: 'Cartera', co: 'TYM/TAT' }
                                         ].map((u, i) => (
                                             <tr key={i} style={{ borderBottom: '1px solid var(--border-soft)' }}>
                                                 <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-main)' }}>{u.name}</td>

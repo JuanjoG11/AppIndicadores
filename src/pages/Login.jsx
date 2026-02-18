@@ -14,12 +14,11 @@ const Login = ({ onLogin }) => {
         { id: 'DEVOLUCIONES', name: 'Devoluciones', desc: 'Pedidos devueltos, promedio por auxiliar/carro', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-entrega', 'logistica-picking', 'logistica-deposito'] },
         { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano', 'logistica-entrega', 'logistica-picking', 'logistica-deposito'] },
         { id: 'CONTABILIDAD', name: 'Contabilidad', desc: 'Gasto de fletes, rentabilidad y cierres', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['contabilidad', 'logistica-entrega'] },
-        { id: 'ANALISTA DE INFORMACIÓN', name: 'Analista de Información', desc: 'Picking, segundos/unidad, pedidos/hombre', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-picking'] },
+        { id: 'INFORMACIÓN/INVENTARIO', name: 'Información/Inventario', desc: 'Picking, fiabilidad y obsolescencia', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-picking', 'administrativo'] },
         { id: 'LOGISTICA INVERSA', name: 'Logística Inversa', desc: 'Embalajes y control de canastillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-deposito'] },
-        { id: 'CONTROLLER', name: 'Controller', desc: 'Arqueos de caja y planillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['caja'] },
-        { id: 'ANALISTA DE CARTERA', name: 'Analista de Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['cartera'] },
+        { id: 'CAJA', name: 'Caja', desc: 'Arqueos de caja y planillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['caja'] },
+        { id: 'CARTERA', name: 'Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['cartera'] },
         { id: 'COORDINADOR POR MARCA', name: 'Coordinador por Marca', desc: 'Ventas, margen y devoluciones comercial', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['comercial'] },
-        { id: 'ANALISTA DE INVENTARIOS', name: 'Analista de Inventarios', desc: 'Fiabilidad, quiebres y obsolescencia', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['administrativo'] },
         { id: 'SST', name: 'SST', desc: 'Sistema de Gestión y Auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'] },
     ];
 

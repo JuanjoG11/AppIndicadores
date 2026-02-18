@@ -115,7 +115,7 @@ export const kpiDefinitions = [
         meta: 8,
         unit: 'segundos',
         frecuencia: 'DIARIO',
-        responsable: 'ANALISTA DE INFORMACIÓN',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         formula: 'SEGUNDOS UTILIZADOS / UNIDADES SEPARADAS',
         sustentacion: 'SEMANAL',
         fuente: 'SODISTEC'
@@ -128,7 +128,7 @@ export const kpiDefinitions = [
         meta: 218000000,
         unit: '$',
         frecuencia: 'MENSUAL',
-        responsable: 'ANALISTA DE INFORMACIÓN',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         formula: 'VALOR VENTA / AUXILIARES DE SEPARACIÓN',
         sustentacion: 'SEMANAL',
         fuente: 'SYT'
@@ -141,7 +141,7 @@ export const kpiDefinitions = [
         meta: 100,
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'ANALISTA DE INFORMACIÓN',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         formula: 'PEDIDOS SEPARADOS / PEDIDOS FACTURADOS',
         sustentacion: 'SEMANAL',
         fuente: 'SODISTEC'
@@ -167,7 +167,7 @@ export const kpiDefinitions = [
         meta: 100,
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'ANALISTA DE INFORMACIÓN',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         formula: 'PLANILLAS SEPARADAS / PLANILLAS GENERADAS',
         sustentacion: 'SEMANAL',
         fuente: 'SIDIS'
@@ -382,7 +382,7 @@ export const kpiDefinitions = [
         meta: 8,
         unit: 'arqueos',
         frecuencia: 'SEMANAL',
-        responsable: 'CONTROLLER',
+        responsable: 'CAJA',
         sustentacion: 'SEMANAL'
     },
     {
@@ -393,7 +393,7 @@ export const kpiDefinitions = [
         meta: 100,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'CONTROLLER',
+        responsable: 'CAJA',
         sustentacion: 'SEMANAL'
     },
     {
@@ -404,7 +404,7 @@ export const kpiDefinitions = [
         meta: 0,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'CONTROLLER',
+        responsable: 'CAJA',
         sustentacion: 'SEMANAL'
     },
 
@@ -423,7 +423,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'ANALISTA DE CARTERA',
+        responsable: 'CARTERA',
         formula: 'CARTERA NO VENCIDA / CARTERA TOTAL',
         sustentacion: 'QUINCENAL'
     },
@@ -441,7 +441,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'ANALISTA DE CARTERA',
+        responsable: 'CARTERA',
         formula: 'CARTERA 11-30 DIAS / CARTERA TOTAL',
         sustentacion: 'QUINCENAL'
     },
@@ -453,7 +453,7 @@ export const kpiDefinitions = [
         meta: 'ALPINA / FAMILIA / UNILEVER',
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'ANALISTA DE CARTERA',
+        responsable: 'CARTERA',
         sustentacion: 'QUINCENAL'
     },
     {
@@ -464,7 +464,7 @@ export const kpiDefinitions = [
         meta: 'ALPINA / FAMILIA / UNILEVER',
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'ANALISTA DE CARTERA',
+        responsable: 'CARTERA',
         sustentacion: 'QUINCENAL'
     },
     {
@@ -475,7 +475,7 @@ export const kpiDefinitions = [
         meta: 'TYM: 2 | TAT: 2',
         unit: 'cantidad',
         frecuencia: 'BIMENSUAL',
-        responsable: 'ANALISTA DE CARTERA',
+        responsable: 'CARTERA',
         sustentacion: 'BIMENSUAL'
     },
     {
@@ -492,7 +492,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'ANALISTA DE CARTERA',
+        responsable: 'CARTERA',
         formula: 'VALOR TOTAL CARTERA / VENTA TOTAL',
         sustentacion: 'QUINCENAL'
     },
@@ -696,7 +696,7 @@ export const kpiDefinitions = [
         meta: 16,
         unit: 'cantidad',
         frecuencia: 'SEMANAL',
-        responsable: 'ANALISTA DE INVENTARIOS',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         sustentacion: 'SEMANAL'
     },
     {
@@ -707,7 +707,7 @@ export const kpiDefinitions = [
         meta: 100,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'ANALISTA DE INVENTARIOS',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         sustentacion: 'SEMANAL'
     },
     {
@@ -718,7 +718,7 @@ export const kpiDefinitions = [
         meta: 0,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'ANALISTA DE INVENTARIOS',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         sustentacion: 'SEMANAL'
     },
     {
@@ -729,7 +729,7 @@ export const kpiDefinitions = [
         meta: 0,
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'ANALISTA DE INVENTARIOS',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         sustentacion: 'MENSUAL'
     },
     {
@@ -740,7 +740,7 @@ export const kpiDefinitions = [
         meta: 0,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'ANALISTA DE INVENTARIOS',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         sustentacion: 'SEMANAL'
     },
     {
@@ -751,7 +751,7 @@ export const kpiDefinitions = [
         meta: 0,
         unit: '$',
         frecuencia: 'SEMANAL',
-        responsable: 'ANALISTA DE INVENTARIOS',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         sustentacion: 'SEMANAL'
     },
     {
@@ -762,7 +762,7 @@ export const kpiDefinitions = [
         meta: 4,
         unit: 'veces',
         frecuencia: 'SEMANAL',
-        responsable: 'ANALISTA DE INVENTARIOS',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         sustentacion: 'SEMANAL'
     },
     {
@@ -773,7 +773,7 @@ export const kpiDefinitions = [
         meta: 4,
         unit: 'veces',
         frecuencia: 'SEMANAL',
-        responsable: 'ANALISTA DE INVENTARIOS',
+        responsable: 'INFORMACIÓN/INVENTARIO',
         sustentacion: 'SEMANAL'
     }
 ];
