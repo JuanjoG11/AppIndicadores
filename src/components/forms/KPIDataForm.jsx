@@ -197,6 +197,31 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
             'vales-descuadres': [
                 { name: 'totalCuadreCaja', label: 'Total Cuadre de Caja ($)', type: 'number', placeholder: 'Eje: 150000000' },
                 { name: 'valorVales', label: 'Valor de Vales ($)', type: 'number', placeholder: 'Eje: 750000' }
+            ],
+            // Cartera Specific (Fed by Contabilidad)
+            'cartera-no-vencida': [
+                { name: 'totalVenta', label: 'Total Venta ($)', type: 'number', placeholder: 'Eje: 1500000000' },
+                { name: 'totalCarteraVencida', label: 'Total Cartera Vencida ($)', type: 'number', placeholder: 'Eje: 140000000' }
+            ],
+            'cartera-11-30': [
+                { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number', placeholder: 'Eje: 140000000' },
+                { name: 'totalCartera1130', label: 'Total Cartera 11-30 días ($)', type: 'number', placeholder: 'Eje: 87000000' }
+            ],
+            'cartera-31-45': [
+                { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number', placeholder: 'Eje: 140000000' },
+                { name: 'totalCartera3145', label: 'Total Cartera 31-45 días ($)', type: 'number', placeholder: 'Eje: 10000000' }
+            ],
+            'cartera-mayor-45': [
+                { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number', placeholder: 'Eje: 140000000' },
+                { name: 'totalMayor45', label: 'Total Mayor a 45 días ($)', type: 'number', placeholder: 'Eje: 5000000' }
+            ],
+            'recircularizaciones': [
+                { name: 'programadas', label: 'Programadas', type: 'number', placeholder: 'Eje: 2' },
+                { name: 'efectuadas', label: 'Efectuadas', type: 'number', placeholder: 'Eje: 2' }
+            ],
+            'valor-cartera-venta': [
+                { name: 'totalVenta', label: 'Total Venta ($)', type: 'number', placeholder: 'Eje: 3600000000' },
+                { name: 'ventaCredito', label: 'Venta Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' }
             ]
         };
 
@@ -249,6 +274,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
             else if (id === 'arqueos-realizados') res = (d.arqueosRealizados / d.arqueosProgramados) * 100;
             else if (id === 'planillas-cerradas') res = (d.planillasCerradas / d.planillasGeneradas) * 100;
             else if (id === 'vales-descuadres') res = (d.valorVales / d.totalCuadreCaja) * 100;
+            // Cartera Specific (Fed by Contabilidad)
+            else if (id === 'cartera-no-vencida') res = (d.totalCarteraVencida / d.totalVenta) * 100;
+            else if (id === 'cartera-11-30') res = (d.totalCartera1130 / d.totalCartera) * 100;
+            else if (id === 'cartera-31-45') res = (d.totalCartera3145 / d.totalCartera) * 100;
+            else if (id === 'cartera-mayor-45') res = (d.totalMayor45 / d.totalCartera) * 100;
+            else if (id === 'recircularizaciones') res = d.efectuadas;
+            else if (id === 'valor-cartera-venta') res = (d.ventaCredito / d.totalVenta) * 100;
             else if (d.currentValue !== undefined) res = d.currentValue;
         } catch (e) { return null; }
 

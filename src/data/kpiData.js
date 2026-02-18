@@ -438,17 +438,18 @@ export const kpiDefinitions = [
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
-            ALPINA: 90,
-            FAMILIA: 85,
-            UNILEVER: 88,
-            POLAR: 85,
-            ZENU: 90
+            ALPINA: 10,
+            FAMILIA: 10,
+            UNILEVER: 10,
+            POLAR: 10,
+            ZENU: 10
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'CARTERA',
-        formula: 'CARTERA NO VENCIDA / CARTERA TOTAL',
-        sustentacion: 'QUINCENAL'
+        responsable: 'CONTABILIDAD',
+        formula: 'TOTAL CARTERA VENCIDA / TOTAL VENTA',
+        sustentacion: 'QUINCENAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'cartera-11-30',
@@ -456,50 +457,72 @@ export const kpiDefinitions = [
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
-            ALPINA: 5,
-            FAMILIA: 8,
-            UNILEVER: 6,
-            POLAR: 8,
-            ZENU: 5
+            ALPINA: 90,
+            FAMILIA: 90,
+            UNILEVER: 90,
+            POLAR: 90,
+            ZENU: 90
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'CARTERA',
-        formula: 'CARTERA 11-30 DIAS / CARTERA TOTAL',
-        sustentacion: 'QUINCENAL'
+        responsable: 'CONTABILIDAD',
+        formula: 'TOTAL CARTERA 11-30 / TOTAL CARTERA',
+        sustentacion: 'QUINCENAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'cartera-31-45',
         name: '% de cartera 31-45 días',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
-        meta: 'ALPINA / FAMILIA / UNILEVER',
+        meta: {
+            ALPINA: 8,
+            FAMILIA: 8,
+            UNILEVER: 8,
+            POLAR: 8,
+            ZENU: 8
+        },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'CARTERA',
-        sustentacion: 'QUINCENAL'
+        responsable: 'CONTABILIDAD',
+        formula: 'TOTAL CARTERA 31-45 / TOTAL CARTERA',
+        sustentacion: 'QUINCENAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'cartera-mayor-45',
         name: '% de cartera mayor a 45 días',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
-        meta: 'ALPINA / FAMILIA / UNILEVER',
+        meta: {
+            ALPINA: 2,
+            FAMILIA: 2,
+            UNILEVER: 2,
+            POLAR: 2,
+            ZENU: 2
+        },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'CARTERA',
-        sustentacion: 'QUINCENAL'
+        responsable: 'CONTABILIDAD',
+        formula: 'TOTAL MAYOR A 45 / TOTAL CARTERA',
+        sustentacion: 'QUINCENAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'recircularizaciones',
         name: '# recircularizaciones efectuadas / programadas',
         area: 'cartera',
         objetivo: 'Fortalecer el control interno con la cartera a la calle',
-        meta: 'TYM: 2 | TAT: 2',
+        meta: {
+            TYM: 2,
+            TAT: 2
+        },
         unit: 'cantidad',
-        frecuencia: 'BIMENSUAL',
-        responsable: 'CARTERA',
-        sustentacion: 'BIMENSUAL'
+        frecuencia: 'BIMESTRAL',
+        responsable: 'CONTABILIDAD',
+        formula: 'EFECTUADAS / PROGRAMADAS',
+        sustentacion: 'BIMESTRAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'valor-cartera-venta',
@@ -507,17 +530,18 @@ export const kpiDefinitions = [
         area: 'cartera',
         objetivo: 'Garantizar los Flujos de las compañías',
         meta: {
-            ALPINA: 15,
+            ALPINA: 10,
             FAMILIA: 20,
-            UNILEVER: 18,
+            UNILEVER: 20,
             POLAR: 20,
             ZENU: 15
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'CARTERA',
-        formula: 'VALOR TOTAL CARTERA / VENTA TOTAL',
-        sustentacion: 'QUINCENAL'
+        responsable: 'CONTABILIDAD',
+        formula: 'VENTA CREDITO / TOTAL VENTA',
+        sustentacion: 'QUINCENAL',
+        fuente: 'CONTABILIDAD'
     },
 
     // ========== CONTABILIDAD ==========
