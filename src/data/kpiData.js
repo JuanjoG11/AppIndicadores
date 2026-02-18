@@ -10,7 +10,7 @@ export const kpiDefinitions = [
         meta: 1.80,
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'APRENDIZ DEVOLUCIONES',
+        responsable: 'DEVOLUCIONES',
         formula: 'PEDIDOS DEVUELTOS / PEDIDOS FACTURADOS',
         sustentacion: 'SEMANAL',
         fuente: 'APP DE DEVOLUCIONES'
@@ -28,7 +28,7 @@ export const kpiDefinitions = [
         },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
-        responsable: 'APRENDIZ DEVOLUCIONES',
+        responsable: 'DEVOLUCIONES',
         formula: 'NUMERO DE PEDIDOS X PROVEEDOR / AUXILIARES',
         sustentacion: 'SEMANAL',
         fuente: 'APP DE FLETES'
@@ -46,7 +46,7 @@ export const kpiDefinitions = [
         },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
-        responsable: 'APRENDIZ DEVOLUCIONES',
+        responsable: 'DEVOLUCIONES',
         formula: 'NUMERO DE PEDIDOS X PROVEEDOR / VEHICULOS',
         sustentacion: 'SEMANAL',
         fuente: 'APP DE FLETES'
@@ -279,7 +279,7 @@ export const kpiDefinitions = [
         brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'JEFE DE TALENTO HUMANO',
+        responsable: 'GESTIÓN HUMANA',
         formula: '(# de salidas / promedio empleados) x 100',
         sustentacion: 'MENSUAL',
         fuente: 'MAN GO'
@@ -296,7 +296,7 @@ export const kpiDefinitions = [
         brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'JEFE DE TALENTO HUMANO',
+        responsable: 'GESTIÓN HUMANA',
         formula: 'Días perdidos / Días laborados',
         sustentacion: 'SEMANAL',
         fuente: 'MAN GO'
@@ -369,7 +369,7 @@ export const kpiDefinitions = [
         meta: 8,
         unit: 'días',
         frecuencia: 'QUINCENAL',
-        responsable: 'JEFE DE TALENTO HUMANO',
+        responsable: 'GESTIÓN HUMANA',
         sustentacion: 'QUINCENAL'
     },
 

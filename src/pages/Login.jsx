@@ -10,10 +10,9 @@ const Login = ({ onLogin }) => {
     const [error, setError] = useState('');
 
     const roles = [
-        { id: 'Gerente', name: 'Marco Parra', desc: 'Gerente General - Acceso total', icon: <LayoutGrid size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['all'] },
-        { id: 'APRENDIZ DEVOLUCIONES', name: 'Aprendiz Devoluciones', desc: 'Pedidos devueltos, promedio por auxiliar/carro', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-entrega', 'logistica-picking', 'logistica-deposito'] },
+        { id: 'Gerente', name: 'Gerencia', desc: 'Gerente General - Acceso total', icon: <LayoutGrid size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['all'] },
+        { id: 'DEVOLUCIONES', name: 'Devoluciones', desc: 'Pedidos devueltos, promedio por auxiliar/carro', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-entrega', 'logistica-picking', 'logistica-deposito'] },
         { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano', 'logistica-entrega', 'logistica-picking', 'logistica-deposito'] },
-        { id: 'JEFE DE TALENTO HUMANO', name: 'Jefe de Talento Humano', desc: 'Rotación, ausentismo, calificación auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'] },
         { id: 'CONTADOR', name: 'Contador', desc: 'Gasto de fletes y rentabilidad', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-entrega'] },
         { id: 'ANALISTA DE INFORMACIÓN', name: 'Analista de Información', desc: 'Picking, segundos/unidad, pedidos/hombre', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-picking'] },
         { id: 'LOGISTICA INVERSA', name: 'Logística Inversa', desc: 'Embalajes y control de canastillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica-deposito'] },

@@ -264,7 +264,7 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
                                     </thead>
                                     <tbody>
                                         {[
-                                            { name: 'Marco Parra', role: 'Gerencia', co: 'TYM/TAT' },
+                                            { name: 'Gerencia', role: 'Gerencia', co: 'TYM/TAT' },
                                             { name: 'SST', role: 'Analista', co: 'TYM' },
                                             { name: 'Contador', role: 'Finanzas', co: 'TAT' }
                                         ].map((u, i) => (
