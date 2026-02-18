@@ -399,7 +399,7 @@ export const kpiDefinitions = [
         meta: 8,
         unit: 'arqueos',
         frecuencia: 'SEMANAL',
-        responsable: 'CAJA',
+        responsable: 'CONTABILIDAD',
         formula: 'ARQUEOS REALIZADOS / ARQUEOS PROGRAMADOS',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
@@ -412,7 +412,7 @@ export const kpiDefinitions = [
         meta: 100,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'CAJA',
+        responsable: 'CONTABILIDAD',
         formula: 'PLANILLAS CERRADAS / PLANILLAS GENERADAS',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
@@ -425,7 +425,7 @@ export const kpiDefinitions = [
         meta: 0.5,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'CAJA',
+        responsable: 'CONTABILIDAD',
         formula: 'VALOR DE VALES / TOTAL CUADRE DE CAJA',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
