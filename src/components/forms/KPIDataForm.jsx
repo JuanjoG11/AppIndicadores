@@ -352,7 +352,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                         <div>
                             <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.2rem' }}>{kpi.name}</h2>
                             <div style={{ fontSize: '0.75rem', opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                                {kpi.area.replace(/-/g, ' ')} • Meta: {typeof currentMeta === 'number' ? `${currentMeta}${kpi.unit}` : currentMeta}
+                                {kpi.area.replace(/-/g, ' ')} • {typeof currentMeta === 'number' ? `Meta: ${currentMeta}${kpi.unit}` : currentMeta}
                             </div>
                         </div>
                     </div>

@@ -178,7 +178,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                                     <div>
                                         <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
                                         <div style={{ fontSize: '1rem', fontWeight: 800, color: '#475569' }}>
-                                            {typeof kpi.meta === 'object' ? 'Multimarta' : `${kpi.meta}${kpi.unit}`}
+                                            {typeof kpi.meta === 'object' ? 'Varios (Marca)' : `${kpi.meta}${kpi.unit}`}
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
@@ -242,7 +242,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                                     <div>
                                         <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
                                         <div style={{ fontSize: '1rem', fontWeight: 700, color: '#64748b' }}>
-                                            {typeof kpi.meta === 'object' ? 'Multimarta' : `${kpi.meta}${kpi.unit}`}
+                                            {typeof kpi.meta === 'object' ? 'Varios (Marca)' : `${kpi.meta}${kpi.unit}`}
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
