@@ -265,7 +265,9 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
                                     <tbody>
                                         {[
                                             { name: 'Gerencia', role: 'Gerencia', co: 'TYM/TAT' },
-                                            { name: 'Información/Inventario', role: 'Información/Inventario', co: 'TYM' },
+                                            { name: 'Logística', role: 'Logística', co: 'TYM/TAT' },
+                                            { name: 'Información y Inventario', role: 'Información/Inventario', co: 'TYM' },
+                                            { name: 'Gestión Humana', role: 'Gestión Humana', co: 'TYM/TAT' },
                                             { name: 'Contabilidad', role: 'Contabilidad', co: 'TYM/TAT' },
                                             { name: 'Caja', role: 'Caja', co: 'TYM/TAT' },
                                             { name: 'Cartera', role: 'Cartera', co: 'TYM/TAT' }

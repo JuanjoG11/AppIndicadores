@@ -5,12 +5,12 @@ export const kpiDefinitions = [
     {
         id: 'pedidos-devueltos',
         name: '% de pedidos devueltos',
-        area: 'logistica-entrega',
+        area: 'logistica',
         objetivo: 'Garantizar el % mas alto de efectividad en la entrega',
         meta: 1.80,
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'DEVOLUCIONES',
+        responsable: 'LOGISTICA',
         formula: 'PEDIDOS DEVUELTOS / PEDIDOS FACTURADOS',
         sustentacion: 'SEMANAL',
         fuente: 'APP DE DEVOLUCIONES'
@@ -18,7 +18,7 @@ export const kpiDefinitions = [
     {
         id: 'promedio-pedidos-auxiliar',
         name: 'Promedio de pedidos entregados por AUXILIAR x marca',
-        area: 'logistica-entrega',
+        area: 'logistica',
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
         meta: {
             ALPINA: 50,
@@ -28,7 +28,7 @@ export const kpiDefinitions = [
         },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
-        responsable: 'DEVOLUCIONES',
+        responsable: 'LOGISTICA',
         formula: 'NUMERO DE PEDIDOS X PROVEEDOR / AUXILIARES',
         sustentacion: 'SEMANAL',
         fuente: 'APP DE FLETES'
@@ -36,7 +36,7 @@ export const kpiDefinitions = [
     {
         id: 'promedio-pedidos-carro',
         name: 'Promedio de pedidos entregados por CARRO',
-        area: 'logistica-entrega',
+        area: 'logistica',
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
         meta: {
             ALPINA: 65,
@@ -46,7 +46,7 @@ export const kpiDefinitions = [
         },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
-        responsable: 'DEVOLUCIONES',
+        responsable: 'LOGISTICA',
         formula: 'NUMERO DE PEDIDOS X PROVEEDOR / VEHICULOS',
         sustentacion: 'SEMANAL',
         fuente: 'APP DE FLETES'
@@ -54,7 +54,7 @@ export const kpiDefinitions = [
     {
         id: 'gasto-nomina-venta',
         name: '(Gasto de nomina /Venta total)',
-        area: 'logistica-entrega',
+        area: 'logistica',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 3.4,
@@ -64,7 +64,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'GESTION HUMANA',
+        responsable: 'GESTIÓN HUMANA',
         formula: 'NOMINA LOGISTICA / VENTA TOTAL',
         sustentacion: 'MENSUAL',
         fuente: 'SYT / MAN GO'
@@ -72,7 +72,7 @@ export const kpiDefinitions = [
     {
         id: 'gasto-fletes-venta',
         name: '(Gasto de Fletes / Venta total)',
-        area: 'logistica-entrega',
+        area: 'logistica',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 4.5,
@@ -90,7 +90,7 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-auxiliares',
         name: 'Numero de horas extras trabajadas en el periodo / Auxiliares',
-        area: 'logistica-entrega',
+        area: 'logistica',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 1.5,
@@ -110,7 +110,7 @@ export const kpiDefinitions = [
     {
         id: 'segundos-unidad-separada',
         name: 'Segundos por unidad separada',
-        area: 'logistica-picking',
+        area: 'logistica',
         objetivo: 'Garantizar la productividad en el picking de productos',
         meta: 8,
         unit: 'segundos',
@@ -123,7 +123,7 @@ export const kpiDefinitions = [
     {
         id: 'pesos-separados-hombre',
         name: '$ Separados por hombre',
-        area: 'logistica-picking',
+        area: 'logistica',
         objetivo: 'Garantizar la productividad en el picking de productos',
         meta: 218000000,
         unit: '$',
@@ -136,7 +136,7 @@ export const kpiDefinitions = [
     {
         id: 'pedidos-separar-total',
         name: '# Pedidos a separar / Total pedidos',
-        area: 'logistica-picking',
+        area: 'logistica',
         objetivo: 'Garantizar la eficiencia del turno de separación',
         meta: 100,
         unit: '%',
@@ -149,12 +149,12 @@ export const kpiDefinitions = [
     {
         id: 'notas-errores-venta',
         name: '$ de notas generadas por errores / Venta',
-        area: 'logistica-picking',
+        area: 'logistica',
         objetivo: 'Garantizar la eficiencia del turno de separación',
         meta: 1,
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'APRENDIZ DEVOLUCIONES',
+        responsable: 'LOGISTICA',
         formula: 'NOTAS X DEVOLUCIÓN / VALOR DE LA VENTA',
         sustentacion: 'SEMANAL',
         fuente: 'SYT'
@@ -162,7 +162,7 @@ export const kpiDefinitions = [
     {
         id: 'planillas-separadas',
         name: '# de planillas separadas / # planillas a separar',
-        area: 'logistica-picking',
+        area: 'logistica',
         objetivo: 'Garantizar la eficiencia del turno de separación',
         meta: 100,
         unit: '%',
@@ -175,7 +175,7 @@ export const kpiDefinitions = [
     {
         id: 'nomina-venta-picking',
         name: '$ Nómina / Total de la venta',
-        area: 'logistica-picking',
+        area: 'logistica',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
@@ -192,7 +192,7 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-venta-picking',
         name: '# De horas extras trabajada / Venta',
-        area: 'logistica-picking',
+        area: 'logistica',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             TYM: 0.05,
@@ -210,12 +210,12 @@ export const kpiDefinitions = [
     {
         id: 'embalajes-perdidos',
         name: '# de embalajes por tamaño perdidos',
-        area: 'logistica-deposito',
+        area: 'logistica',
         objetivo: 'Reducir la pérdida de embalajes',
         meta: 0,
         unit: 'cantidad',
         frecuencia: 'SEMANAL',
-        responsable: 'LOGISTICA INVERSA',
+        responsable: 'LOGISTICA',
         formula: 'CANASTILLAS RECIBIDAS - CANASTILLAS GESTIONADAS',
         sustentacion: 'SEMANAL',
         fuente: 'CONTROL DE EMBALAJES'
@@ -223,7 +223,7 @@ export const kpiDefinitions = [
     {
         id: 'nomina-compra-deposito',
         name: 'Gasto de nómina / Total de la compra',
-        area: 'logistica-deposito',
+        area: 'logistica',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             TYM: 0.4,
@@ -239,7 +239,7 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-venta-deposito',
         name: '# De horas extras trabajada / Venta',
-        area: 'logistica-deposito',
+        area: 'logistica',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             TYM: 0.05,
@@ -255,12 +255,12 @@ export const kpiDefinitions = [
     {
         id: 'averias-venta',
         name: '% de averías sobre la venta',
-        area: 'logistica-deposito',
+        area: 'logistica',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: 0.20,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'APRENDIZ DEVOLUCIONES',
+        responsable: 'LOGISTICA',
         formula: 'TOTAL AVERIAS / VENTA TOTAL',
         sustentacion: 'QUINCENAL',
         fuente: 'SYT'

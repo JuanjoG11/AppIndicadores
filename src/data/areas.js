@@ -1,29 +1,15 @@
 // Áreas reales de TYM/TAT basadas en el Excel
 export const areas = [
   {
-    id: 'logistica-entrega',
-    name: 'Logística de Entrega',
-    description: 'Gestión de entregas y distribución',
+    id: 'logistica',
+    name: 'Logística',
+    description: 'Gestión integral de entregas, picking y almacenamiento',
     responsible: 'Jefe de Logística',
     color: '#1e40af'
   },
   {
-    id: 'logistica-picking',
-    name: 'Logística de Picking',
-    description: 'Separación y alistamiento de productos',
-    responsible: 'Jefe de Logística',
-    color: '#059669'
-  },
-  {
-    id: 'logistica-deposito',
-    name: 'Logística de Depósito',
-    description: 'Gestión de bodega y almacenamiento',
-    responsible: 'Jefe de Logística',
-    color: '#d97706'
-  },
-  {
     id: 'talento-humano',
-    name: 'Talento Humano',
+    name: 'Gestión Humana',
     description: 'Gestión de recursos humanos',
     responsible: 'Jefe de Talento Humano',
     color: '#dc2626'
@@ -32,21 +18,21 @@ export const areas = [
     id: 'caja',
     name: 'Caja',
     description: 'Control de efectivo y cierres',
-    responsible: 'Controller',
+    responsible: 'Caja',
     color: '#7c3aed'
   },
   {
     id: 'cartera',
     name: 'Cartera',
     description: 'Gestión de cuentas por cobrar',
-    responsible: 'Analista de Cartera',
+    responsible: 'Cartera',
     color: '#0891b2'
   },
   {
     id: 'contabilidad',
     name: 'Contabilidad',
     description: 'Cierres contables y reportes',
-    responsible: 'Contadora',
+    responsible: 'Contabilidad',
     color: '#65a30d'
   },
   {
@@ -58,9 +44,9 @@ export const areas = [
   },
   {
     id: 'administrativo',
-    name: 'Administrativo',
+    name: 'Información y Inventario',
     description: 'Control de inventarios y precios',
-    responsible: 'Analista de Inventarios',
+    responsible: 'Información/Inventario',
     color: '#8b5cf6'
   }
 ];
