@@ -222,6 +222,44 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
             'valor-cartera-venta': [
                 { name: 'totalVenta', label: 'Total Venta ($)', type: 'number', placeholder: 'Eje: 3600000000' },
                 { name: 'ventaCredito', label: 'Venta Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' }
+            ],
+            // Contabilidad Specific
+            'dias-cierre': [
+                { name: 'totalDiasCierre', label: 'Total Días al Cierre', type: 'number', placeholder: 'Eje: 12' },
+                { name: 'diasReporte', label: 'Días para el Reporte', type: 'number', placeholder: 'Eje: 13' }
+            ],
+            'ajustes-posteriores': [
+                { name: 'totalAjustes', label: 'Total Ajustes', type: 'number', placeholder: 'Eje: 1' },
+                { name: 'ajustesPosteriores', label: 'Ajustes Posteriores', type: 'number', placeholder: 'Eje: 1' }
+            ],
+            'ajustes-revisoria': [
+                { name: 'totalAjustes', label: 'Total Ajustes', type: 'number', placeholder: 'Eje: 1' },
+                { name: 'ajustesRevisor', label: 'Ajustes Revisor Fiscal', type: 'number', placeholder: 'Eje: 1' }
+            ],
+            'rotacion-cxc': [
+                { name: 'ventasCredito', label: 'Ventas a Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' },
+                { name: 'cuentasPorCobrar', label: 'Cuentas por Cobrar ($)', type: 'number', placeholder: 'Eje: 140000000' }
+            ],
+            'rotacion-cxp': [
+                { name: 'comprasCredito', label: 'Compras a Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' },
+                { name: 'cuentasPorPagar', label: 'Cuentas por Pagar ($)', type: 'number', placeholder: 'Eje: 200000000' }
+            ],
+            'conciliaciones-bancarias': [
+                { name: 'conciliacionesRequeridas', label: 'Conciliaciones Requeridas', type: 'number', placeholder: 'Eje: 2' },
+                { name: 'conciliacionesRealizadas', label: 'Conciliaciones Realizadas', type: 'number', placeholder: 'Eje: 1' }
+            ],
+            'activos-conciliados': [
+                { name: 'activosRegistrados', label: 'Activos Registrados', type: 'number', placeholder: 'Eje: 250' },
+                { name: 'activosConciliados', label: 'Activos Conciliados', type: 'number', placeholder: 'Eje: 245' }
+            ],
+            'multas-sanciones': [
+                { name: 'multasSanciones', label: 'Multas o Sanciones ($)', type: 'number', placeholder: 'Eje: 2500000' },
+                { name: 'ingreso', label: 'Ingreso Total ($)', type: 'number', placeholder: 'Eje: 3600000000' }
+            ],
+            'optimizacion-tributaria': [
+                { name: 'impuestosRecuperados', label: 'Impuestos Recuperados ($)', type: 'number', placeholder: 'Eje: 50000000' },
+                { name: 'impuestosOptimizados', label: 'Impuestos Optimizados ($)', type: 'number', placeholder: 'Eje: 70000000' },
+                { name: 'totalImpuestos', label: 'Total de Impuestos ($)', type: 'number', placeholder: 'Eje: 150000000' }
             ]
         };
 
@@ -281,6 +319,16 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
             else if (id === 'cartera-mayor-45') res = (d.totalMayor45 / d.totalCartera) * 100;
             else if (id === 'recircularizaciones') res = d.efectuadas;
             else if (id === 'valor-cartera-venta') res = (d.ventaCredito / d.totalVenta) * 100;
+            // Contabilidad Specific
+            else if (id === 'dias-cierre') res = (d.diasReporte / d.totalDiasCierre) * 100;
+            else if (id === 'ajustes-posteriores') res = (d.ajustesPosteriores / d.totalAjustes) * 100;
+            else if (id === 'ajustes-revisoria') res = (d.ajustesRevisor / d.totalAjustes) * 100;
+            else if (id === 'rotacion-cxc') res = d.ventasCredito / (d.cuentasPorCobrar || 1);
+            else if (id === 'rotacion-cxp') res = d.comprasCredito / (d.cuentasPorPagar || 1);
+            else if (id === 'conciliaciones-bancarias') res = (d.conciliacionesRealizadas / d.conciliacionesRequeridas) * 100;
+            else if (id === 'activos-conciliados') res = (d.activosConciliados / d.activosRegistrados) * 100;
+            else if (id === 'multas-sanciones') res = (d.multasSanciones / d.ingreso) * 100;
+            else if (id === 'optimizacion-tributaria') res = ((d.impuestosRecuperados + d.impuestosOptimizados) / (d.totalImpuestos || 1)) * 100;
             else if (d.currentValue !== undefined) res = d.currentValue;
         } catch (e) { return null; }
 
@@ -303,6 +351,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
         kpi.id === 'ausentismo' ||
         kpi.id === 'he-rn-nomina' ||
         kpi.id === 'vales-descuadres' ||
+        kpi.id === 'multas-sanciones' ||
         kpi.id === 'tiempo-contratacion';
     const isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
 

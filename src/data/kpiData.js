@@ -554,53 +554,67 @@ export const kpiDefinitions = [
         unit: 'días',
         frecuencia: 'MENSUAL',
         responsable: 'CONTABILIDAD',
-        sustentacion: 'MENSUAL'
+        formula: 'DIAS PARA EL REPORTE / TOTAL DIAS AL CIERRE',
+        sustentacion: 'MENSUAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'ajustes-posteriores',
         name: '# de ajustes posteriores al cierre',
         area: 'contabilidad',
         objetivo: 'Garantizar la confiabilidad de los cierres contables',
-        meta: 0,
+        meta: 1,
         unit: 'cantidad',
         frecuencia: 'MENSUAL',
         responsable: 'CONTABILIDAD',
-        sustentacion: 'MENSUAL'
+        formula: 'AJUSTES POSTERIORES / TOTAL AJUSTES',
+        sustentacion: 'MENSUAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'ajustes-revisoria',
         name: '# de ajustes por revisoría fiscal',
         area: 'contabilidad',
         objetivo: 'Garantizar la confiabilidad de los cierres contables',
-        meta: 0,
+        meta: 1,
         unit: 'cantidad',
         frecuencia: 'MENSUAL',
         responsable: 'CONTABILIDAD',
-        sustentacion: 'MENSUAL'
+        formula: 'AJUSTES REVISOR FISCAL / TOTAL AJUSTES',
+        sustentacion: 'MENSUAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'rotacion-cxc',
         name: 'Rotación cuentas por cobrar',
         area: 'contabilidad',
         objetivo: 'Mejorar la rotación en las cuentas por cobrar a clientes',
-        meta: 'TYM / TAT',
+        meta: {
+            TYM: 0,
+            TAT: 0
+        },
         unit: 'veces',
         frecuencia: 'MENSUAL',
         responsable: 'CONTABILIDAD',
-        formula: 'Ventas de crédito / cuentas por cobrar promedio',
-        sustentacion: 'MENSUAL'
+        formula: 'VENTAS CREDITO / CUENTAS POR COBRAR',
+        sustentacion: 'MENSUAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'rotacion-cxp',
         name: 'Rotación cuentas por pagar',
         area: 'contabilidad',
         objetivo: 'Garantizar la rotación en las cuentas por pagar a proveedores',
-        meta: 'TYM / TAT',
+        meta: {
+            TYM: 0,
+            TAT: 0
+        },
         unit: 'veces',
         frecuencia: 'MENSUAL',
         responsable: 'CONTABILIDAD',
-        formula: 'Compras a crédito / cuentas por pagar promedio',
-        sustentacion: 'MENSUAL'
+        formula: 'COMPRAS CREDITO / CUENTAS POR PAGAR',
+        sustentacion: 'MENSUAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'conciliaciones-bancarias',
@@ -611,18 +625,57 @@ export const kpiDefinitions = [
         unit: 'cantidad',
         frecuencia: 'QUINCENAL',
         responsable: 'CONTABILIDAD',
-        sustentacion: 'QUINCENAL'
+        formula: 'CONCILIACIONES REALIZADAS / CONCILIACIONES REQUERIDAS',
+        sustentacion: 'QUINCENAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'activos-conciliados',
         name: 'Activos conciliados / activos registrados',
         area: 'contabilidad',
         objetivo: 'Fortalecer el control interno',
-        meta: 'TYM: 94% | TAT: 94%',
+        meta: {
+            TYM: 94,
+            TAT: 94
+        },
         unit: '%',
         frecuencia: 'BIMENSUAL',
         responsable: 'CONTABILIDAD',
-        sustentacion: 'BIMENSUAL'
+        formula: 'ACTIVOS CONCILIADOS / ACTIVOS REGISTRADOS',
+        sustentacion: 'BIMENSUAL',
+        fuente: 'CONTABILIDAD'
+    },
+    {
+        id: 'multas-sanciones',
+        name: 'Valor de Multas o sanciones tributarias / ingreso',
+        area: 'contabilidad',
+        objetivo: 'Fortalecer el control interno',
+        meta: {
+            TYM: 0.1,
+            TAT: 0.1
+        },
+        unit: '%',
+        frecuencia: 'MENSUAL',
+        responsable: 'CONTABILIDAD',
+        formula: 'MULTAS O SANCIONES / INGRESO',
+        sustentacion: 'MENSUAL',
+        fuente: 'CONTABILIDAD'
+    },
+    {
+        id: 'optimizacion-tributaria',
+        name: 'Optimizar la carga tributaria',
+        area: 'contabilidad',
+        objetivo: 'Optimizar la carga tributaria buscando mejores flujos y rentabilidad',
+        meta: {
+            TYM: 90,
+            TAT: 90
+        },
+        unit: '%',
+        frecuencia: 'MENSUAL',
+        responsable: 'CONTABILIDAD',
+        formula: '(IMPUESTOS RECUPERADOS + IMPUESTOS OPTIMIZADOS) / TOTAL IMPUESTOS',
+        sustentacion: 'MENSUAL',
+        fuente: 'CONTABILIDAD'
     },
 
     // ========== COMERCIAL ==========
