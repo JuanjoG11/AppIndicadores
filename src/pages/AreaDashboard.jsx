@@ -32,6 +32,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
+    const [activeSubArea, setActiveSubArea] = useState(areaId === 'logistica' ? 'Logística de Entrega' : 'all');
     const [editingKPI, setEditingKPI] = useState(null);
 
     // Restricted access: Manager (Gerente) cannot edit
@@ -47,23 +48,32 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         );
     }
 
-    // Filter data by company FIRST, then by area
+    // 1. Filter data by company FIRST, then by area
     const companyKPIs = filterKPIsByEntity(kpiData, activeCompany || 'TYM');
     const areaKPIs = companyKPIs.filter(kpi => kpi.area === areaId);
-    const kpisWithData = areaKPIs.filter(kpi => kpi.hasData);
 
-    const greenCount = areaKPIs.filter(kpi => kpi.semaphore === 'green').length;
-    const redCount = areaKPIs.filter(kpi => kpi.semaphore !== 'green' && kpi.hasData).length;
-    const pendingCount = areaKPIs.filter(kpi => !kpi.hasData).length;
+    // 2. Sub-areas filter logic for Logistics
+    const subAreas = areaId === 'logistica' ? ['Logística de Entrega', 'Logística de Picking', 'Logística de Depósito'] : [];
 
-    const radarData = areaKPIs.map(kpi => ({
+    // 3. Filtered KPIs for the CURRENT view (Area or Sub-Area)
+    const filteredKPIs = areaId === 'logistica' && activeSubArea !== 'all'
+        ? areaKPIs.filter(kpi => kpi.subArea === activeSubArea)
+        : areaKPIs;
+
+    // 4. Analytics based on FILTERED data
+    const kpisWithData = filteredKPIs.filter(kpi => kpi.hasData);
+    const greenCount = filteredKPIs.filter(kpi => kpi.semaphore === 'green').length;
+    const redCount = filteredKPIs.filter(kpi => kpi.semaphore !== 'green' && kpi.hasData).length;
+    const pendingCount = filteredKPIs.filter(kpi => !kpi.hasData).length;
+
+    const radarData = filteredKPIs.map(kpi => ({
         subject: kpi.name.length > 20 ? kpi.name.substring(0, 17) + '...' : kpi.name,
         fullValue: kpi.name,
         value: kpi.compliance || 0
     }));
 
     const complianceData = kpisWithData
-        .filter(kpi => kpi.compliance)
+        .filter(kpi => kpi.compliance !== undefined)
         .slice(0, 10)
         .map(kpi => ({
             name: kpi.name.length > 15 ? kpi.name.substring(0, 15) + '...' : kpi.name,
@@ -78,7 +88,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         setEditingKPI(null);
     };
 
-    const groupCompliance = areaKPIs.length > 0 ? Math.round((greenCount / areaKPIs.length) * 100) : 0;
+    const groupCompliance = filteredKPIs.length > 0 ? Math.round((greenCount / filteredKPIs.length) * 100) : 0;
 
     return (
         <div style={{ padding: 'clamp(1rem, 5vw, 2rem) clamp(1rem, 5vw, 3rem)', background: 'var(--bg-app)', minHeight: 'calc(100vh - 64px)' }}>
@@ -208,16 +218,51 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                 </div>
             </div>
 
+            {/* Navigation / Filtering by Sub-Process if Logistics */}
+            {areaId === 'logistica' && (
+                <div style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    marginBottom: '2.5rem',
+                    background: 'white',
+                    padding: '0.75rem',
+                    borderRadius: '20px',
+                    width: 'fit-content',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    {subAreas.map(sub => (
+                        <button
+                            key={sub}
+                            onClick={() => setActiveSubArea(sub)}
+                            style={{
+                                padding: '0.6rem 1.25rem',
+                                borderRadius: '12px',
+                                border: 'none',
+                                fontSize: '0.85rem',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                background: activeSubArea === sub ? 'var(--brand)' : 'transparent',
+                                color: activeSubArea === sub ? 'white' : '#64748b'
+                            }}
+                        >
+                            {sub.split('Logística de ')[1]}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             {/* Bottom Grid Row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
                 <div style={{ width: '24px', height: '4px', background: 'var(--brand)', borderRadius: '2px' }}></div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
-                    Indicadores del Proceso
+                    {areaId === 'logistica' && activeSubArea !== 'all' ? activeSubArea : 'Indicadores del Proceso'}
                 </h3>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
-                {areaKPIs.map(kpi => (
+                {filteredKPIs.map(kpi => (
                     <KPIDetailCard
                         key={kpi.id}
                         kpi={kpi}
