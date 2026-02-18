@@ -400,7 +400,9 @@ export const kpiDefinitions = [
         unit: 'arqueos',
         frecuencia: 'SEMANAL',
         responsable: 'CAJA',
-        sustentacion: 'SEMANAL'
+        formula: 'ARQUEOS REALIZADOS / ARQUEOS PROGRAMADOS',
+        sustentacion: 'SEMANAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'planillas-cerradas',
@@ -411,18 +413,22 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CAJA',
-        sustentacion: 'SEMANAL'
+        formula: 'PLANILLAS CERRADAS / PLANILLAS GENERADAS',
+        sustentacion: 'SEMANAL',
+        fuente: 'CONTABILIDAD'
     },
     {
         id: 'vales-descuadres',
         name: 'Valor de vales día / total cuadre de caja',
         area: 'caja',
         objetivo: 'Reducir el valor de vales generados en caja por descuadres',
-        meta: 0,
+        meta: 0.5,
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CAJA',
-        sustentacion: 'SEMANAL'
+        formula: 'VALOR DE VALES / TOTAL CUADRE DE CAJA',
+        sustentacion: 'SEMANAL',
+        fuente: 'CONTABILIDAD'
     },
 
     // ========== CARTERA ==========

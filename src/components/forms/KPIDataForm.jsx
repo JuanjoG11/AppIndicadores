@@ -184,6 +184,19 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
             ],
             'tiempo-contratacion': [
                 { name: 'diasVacante', label: 'Días de Respuesta', type: 'number', placeholder: 'Eje: 7' }
+            ],
+            // Caja Specific
+            'arqueos-realizados': [
+                { name: 'arqueosProgramados', label: 'Arqueos Programados', type: 'number', placeholder: 'Eje: 8' },
+                { name: 'arqueosRealizados', label: 'Arqueos Realizados', type: 'number', placeholder: 'Eje: 8' }
+            ],
+            'planillas-cerradas': [
+                { name: 'planillasGeneradas', label: 'Planillas Generadas', type: 'number', placeholder: 'Eje: 40' },
+                { name: 'planillasCerradas', label: 'Planillas Cerradas', type: 'number', placeholder: 'Eje: 40' }
+            ],
+            'vales-descuadres': [
+                { name: 'totalCuadreCaja', label: 'Total Cuadre de Caja ($)', type: 'number', placeholder: 'Eje: 150000000' },
+                { name: 'valorVales', label: 'Valor de Vales ($)', type: 'number', placeholder: 'Eje: 750000' }
             ]
         };
 
@@ -232,6 +245,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
             else if (id === 'gasto-nomina-venta-rrhh') res = ((d.valorNomina || 0) / (d.ventaTotal || 1)) * 100;
             else if (id === 'actividades-cultura') res = ((d.actividadesEjecutadas || 0) / (d.actividadesProgramadas || 1)) * 100;
             else if (id === 'tiempo-contratacion') res = d.diasVacante;
+            // Caja Specific
+            else if (id === 'arqueos-realizados') res = (d.arqueosRealizados / d.arqueosProgramados) * 100;
+            else if (id === 'planillas-cerradas') res = (d.planillasCerradas / d.planillasGeneradas) * 100;
+            else if (id === 'vales-descuadres') res = (d.valorVales / d.totalCuadreCaja) * 100;
             else if (d.currentValue !== undefined) res = d.currentValue;
         } catch (e) { return null; }
 
@@ -253,6 +270,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
         kpi.id === 'rotacion-personal' ||
         kpi.id === 'ausentismo' ||
         kpi.id === 'he-rn-nomina' ||
+        kpi.id === 'vales-descuadres' ||
         kpi.id === 'tiempo-contratacion';
     const isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
 
