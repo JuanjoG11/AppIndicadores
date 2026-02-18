@@ -54,7 +54,7 @@ export const kpiDefinitions = [
     {
         id: 'gasto-nomina-venta',
         name: '(Gasto de nomina /Venta total)',
-        area: 'talento-humano',
+        area: 'logistica',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 3.4,
@@ -90,7 +90,7 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-auxiliares',
         name: 'Numero de horas extras trabajadas en el periodo / Auxiliares',
-        area: 'talento-humano',
+        area: 'logistica',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 1.5,
@@ -175,7 +175,7 @@ export const kpiDefinitions = [
     {
         id: 'nomina-venta-picking',
         name: '$ Nómina / Total de la venta',
-        area: 'talento-humano',
+        area: 'logistica',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
@@ -192,7 +192,7 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-venta-picking',
         name: '# De horas extras trabajada / Venta',
-        area: 'talento-humano',
+        area: 'logistica',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             TYM: 0.05,
@@ -223,7 +223,7 @@ export const kpiDefinitions = [
     {
         id: 'nomina-compra-deposito',
         name: 'Gasto de nómina / Total de la compra',
-        area: 'talento-humano',
+        area: 'logistica',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             TYM: 0.4,
@@ -239,7 +239,7 @@ export const kpiDefinitions = [
     {
         id: 'horas-extras-venta-deposito',
         name: '# De horas extras trabajada / Venta',
-        area: 'talento-humano',
+        area: 'logistica',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             TYM: 0.05,
