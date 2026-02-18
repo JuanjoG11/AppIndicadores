@@ -82,7 +82,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'CONTADOR',
+        responsable: 'CONTABILIDAD',
         formula: 'VALOR FLETES / VENTA TOTAL',
         sustentacion: 'SEMANAL',
         fuente: 'MEKANO'
@@ -506,7 +506,7 @@ export const kpiDefinitions = [
         meta: 12,
         unit: 'días',
         frecuencia: 'MENSUAL',
-        responsable: 'CONTADORA',
+        responsable: 'CONTABILIDAD',
         sustentacion: 'MENSUAL'
     },
     {
@@ -517,7 +517,7 @@ export const kpiDefinitions = [
         meta: 0,
         unit: 'cantidad',
         frecuencia: 'MENSUAL',
-        responsable: 'CONTADORA',
+        responsable: 'CONTABILIDAD',
         sustentacion: 'MENSUAL'
     },
     {
@@ -528,7 +528,7 @@ export const kpiDefinitions = [
         meta: 0,
         unit: 'cantidad',
         frecuencia: 'MENSUAL',
-        responsable: 'CONTADORA',
+        responsable: 'CONTABILIDAD',
         sustentacion: 'MENSUAL'
     },
     {
@@ -539,7 +539,7 @@ export const kpiDefinitions = [
         meta: 'TYM / TAT',
         unit: 'veces',
         frecuencia: 'MENSUAL',
-        responsable: 'CONTADORA',
+        responsable: 'CONTABILIDAD',
         formula: 'Ventas de crédito / cuentas por cobrar promedio',
         sustentacion: 'MENSUAL'
     },
@@ -551,7 +551,7 @@ export const kpiDefinitions = [
         meta: 'TYM / TAT',
         unit: 'veces',
         frecuencia: 'MENSUAL',
-        responsable: 'CONTADORA',
+        responsable: 'CONTABILIDAD',
         formula: 'Compras a crédito / cuentas por pagar promedio',
         sustentacion: 'MENSUAL'
     },
@@ -563,7 +563,7 @@ export const kpiDefinitions = [
         meta: 2,
         unit: 'cantidad',
         frecuencia: 'QUINCENAL',
-        responsable: 'CONTADORA',
+        responsable: 'CONTABILIDAD',
         sustentacion: 'QUINCENAL'
     },
     {
@@ -574,7 +574,7 @@ export const kpiDefinitions = [
         meta: 'TYM: 94% | TAT: 94%',
         unit: '%',
         frecuencia: 'BIMENSUAL',
-        responsable: 'CONTADORA',
+        responsable: 'CONTABILIDAD',
         sustentacion: 'BIMENSUAL'
     },
 
