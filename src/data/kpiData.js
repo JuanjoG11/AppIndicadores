@@ -64,7 +64,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'GESTIÓN HUMANA',
+        responsable: 'GESTION HUMANA',
         formula: 'NOMINA LOGISTICA / VENTA TOTAL',
         sustentacion: 'MENSUAL',
         fuente: 'SYT / MAN GO'
@@ -154,7 +154,7 @@ export const kpiDefinitions = [
         meta: 1,
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'LOGISTICA',
+        responsable: 'APRENDIZ DEVOLUCIONES',
         formula: 'NOTAS X DEVOLUCIÓN / VALOR DE LA VENTA',
         sustentacion: 'SEMANAL',
         fuente: 'SYT'
@@ -260,7 +260,7 @@ export const kpiDefinitions = [
         meta: 0.20,
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'LOGISTICA',
+        responsable: 'APRENDIZ DEVOLUCIONES',
         formula: 'TOTAL AVERIAS / VENTA TOTAL',
         sustentacion: 'QUINCENAL',
         fuente: 'SYT'
