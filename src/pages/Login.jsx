@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutGrid, Users, Lock, ChevronLeft } from 'lucide-react';
+import Logo from '../components/common/Logo';
 
 const Login = ({ onLogin }) => {
     const [selectedCompany, setSelectedCompany] = useState(null);
@@ -104,6 +105,14 @@ const Login = ({ onLogin }) => {
                 }} />
 
                 <div style={{ textAlign: 'center', marginBottom: '3.5rem', position: 'relative' }}>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        marginBottom: '1.5rem',
+                        filter: `drop-shadow(0 0 10px ${activeColor}44)`
+                    }}>
+                        <Logo size="xl" />
+                    </div>
                     <h1 style={{
                         fontSize: '3.5rem',
                         fontWeight: 950,
