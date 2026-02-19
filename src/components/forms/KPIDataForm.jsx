@@ -95,6 +95,43 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                 { name: 'carteraVencida', label: 'Cartera Vencida ($)', type: 'number', placeholder: 'Eje: 5000000' },
                 { name: 'totalCartera', label: 'Cartera Total ($)', type: 'number', placeholder: 'Eje: 100000000' }
             ],
+            // New Commercial KPIs
+            'venta-realizada-esperada': [
+                { name: 'ventaRealizada', label: 'Venta Realizada ($)', type: 'number' },
+                { name: 'presupuestoVenta', label: 'Presupuesto de Venta ($)', type: 'number' }
+            ],
+            'devoluciones-mal-estado-comercial': [
+                { name: 'devolucionMalEstado', label: 'Devolución Mal Estado ($)', type: 'number' },
+                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number' }
+            ],
+            'participacion-venta-credito': [
+                { name: 'ventaCredito', label: 'Venta Crédito ($)', type: 'number' },
+                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number' }
+            ],
+            'cobro-optimo-cartera': [
+                { name: 'carteraVencida', label: 'Cartera Vencida ($)', type: 'number' },
+                { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number' }
+            ],
+            'rotacion-equipo-comercial': [
+                { name: 'personalRetirado', label: 'Personal Retirado', type: 'number' },
+                { name: 'promedioEmpleados', label: 'Promedio de Empleados', type: 'number' }
+            ],
+            'gasto-personal-comercial': [
+                { name: 'gastosPersonal', label: 'Gastos de Personal ($)', type: 'number' },
+                { name: 'ventaTotal', label: 'Total Venta ($)', type: 'number' }
+            ],
+            'gasto-viaje-comercial': [
+                { name: 'gastosViaje', label: 'Gastos de Viaje ($)', type: 'number' },
+                { name: 'ventaTotal', label: 'Total Venta ($)', type: 'number' }
+            ],
+            'gasto-fletes-comercial': [
+                { name: 'gastosFletes', label: 'Gastos de Fletes ($)', type: 'number' },
+                { name: 'ventaTotal', label: 'Total Venta ($)', type: 'number' }
+            ],
+            'dias-inventario-comercial': [
+                { name: 'diasInventario', label: 'Días de Inventario', type: 'number' },
+                { name: 'metaInventario', label: 'Meta (Días)', type: 'number' }
+            ],
             'cartera-no-vencida': [
                 { name: 'carteraNoVencida', label: 'Cartera No Vencida ($)', type: 'number', placeholder: 'Eje: 90000000' },
                 { name: 'carteraTotal', label: 'Cartera Total ($)', type: 'number', placeholder: 'Eje: 100000000' }
@@ -114,6 +151,30 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
             'fiabilidad-inventarios': [
                 { name: 'valorCorrecto', label: 'Valor Correcto ($)', type: 'number' },
                 { name: 'valorVerificado', label: 'Valor Verificado ($)', type: 'number' }
+            ],
+            'quiebres-inventario': [
+                { name: 'quiebres', label: 'Quiebres de Inventario', type: 'number' },
+                { name: 'totalSku', label: 'Total SKU / Referencias', type: 'number' }
+            ],
+            'obsolescencia': [
+                { name: 'inventarioObsoleto', label: 'Inventario Obsoleto ($)', type: 'number' },
+                { name: 'inventarioTotal', label: 'Inventario Total ($)', type: 'number' }
+            ],
+            'mermas': [
+                { name: 'valorMermas', label: 'Valor Mermas ($)', type: 'number' },
+                { name: 'inventarioTotal', label: 'Inventario Total ($)', type: 'number' }
+            ],
+            'diferencia-inventarios': [
+                { name: 'diferenciaFisica', label: 'Valor Diferencia Física ($)', type: 'number' },
+                { name: 'valorInventario', label: 'Valor del Inventario ($)', type: 'number' }
+            ],
+            'revision-margenes': [
+                { name: 'revisionesEjecutadas', label: 'Revisiones Ejecutadas', type: 'number' },
+                { name: 'revisionesProgramadas', label: 'Revisiones Programadas', type: 'number' }
+            ],
+            'revision-precios': [
+                { name: 'revisionesEjecutadas', label: 'Revisiones Ejecutadas', type: 'number' },
+                { name: 'revisionesProgramadas', label: 'Revisiones Programadas', type: 'number' }
             ],
             // Picking Specific
             'segundos-unidad-separada': [
@@ -288,6 +349,22 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
             else if (id === 'valor-cartera-venta') res = (d.carteraTotal / d.ventaTotal) * 100;
             else if (id === 'notas-errores-venta') res = (d.notasDevolucion / d.valorVenta) * 100;
             else if (id === 'fiabilidad-inventarios') res = (d.valorCorrecto / d.valorVerificado) * 100;
+            else if (id === 'quiebres-inventario') res = (d.quiebres / d.totalSku) * 100;
+            else if (id === 'obsolescencia') res = (d.inventarioObsoleto / d.inventarioTotal) * 100;
+            else if (id === 'mermas') res = (d.valorMermas / d.inventarioTotal) * 100;
+            else if (id === 'diferencia-inventarios') res = d.diferenciaFisica - d.valorInventario;
+            else if (id === 'revision-margenes') res = (d.revisionesEjecutadas / d.revisionesProgramadas) * 100;
+            else if (id === 'revision-precios') res = (d.revisionesEjecutadas / d.revisionesProgramadas) * 100;
+            // Commercial Specific
+            else if (id === 'venta-realizada-esperada') res = (d.ventaRealizada / d.presupuestoVenta) * 100;
+            else if (id === 'devoluciones-mal-estado-comercial') res = (d.devolucionMalEstado / d.ventaTotal) * 100;
+            else if (id === 'participacion-venta-credito') res = (d.ventaCredito / d.ventaTotal) * 100;
+            else if (id === 'cobro-optimo-cartera') res = (d.carteraVencida / d.totalCartera) * 100;
+            else if (id === 'rotacion-equipo-comercial') res = (d.personalRetirado / d.promedioEmpleados) * 100;
+            else if (id === 'gasto-personal-comercial') res = (d.gastosPersonal / d.ventaTotal) * 100;
+            else if (id === 'gasto-viaje-comercial') res = (d.gastosViaje / d.ventaTotal) * 100;
+            else if (id === 'gasto-fletes-comercial') res = (d.gastosFletes / d.ventaTotal) * 100;
+            else if (id === 'dias-inventario-comercial') res = (d.diasInventario / d.metaInventario) * 100;
             // Picking Specific
             else if (id === 'segundos-unidad-separada') res = d.segundosUtilizados / d.unidadesSeparadas;
             else if (id === 'pesos-separados-hombre') res = d.valorVenta / d.auxiliaresSeparacion;
@@ -352,7 +429,17 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
         kpi.id === 'he-rn-nomina' ||
         kpi.id === 'vales-descuadres' ||
         kpi.id === 'multas-sanciones' ||
-        kpi.id === 'tiempo-contratacion';
+        kpi.id === 'tiempo-contratacion' ||
+        kpi.id === 'cobro-optimo-cartera' ||
+        kpi.id.includes('devoluciones') ||
+        kpi.id === 'participacion-venta-credito' ||
+        kpi.id === 'rotacion-equipo-comercial' ||
+        kpi.id.includes('gasto-') ||
+        kpi.id === 'dias-inventario-comercial' ||
+        kpi.id === 'quiebres-inventario' ||
+        kpi.id === 'obsolescencia' ||
+        kpi.id === 'mermas' ||
+        kpi.id === 'diferencia-inventarios';
     const isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
 
     const handleSubmit = (e) => {

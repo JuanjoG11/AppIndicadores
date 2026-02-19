@@ -88,7 +88,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         setEditingKPI(null);
     };
 
-    const groupCompliance = filteredKPIs.length > 0 ? Math.round((greenCount / filteredKPIs.length) * 100) : 0;
+    const totalComplianceSum = kpisWithData.reduce((sum, kpi) => sum + (kpi.compliance || 0), 0);
+    const groupCompliance = kpisWithData.length > 0 ? Math.round(totalComplianceSum / kpisWithData.length) : 0;
 
     return (
         <div style={{ padding: 'clamp(1rem, 5vw, 2rem) clamp(1rem, 5vw, 3rem)', background: 'var(--bg-app)', minHeight: 'calc(100vh - 64px)' }}>
@@ -134,9 +135,9 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     boxShadow: 'var(--shadow-premium)'
                 }}>
                     <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                        Salud de Ejecución
+                        EJECUCIÓN
                     </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 900, color: groupCompliance > 80 ? '#059669' : '#f59e0b' }}>
+                    <div style={{ fontSize: '2.5rem', fontWeight: 900, color: groupCompliance > 80 ? '#059669' : groupCompliance > 60 ? '#f59e0b' : '#ef4444' }}>
                         {groupCompliance}%
                     </div>
                 </div>
