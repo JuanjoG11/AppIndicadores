@@ -244,7 +244,7 @@ const Login = ({ onLogin }) => {
                                     const logoSrc = company === 'TYM' ? '/tym-logo.png.png' : '/tat-logoo.jpg';
                                     const companyFull = company === 'TYM' ? 'Tiendas & Marcas' : 'TAT Distribuciones';
                                     const companyCity = company === 'TYM' ? 'Eje Cafetero' : 'Eje Cafetero';
-                                    const companyColor = company === 'TYM' ? '#38bdf8' : '#f59e0b';
+                                    const companyColor = '#38bdf8'; // Unified blue theme for exploration
 
                                     return (
                                         <button
