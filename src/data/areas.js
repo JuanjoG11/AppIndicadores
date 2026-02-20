@@ -44,7 +44,7 @@ export const areas = [
   },
   {
     id: 'administrativo',
-    name: 'Información y Inventario',
+    name: 'Información e Inventario',
     description: 'Control de inventarios y precios',
     responsible: 'Información/Inventario',
     color: '#8b5cf6'
