@@ -240,60 +240,138 @@ const Login = ({ onLogin }) => {
                                 gap: '2.5rem',
                                 marginBottom: '1rem'
                             }}>
-                                {['TYM', 'TAT'].map((company) => (
-                                    <button
-                                        key={company}
-                                        onClick={() => setSelectedCompany(company)}
-                                        style={{
-                                            padding: '3rem 1.5rem',
-                                            textAlign: 'center',
-                                            cursor: 'pointer',
-                                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                                            background: '#1e293b',
-                                            borderRadius: '32px',
-                                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '2rem',
-                                            minHeight: '280px'
-                                        }}
-                                        onMouseOver={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-8px)';
-                                            e.currentTarget.style.background = '#334155';
-                                            e.currentTarget.style.borderColor = activeColor;
-                                            e.currentTarget.style.boxShadow = `0 15px 30px -5px ${activeColor}44`;
-                                        }}
-                                        onMouseOut={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                            e.currentTarget.style.background = '#1e293b';
-                                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                                            e.currentTarget.style.boxShadow = 'none';
-                                        }}
-                                    >
-                                        <div style={{
-                                            fontSize: 'clamp(3rem, 10vw, 4.5rem)',
-                                            fontWeight: 950,
-                                            letterSpacing: '-4px',
-                                            color: 'white',
-                                            lineHeight: 1,
-                                            textShadow: '0 4px 20px rgba(0,0,0,0.5)'
-                                        }}>
-                                            {company}
-                                        </div>
+                                {['TYM', 'TAT'].map((company) => {
+                                    const logoSrc = company === 'TYM' ? '/tym-logo.png.png' : '/tat-logoo.jpg';
+                                    const companyFull = company === 'TYM' ? 'Tiendas & Marcas' : 'TAT Distribuciones';
+                                    const companyCity = company === 'TYM' ? 'Eje Cafetero' : 'Eje Cafetero';
+                                    const companyColor = company === 'TYM' ? '#38bdf8' : '#f59e0b';
 
-                                        <div style={{
-                                            fontSize: '0.75rem',
-                                            fontWeight: 900,
-                                            letterSpacing: '0.3em',
-                                            color: 'rgba(255,255,255,0.4)',
-                                            textTransform: 'uppercase'
-                                        }}>
-                                            INGRESAR
-                                        </div>
-                                    </button>
-                                ))}
+                                    return (
+                                        <button
+                                            key={company}
+                                            onClick={() => setSelectedCompany(company)}
+                                            style={{
+                                                padding: '2.5rem 1.5rem',
+                                                textAlign: 'center',
+                                                cursor: 'pointer',
+                                                border: `1px solid rgba(255, 255, 255, 0.12)`,
+                                                background: `linear-gradient(145deg, #1e293b 0%, #162032 100%)`,
+                                                borderRadius: '32px',
+                                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '1.5rem',
+                                                minHeight: '300px',
+                                                position: 'relative',
+                                                overflow: 'hidden'
+                                            }}
+                                            onMouseOver={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(-10px) scale(1.02)';
+                                                e.currentTarget.style.background = `linear-gradient(145deg, #1e3a5f 0%, #1e293b 100%)`;
+                                                e.currentTarget.style.borderColor = companyColor;
+                                                e.currentTarget.style.boxShadow = `0 20px 40px -8px ${companyColor}44, 0 0 60px ${companyColor}15`;
+                                            }}
+                                            onMouseOut={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                                e.currentTarget.style.background = `linear-gradient(145deg, #1e293b 0%, #162032 100%)`;
+                                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                                                e.currentTarget.style.boxShadow = 'none';
+                                            }}
+                                        >
+                                            {/* Glow de fondo */}
+                                            <div style={{
+                                                position: 'absolute', top: '-60px', left: '50%',
+                                                transform: 'translateX(-50%)',
+                                                width: '180px', height: '180px',
+                                                background: companyColor,
+                                                filter: 'blur(60px)', opacity: 0.1,
+                                                pointerEvents: 'none'
+                                            }} />
+
+                                            {logoSrc ? (
+                                                <div style={{
+                                                    width: '150px', height: '150px',
+                                                    borderRadius: '50%',
+                                                    overflow: 'hidden',
+                                                    background: company === 'TAT' ? '#1e293b' : 'transparent',
+                                                    border: `2px solid ${companyColor}33`,
+                                                    boxShadow: `0 8px 30px -6px ${companyColor}44`,
+                                                    flexShrink: 0,
+                                                    transition: 'all 0.4s',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    padding: company === 'TAT' ? '2px' : '0'
+                                                }}>
+                                                    <img
+                                                        src={logoSrc}
+                                                        alt={`Logo ${company}`}
+                                                        style={{
+                                                            width: '100%', height: '100%',
+                                                            objectFit: company === 'TAT' ? 'cover' : 'contain',
+                                                            borderRadius: '50%'
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div style={{
+                                                    width: '150px', height: '150px',
+                                                    borderRadius: '50%',
+                                                    background: `${companyColor}15`,
+                                                    border: `3px solid ${companyColor}55`,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: '3.5rem', fontWeight: 950,
+                                                    color: companyColor,
+                                                    letterSpacing: '-3px',
+                                                    boxShadow: `0 8px 30px -6px ${companyColor}44`
+                                                }}>
+                                                    {company}
+                                                </div>
+                                            )}
+
+                                            {/* Nombre empresa */}
+                                            <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+                                                <div style={{
+                                                    fontSize: '1.2rem',
+                                                    fontWeight: 800,
+                                                    color: 'white',
+                                                    letterSpacing: '-0.02em',
+                                                    marginBottom: '0.25rem'
+                                                }}>
+                                                    {companyFull}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 700,
+                                                    color: companyColor,
+                                                    letterSpacing: '0.2em',
+                                                    textTransform: 'uppercase',
+                                                    opacity: 0.9
+                                                }}>
+                                                    {companyCity}
+                                                </div>
+                                            </div>
+
+                                            {/* Botón ingresar */}
+                                            <div style={{
+                                                padding: '0.5rem 1.75rem',
+                                                background: `${companyColor}18`,
+                                                border: `1px solid ${companyColor}44`,
+                                                borderRadius: '100px',
+                                                fontSize: '0.7rem',
+                                                fontWeight: 900,
+                                                letterSpacing: '0.25em',
+                                                color: companyColor,
+                                                textTransform: 'uppercase'
+                                            }}>
+                                                INGRESAR →
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+
                             </div>
                         ) : (
                             <>
