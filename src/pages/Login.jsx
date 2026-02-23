@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, Users, Lock, ChevronLeft } from 'lucide-react';
+import {
+    LayoutGrid,
+    Users,
+    Lock,
+    ChevronLeft,
+    Truck,
+    HeartHandshake,
+    Calculator,
+    ClipboardList,
+    Banknote,
+    Wallet,
+    Target,
+    ShieldCheck
+} from 'lucide-react';
 import Logo from '../components/common/Logo';
 
 const Login = ({ onLogin }) => {
@@ -10,14 +23,14 @@ const Login = ({ onLogin }) => {
     const [error, setError] = useState('');
 
     const roles = [
-        { id: 'Gerente', name: 'Gerencia', desc: 'Gerente General - Acceso total', icon: <LayoutGrid size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['all'], color: '#2563eb', password: 'admin2026' },
-        { id: 'LOGISTICA', name: 'Logística', desc: 'Entregas, picking, devoluciones y bodega', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica'], color: '#0ea5e9', password: 'admin2026' },
-        { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo, SST', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'], color: '#8b5cf6', password: 'admin2026' },
-        { id: 'CONTABILIDAD', name: 'Contabilidad', desc: 'Gasto de fletes, rentabilidad y cierres', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['contabilidad'], color: '#f59e0b', password: 'admin2026' },
-        { id: 'INFORMACIÓN/INVENTARIO', name: 'Información e Inventario', desc: 'Picking, fiabilidad y obsolescencia', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['administrativo'], color: '#10b981', password: 'admin2026' },
-        { id: 'CAJA', name: 'Caja', desc: 'Arqueos de caja y planillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['caja'], color: '#6366f1', password: 'admin2026' },
-        { id: 'CARTERA', name: 'Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['cartera'], color: '#f43f5e', password: 'admin2026' },
-        { id: 'COMERCIAL', name: 'Comercial', desc: 'Ventas, margen y devoluciones comercial', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['comercial'], color: '#ec4899', password: 'admin2026' },
+        { id: 'Gerente', name: 'Gerencia', desc: 'Gerente General - Acceso total', icon: <ShieldCheck size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['all'], color: '#2563eb', password: 'admin2026' },
+        { id: 'LOGISTICA', name: 'Logística', desc: 'Entregas, picking, devoluciones y bodega', icon: <Truck size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica'], color: '#0ea5e9', password: 'admin2026' },
+        { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo, SST', icon: <HeartHandshake size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'], color: '#8b5cf6', password: 'admin2026' },
+        { id: 'CONTABILIDAD', name: 'Contabilidad', desc: 'Gasto de fletes, rentabilidad y cierres', icon: <Calculator size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['contabilidad'], color: '#f59e0b', password: 'admin2026' },
+        { id: 'INFORMACIÓN/INVENTARIO', name: 'Información e Inventario', desc: 'Picking, fiabilidad y obsolescencia', icon: <ClipboardList size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['administrativo'], color: '#10b981', password: 'admin2026' },
+        { id: 'CAJA', name: 'Caja', desc: 'Arqueos de caja y planillas', icon: <Banknote size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['caja'], color: '#6366f1', password: 'admin2026' },
+        { id: 'CARTERA', name: 'Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Wallet size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['cartera'], color: '#f43f5e', password: 'admin2026' },
+        { id: 'COMERCIAL', name: 'Comercial', desc: 'Ventas, margen y devoluciones comercial', icon: <Target size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['comercial'], color: '#ec4899', password: 'admin2026' },
     ];
 
     const navigate = useNavigate();
@@ -441,17 +454,20 @@ const Login = ({ onLogin }) => {
                                             }}
                                         >
                                             <div style={{
-                                                width: '44px',
-                                                height: '44px',
-                                                background: `${role.color}15`,
-                                                borderRadius: '12px',
+                                                width: '56px',
+                                                height: '56px',
+                                                background: `${role.color}22`,
+                                                borderRadius: '16px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 color: role.color,
-                                                transition: 'all 0.3s'
-                                            }}>
-                                                {role.icon}
+                                                transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                                border: `1px solid ${role.color}44`,
+                                                boxShadow: `0 8px 15px -4px ${role.color}33`,
+                                                marginBottom: '0.5rem'
+                                            }} className="role-icon-container">
+                                                {React.cloneElement(role.icon, { size: 28, strokeWidth: 2.5 })}
                                             </div>
                                             <div>
                                                 <div style={{ fontWeight: 800, color: 'white', fontSize: '1.1rem', marginBottom: '0.4rem' }}>
