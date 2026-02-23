@@ -105,6 +105,36 @@ const realKPIValues = {
     }
 };
 
+// Nombres de meses en español
+const MONTH_NAMES = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+// Mes en que inicia el tracking real de la app
+const START_YEAR = 2026;
+const START_MONTH = 1; // 0-indexed: Febrero = 1
+
+// Genera array de meses desde Feb 2026 hasta el mes actual
+// Cada slot guarda por separado TYM y TAT
+export const generateRealHistory = () => {
+    const now = new Date();
+    const history = [];
+    let y = START_YEAR;
+    let m = START_MONTH;
+    while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) {
+        history.push({ month: MONTH_NAMES[m], year: y, TYM: null, TAT: null });
+        m++;
+        if (m > 11) { m = 0; y++; }
+    }
+    return history;
+};
+
+export const getMonthKey = (date) => {
+    const d = date ? new Date(date) : new Date();
+    return MONTH_NAMES[d.getMonth()];
+};
+
 // Generar datos con valores reales donde estén disponibles
 export const generateMockData = () => {
     return kpiDefinitions.map(kpi => {
@@ -186,29 +216,12 @@ export const generateMockData = () => {
             semaphore,
             additionalData,
             targetMeta, // Incluimos la meta seleccionada para facilitar UI
-            history: hasData ? generateHistory(currentValue, 6) : []
+            history: generateRealHistory()
         };
     });
 };
 
-// Generar historial con variación realista
-const generateHistory = (currentValue, months) => {
-    const monthNames = ['Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre', 'Enero'];
-    return monthNames.map((month, i) => {
-        let value;
-        if (i === 5) {
-            value = currentValue; // Valor actual en el último mes
-        } else {
-            // Variación del 5-15% para meses anteriores
-            const variation = 0.85 + Math.random() * 0.3;
-            value = currentValue * variation;
-        }
-        return {
-            month,
-            value: parseFloat(value.toFixed(2))
-        };
-    });
-};
+
 
 export const mockKPIData = generateMockData();
 

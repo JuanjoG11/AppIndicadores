@@ -6,7 +6,7 @@ import ExecutiveDashboard from './pages/ExecutiveDashboard';
 import AreaDashboard from './pages/AreaDashboard';
 import AnalystDashboard from './pages/AnalystDashboard';
 import Login from './pages/Login';
-import { mockKPIData } from './data/mockData';
+import { mockKPIData, getMonthKey } from './data/mockData';
 import { supabase } from './lib/supabase';
 import { filterKPIsByEntity } from './utils/kpiHelpers';
 import SettingsModal from './components/layout/SettingsModal';
@@ -110,7 +110,8 @@ function App() {
 
       if (data && !error) {
         data.forEach(update => {
-          applyKPIUpdate(update.kpi_id, update.additional_data, false);
+          // Inject updatedAt so applyKPIUpdate places value in correct month
+          applyKPIUpdate(update.kpi_id, { ...update.additional_data, updatedAt: update.updated_at }, false);
         });
       }
     };
@@ -255,6 +256,8 @@ function App() {
           persistUpdate(kpiId, updatedAdditionalData, newValue);
         }
 
+        const targetMonth = getMonthKey(d.updatedAt || null);
+        const targetCompany = d.company || 'TYM'; // La empresa viene del additional_data
         return {
           ...kpi,
           currentValue: newValue,
@@ -264,7 +267,11 @@ function App() {
           hasData: true,
           additionalData: updatedAdditionalData,
           brandValues,
-          history: kpi.history.map((h, i) => i === kpi.history.length - 1 ? { ...h, value: newValue } : h)
+          history: kpi.history.map(h =>
+            h.month === targetMonth
+              ? { ...h, [targetCompany]: newValue }
+              : h
+          )
         };
       }
       return kpi;
