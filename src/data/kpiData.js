@@ -326,7 +326,7 @@ export const kpiDefinitions = [
         meta: 90,
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'SST',
+        responsable: 'GESTIÓN HUMANA',
         formula: 'Actividades ejecutadas / Actividades programadas',
         sustentacion: 'MENSUAL',
         fuente: 'SYCH'

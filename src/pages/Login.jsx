@@ -10,15 +10,14 @@ const Login = ({ onLogin }) => {
     const [error, setError] = useState('');
 
     const roles = [
-        { id: 'Gerente', name: 'Gerencia', desc: 'Gerente General - Acceso total', icon: <LayoutGrid size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['all'], color: '#2563eb' },
-        { id: 'LOGISTICA', name: 'Logística', desc: 'Entregas, picking, devoluciones y bodega', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica'], color: '#0ea5e9' },
-        { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'], color: '#8b5cf6' },
-        { id: 'CONTABILIDAD', name: 'Contabilidad', desc: 'Gasto de fletes, rentabilidad y cierres', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['contabilidad'], color: '#f59e0b' },
-        { id: 'INFORMACIÓN/INVENTARIO', name: 'Información/Inventario', desc: 'Picking, fiabilidad y obsolescencia', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['administrativo'], color: '#10b981' },
-        { id: 'CAJA', name: 'Caja', desc: 'Arqueos de caja y planillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['caja'], color: '#6366f1' },
-        { id: 'CARTERA', name: 'Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['cartera'], color: '#f43f5e' },
-        { id: 'COMERCIAL', name: 'Comercial', desc: 'Ventas, margen y devoluciones comercial', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['comercial'], color: '#ec4899' },
-        { id: 'SST', name: 'SST', desc: 'Sistema de Gestión y Auditoría', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'], color: '#06b6d4' },
+        { id: 'Gerente', name: 'Gerencia', desc: 'Gerente General - Acceso total', icon: <LayoutGrid size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['all'], color: '#2563eb', password: 'admin2026' },
+        { id: 'LOGISTICA', name: 'Logística', desc: 'Entregas, picking, devoluciones y bodega', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['logistica'], color: '#0ea5e9', password: 'admin2026' },
+        { id: 'GESTIÓN HUMANA', name: 'Gestión Humana', desc: 'Nómina, horas extras, rotación, ausentismo, SST', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['talento-humano'], color: '#8b5cf6', password: 'admin2026' },
+        { id: 'CONTABILIDAD', name: 'Contabilidad', desc: 'Gasto de fletes, rentabilidad y cierres', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['contabilidad'], color: '#f59e0b', password: 'admin2026' },
+        { id: 'INFORMACIÓN/INVENTARIO', name: 'Información e Inventario', desc: 'Picking, fiabilidad y obsolescencia', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['administrativo'], color: '#10b981', password: 'admin2026' },
+        { id: 'CAJA', name: 'Caja', desc: 'Arqueos de caja y planillas', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['caja'], color: '#6366f1', password: 'admin2026' },
+        { id: 'CARTERA', name: 'Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['cartera'], color: '#f43f5e', password: 'admin2026' },
+        { id: 'COMERCIAL', name: 'Comercial', desc: 'Ventas, margen y devoluciones comercial', icon: <Users size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['comercial'], color: '#ec4899', password: 'admin2026' },
     ];
 
     const navigate = useNavigate();
@@ -33,12 +32,8 @@ const Login = ({ onLogin }) => {
     const activeColor = getActiveColor();
 
     const handleRoleSelection = (role) => {
-        if (role.id === 'Gerente') {
-            setSelectedRole(role);
-            setError('');
-        } else {
-            completeLogin(role);
-        }
+        setSelectedRole(role);
+        setError('');
     };
 
     const completeLogin = (role) => {
@@ -59,7 +54,7 @@ const Login = ({ onLogin }) => {
 
     const handlePasswordSubmit = (e) => {
         e.preventDefault();
-        if (password === 'admin2026') {
+        if (selectedRole && password === selectedRole.password) {
             completeLogin(selectedRole);
         } else {
             setError('Contraseña incorrecta. Por favor intente de nuevo.');
