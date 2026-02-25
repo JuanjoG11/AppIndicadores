@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import { mockKPIData, getMonthKey } from './data/mockData';
 import { supabase } from './lib/supabase';
 import { filterKPIsByEntity } from './utils/kpiHelpers';
+import { calculateKPIValue, isInverseKPI } from './utils/kpiCalculations';
 import SettingsModal from './components/layout/SettingsModal';
 import './index.css';
 import './App.css';
@@ -167,43 +168,7 @@ function App() {
         const brandValues = kpi.brandValues || {};
 
         try {
-          if (kpiId === 'pedidos-devueltos') newValue = (d.pedidosDevueltos / d.pedidosFacturados) * 100;
-          else if (kpiId === 'promedio-pedidos-auxiliar') newValue = d.numeroPedidos / d.auxiliares;
-          else if (kpiId === 'promedio-pedidos-carro') newValue = d.numeroPedidos / d.vehiculos;
-          else if (kpiId === 'gasto-nomina-venta') newValue = (d.nominaLogistica / d.ventaTotal) * 100;
-          else if (kpiId === 'gasto-fletes-venta') newValue = (d.valorFletes / d.ventaTotal) * 100;
-          else if (kpiId === 'horas-extras-auxiliares') newValue = (d.totalHorasExtras / d.auxiliares) / 12;
-          else if (kpiId === 'primer-margen') newValue = ((d.ventas - d.costoVentas) / d.ventas) * 100;
-          else if (kpiId === 'devoluciones-mal-estado') newValue = (d.valorDevolucion / d.ventaTotal) * 100;
-          else if (kpiId === 'promedio-venta-vendedor') newValue = d.ventasTotales / d.numeroVendedores;
-          else if (kpiId === 'venta-credito-total') newValue = (d.ventaCredito / d.ventaTotal) * 100;
-          else if (kpiId === 'cartera-vencida-total') newValue = (d.carteraVencida / d.totalCartera) * 100;
-          else if (kpiId === 'cartera-no-vencida') newValue = (d.carteraNoVencida / d.carteraTotal) * 100;
-          else if (kpiId === 'cartera-11-30') newValue = (d.cartera1130 / d.carteraTotal) * 100;
-          else if (kpiId === 'valor-cartera-venta') newValue = (d.carteraTotal / d.ventaTotal) * 100;
-          else if (kpiId === 'notas-errores-venta') newValue = (d.notasDevolucion / d.valorVenta) * 100;
-          else if (kpiId === 'fiabilidad-inventarios') newValue = (d.valorCorrecto / d.valorVerificado) * 100;
-          // Picking Specific
-          else if (kpiId === 'segundos-unidad-separada') newValue = d.segundosUtilizados / d.unidadesSeparadas;
-          else if (kpiId === 'pesos-separados-hombre') newValue = d.valorVenta / d.auxiliaresSeparacion;
-          else if (kpiId === 'pedidos-separar-total') newValue = (d.pedidosSeparados / d.pedidosFacturados) * 100;
-          else if (kpiId === 'planillas-separadas') newValue = (d.planillasSeparadas / d.planillasGeneradas) * 100;
-          else if (kpiId === 'nomina-venta-picking') newValue = (d.valorNomina / d.ventaTotal) * 100;
-          else if (kpiId === 'horas-extras-venta-picking') newValue = (d.horasExtras / d.ventaTotal) * 100;
-          // Deposito Specific
-          else if (kpiId === 'embalajes-perdidos') newValue = d.canastillasRecibidas - d.canastillasGestionadas;
-          else if (kpiId === 'nomina-compra-deposito') newValue = (d.valorNomina / d.ventaTotal) * 100;
-          else if (kpiId === 'horas-extras-venta-deposito') newValue = (d.horasExtras / d.ventaTotal) * 100;
-          else if (kpiId === 'averias-venta') newValue = (d.totalAverias / d.ventaTotal) * 100;
-          // Talento Humano Specific
-          else if (kpiId === 'rotacion-personal') newValue = (d.personalRetirado / d.promedioEmpleados) * 100;
-          else if (kpiId === 'ausentismo') newValue = (d.diasPerdidos / d.diasLaborados) * 100;
-          else if (kpiId === 'calificacion-auditoria') newValue = (d.actividadesEjecutadas / d.actividadesProgramadas) * 100;
-          else if (kpiId === 'he-rn-nomina') newValue = (d.valorHEDHEN / d.totalNomina) * 100;
-          else if (kpiId === 'gasto-nomina-venta-rrhh') newValue = (d.valorNomina / d.ventaTotal) * 100;
-          else if (kpiId === 'actividades-cultura') newValue = (d.actividadesEjecutadas / d.actividadesProgramadas) * 100;
-          else if (kpiId === 'tiempo-contratacion') newValue = d.diasVacante;
-          else if (d.currentValue !== undefined) newValue = d.currentValue;
+          newValue = calculateKPIValue(kpiId, d);
         } catch (e) {
           console.error("Error calculating KPI:", e);
         }
@@ -219,18 +184,7 @@ function App() {
         let compliance = kpi.compliance;
 
         if (typeof targetMeta === 'number' && targetMeta !== 0) {
-          const isInverse = kpiId.includes('devueltos') ||
-            kpiId.includes('gasto') ||
-            kpiId.includes('horas-extras') ||
-            kpiId.includes('mal-estado') ||
-            kpiId.includes('vencida') ||
-            kpiId === 'segundos-unidad-separada' ||
-            kpiId === 'notas-errores-venta' ||
-            kpiId.includes('nomina') ||
-            kpiId === 'rotacion-personal' ||
-            kpiId === 'ausentismo' ||
-            kpiId === 'he-rn-nomina' ||
-            kpiId === 'tiempo-contratacion';
+          const isInverse = isInverseKPI(kpiId);
           compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
           compliance = Math.min(Math.round(compliance), 100);
           if (newValue === 0 && isInverse) compliance = 100;

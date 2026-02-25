@@ -13,6 +13,7 @@ import {
     Users,
     Activity
 } from 'lucide-react';
+import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 
 const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
     // Determinar si el KPI tiene metas por marca o empresa
@@ -328,118 +329,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
     };
 
     const calculateLiveResult = () => {
-        const id = kpi.id;
-        const d = formData;
-        let res = null;
-
-        try {
-            if (id === 'pedidos-devueltos') res = (d.pedidosDevueltos / d.pedidosFacturados) * 100;
-            else if (id === 'promedio-pedidos-auxiliar') res = d.numeroPedidos / d.auxiliares;
-            else if (id === 'promedio-pedidos-carro') res = d.numeroPedidos / d.vehiculos;
-            else if (id === 'gasto-nomina-venta') res = (d.nominaLogistica / d.ventaTotal) * 100;
-            else if (id === 'gasto-fletes-venta') res = (d.valorFletes / d.ventaTotal) * 100;
-            else if (id === 'horas-extras-auxiliares') res = (d.totalHorasExtras / d.auxiliares) / 12;
-            else if (id === 'primer-margen') res = ((d.ventas - d.costoVentas) / d.ventas) * 100;
-            else if (id === 'devoluciones-mal-estado') res = (d.valorDevolucion / d.ventaTotal) * 100;
-            else if (id === 'promedio-venta-vendedor') res = d.ventasTotales / d.numeroVendedores;
-            else if (id === 'venta-credito-total') res = (d.ventaCredito / d.ventaTotal) * 100;
-            else if (id === 'cartera-vencida-total') res = (d.carteraVencida / d.totalCartera) * 100;
-            else if (id === 'cartera-no-vencida') res = (d.carteraNoVencida / d.carteraTotal) * 100;
-            else if (id === 'cartera-11-30') res = (d.cartera1130 / d.carteraTotal) * 100;
-            else if (id === 'valor-cartera-venta') res = (d.carteraTotal / d.ventaTotal) * 100;
-            else if (id === 'notas-errores-venta') res = (d.notasDevolucion / d.valorVenta) * 100;
-            else if (id === 'fiabilidad-inventarios') res = (d.valorCorrecto / d.valorVerificado) * 100;
-            else if (id === 'quiebres-inventario') res = (d.quiebres / d.totalSku) * 100;
-            else if (id === 'obsolescencia') res = (d.inventarioObsoleto / d.inventarioTotal) * 100;
-            else if (id === 'mermas') res = (d.valorMermas / d.inventarioTotal) * 100;
-            else if (id === 'diferencia-inventarios') res = d.diferenciaFisica - d.valorInventario;
-            else if (id === 'revision-margenes') res = (d.revisionesEjecutadas / d.revisionesProgramadas) * 100;
-            else if (id === 'revision-precios') res = (d.revisionesEjecutadas / d.revisionesProgramadas) * 100;
-            // Commercial Specific
-            else if (id === 'venta-realizada-esperada') res = (d.ventaRealizada / d.presupuestoVenta) * 100;
-            else if (id === 'devoluciones-mal-estado-comercial') res = (d.devolucionMalEstado / d.ventaTotal) * 100;
-            else if (id === 'participacion-venta-credito') res = (d.ventaCredito / d.ventaTotal) * 100;
-            else if (id === 'cobro-optimo-cartera') res = (d.carteraVencida / d.totalCartera) * 100;
-            else if (id === 'rotacion-equipo-comercial') res = (d.personalRetirado / d.promedioEmpleados) * 100;
-            else if (id === 'gasto-personal-comercial') res = (d.gastosPersonal / d.ventaTotal) * 100;
-            else if (id === 'gasto-viaje-comercial') res = (d.gastosViaje / d.ventaTotal) * 100;
-            else if (id === 'gasto-fletes-comercial') res = (d.gastosFletes / d.ventaTotal) * 100;
-            else if (id === 'dias-inventario-comercial') res = (d.diasInventario / d.metaInventario) * 100;
-            // Picking Specific
-            else if (id === 'segundos-unidad-separada') res = d.segundosUtilizados / d.unidadesSeparadas;
-            else if (id === 'pesos-separados-hombre') res = d.valorVenta / d.auxiliaresSeparacion;
-            else if (id === 'pedidos-separar-total') res = (d.pedidosSeparados / d.pedidosFacturados) * 100;
-            else if (id === 'planillas-separadas') res = (d.planillasSeparadas / d.planillasGeneradas) * 100;
-            else if (id === 'nomina-venta-picking') res = (d.valorNomina / d.ventaTotal) * 100;
-            else if (id === 'horas-extras-venta-picking') res = (d.horasExtras / d.ventaTotal) * 100;
-            // Deposito Specific
-            else if (id === 'embalajes-perdidos') res = (d.canastillasRecibidas || 0) - (d.canastillasGestionadas || 0);
-            else if (id === 'nomina-compra-deposito') res = ((d.valorNomina || 0) / (d.ventaTotal || 1)) * 100;
-            else if (id === 'horas-extras-venta-deposito') res = ((d.horasExtras || 0) / (d.ventaTotal || 1)) * 100;
-            else if (id === 'averias-venta') res = ((d.totalAverias || 0) / (d.ventaTotal || 1)) * 100;
-            // Talento Humano Specific
-            else if (id === 'rotacion-personal') res = ((d.personalRetirado || 0) / (d.promedioEmpleados || 1)) * 100;
-            else if (id === 'ausentismo') res = ((d.diasPerdidos || 0) / (d.diasLaborados || 1)) * 100;
-            else if (id === 'calificacion-auditoria') res = ((d.actividadesEjecutadas || 0) / (d.actividadesProgramadas || 1)) * 100;
-            else if (id === 'he-rn-nomina') res = ((d.valorHEDHEN || 0) / (d.totalNomina || 1)) * 100;
-            else if (id === 'gasto-nomina-venta-rrhh') res = ((d.valorNomina || 0) / (d.ventaTotal || 1)) * 100;
-            else if (id === 'actividades-cultura') res = ((d.actividadesEjecutadas || 0) / (d.actividadesProgramadas || 1)) * 100;
-            else if (id === 'tiempo-contratacion') res = d.diasVacante;
-            // Caja Specific
-            else if (id === 'arqueos-realizados') res = (d.arqueosRealizados / d.arqueosProgramados) * 100;
-            else if (id === 'planillas-cerradas') res = (d.planillasCerradas / d.planillasGeneradas) * 100;
-            else if (id === 'vales-descuadres') res = (d.valorVales / d.totalCuadreCaja) * 100;
-            // Cartera Specific (Fed by Contabilidad)
-            else if (id === 'cartera-no-vencida') res = (d.totalCarteraVencida / d.totalVenta) * 100;
-            else if (id === 'cartera-11-30') res = (d.totalCartera1130 / d.totalCartera) * 100;
-            else if (id === 'cartera-31-45') res = (d.totalCartera3145 / d.totalCartera) * 100;
-            else if (id === 'cartera-mayor-45') res = (d.totalMayor45 / d.totalCartera) * 100;
-            else if (id === 'recircularizaciones') res = d.efectuadas;
-            else if (id === 'valor-cartera-venta') res = (d.ventaCredito / d.totalVenta) * 100;
-            // Contabilidad Specific
-            else if (id === 'dias-cierre') res = (d.diasReporte / d.totalDiasCierre) * 100;
-            else if (id === 'ajustes-posteriores') res = (d.ajustesPosteriores / d.totalAjustes) * 100;
-            else if (id === 'ajustes-revisoria') res = (d.ajustesRevisor / d.totalAjustes) * 100;
-            else if (id === 'rotacion-cxc') res = d.ventasCredito / (d.cuentasPorCobrar || 1);
-            else if (id === 'rotacion-cxp') res = d.comprasCredito / (d.cuentasPorPagar || 1);
-            else if (id === 'conciliaciones-bancarias') res = (d.conciliacionesRealizadas / d.conciliacionesRequeridas) * 100;
-            else if (id === 'activos-conciliados') res = (d.activosConciliados / d.activosRegistrados) * 100;
-            else if (id === 'multas-sanciones') res = (d.multasSanciones / d.ingreso) * 100;
-            else if (id === 'optimizacion-tributaria') res = ((d.impuestosRecuperados + d.impuestosOptimizados) / (d.totalImpuestos || 1)) * 100;
-            else if (d.currentValue !== undefined) res = d.currentValue;
-        } catch (e) { return null; }
-
-        if (res === null || isNaN(res) || !isFinite(res)) return null;
-        return parseFloat(res.toFixed(2));
+        return calculateKPIValue(kpi.id, formData);
     };
 
     const fields = getFormulaFields();
     const liveResult = calculateLiveResult();
     const currentMeta = hasMultipleMetas ? kpi.meta[formData.brand] : kpi.meta;
-    const isInverse = kpi.id.includes('devueltos') ||
-        kpi.id.includes('gasto') ||
-        kpi.id.includes('horas-extras') ||
-        kpi.id.includes('mal-estado') ||
-        kpi.id.includes('vencida') ||
-        kpi.id === 'segundos-unidad-separada' ||
-        kpi.id === 'notas-errores-venta' ||
-        kpi.id.includes('nomina') ||
-        kpi.id === 'rotacion-personal' ||
-        kpi.id === 'ausentismo' ||
-        kpi.id === 'he-rn-nomina' ||
-        kpi.id === 'vales-descuadres' ||
-        kpi.id === 'multas-sanciones' ||
-        kpi.id === 'tiempo-contratacion' ||
-        kpi.id === 'cobro-optimo-cartera' ||
-        kpi.id.includes('devoluciones') ||
-        kpi.id === 'participacion-venta-credito' ||
-        kpi.id === 'rotacion-equipo-comercial' ||
-        kpi.id.includes('gasto-') ||
-        kpi.id === 'dias-inventario-comercial' ||
-        kpi.id === 'quiebres-inventario' ||
-        kpi.id === 'obsolescencia' ||
-        kpi.id === 'mermas' ||
-        kpi.id === 'diferencia-inventarios';
+    const isInverse = isInverseKPI(kpi.id);
     const isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
 
     const handleSubmit = (e) => {
