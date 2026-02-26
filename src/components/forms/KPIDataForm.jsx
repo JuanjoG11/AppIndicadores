@@ -19,42 +19,40 @@ import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
 
 const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
     const isMetaMode = mode === 'meta';
-    // Determinar si el KPI tiene metas por marca o empresa
     const hasMultipleMetas = kpi.meta && typeof kpi.meta === 'object';
+    const userEntity = currentUser?.company || 'TYM';
 
-    // 1. Filtrar las marcas/empresas disponibles según la empresa del usuario
-    let availableBrands = [];
+    // 1. Filtrar marcas comerciales
+    let commercialBrands = [];
     if (hasMultipleMetas) {
-        const allBrands = Object.keys(kpi.meta);
-        const userEntity = currentUser?.company; // "TYM" or "TAT"
+        const allBrands = Object.keys(kpi.meta).filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT');
 
         if (isMetaMode) {
-            // Managers see all brands/entities present in the meta object
-            availableBrands = allBrands;
+            commercialBrands = allBrands;
         } else {
-            // Analysts see only their entity's brands
-            availableBrands = allBrands.filter(b =>
-                BRAND_TO_ENTITY[b] === userEntity || b === userEntity
-            );
+            // Analistas solo ven marcas comerciales comprobadas de su entidad
+            commercialBrands = allBrands.filter(b => BRAND_TO_ENTITY[b] === userEntity);
         }
     }
+    const hasCommercialBrands = commercialBrands.length > 0;
 
     // 2. Determinar cuáles faltan por cargar
-    // Un indicador falta por cargar si no tiene entrada en kpi.brandValues[entity-brand]
     const isBrandPending = (brandName) => {
-        const userEntity = currentUser?.company || 'TYM';
         const dataKey = `${userEntity}-${brandName}`;
         const brandData = kpi.brandValues?.[dataKey];
         return !brandData || brandData.hasData === false;
     };
 
-    // 3. Seleccionar por defecto la primera marca que falte por cargar
-    const defaultBrand = availableBrands.find(isBrandPending) || availableBrands[0] || null;
+    // 3. Seleccionar por defecto
+    // Si no hay marcas comerciales y no es gerente, la marca asignada automáticamente es la propia entidad.
+    const defaultBrand = (!isMetaMode && !hasCommercialBrands)
+        ? userEntity
+        : (commercialBrands.find(isBrandPending) || commercialBrands[0] || userEntity);
 
     // Inicializar con datos previos si existen
     const [formData, setFormData] = useState({
         brand: kpi.additionalData?.brand || defaultBrand,
-        company: currentUser?.company || kpi.additionalData?.company || null,
+        company: userEntity, // Auto-assign company
         ...kpi.additionalData
     });
 
@@ -441,7 +439,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                 <div style={{ padding: '2rem 2.5rem' }}>
                     <form onSubmit={handleSubmit}>
                         {/* BRAND / ENTITY SELECTION - PREMIUM CHIPS */}
-                        {(hasMultipleMetas || isMetaMode) && (
+                        {(isMetaMode || (!isMetaMode && hasCommercialBrands)) && (
                             <div style={{ marginBottom: '2rem' }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1.25rem', color: '#1e293b' }}>
                                     <Box size={16} color="var(--brand)" />
@@ -449,55 +447,55 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                 </label>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                    {/* Nivel Empresa / Razón Social */}
-                                    <div>
-                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-                                            Nivel Empresa (Razón Social)
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                            {['Global', 'TYM', 'TAT'].map(scope => {
-                                                const isActive = scope === 'Global' ? (!formData.brand || formData.brand === 'Global') : formData.brand === scope;
-                                                return (
-                                                    <button
-                                                        key={scope}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            handleChange('brand', scope);
-                                                            // If switching to TYM or TAT, and current brand doesn't belong to it, clear brand
-                                                            if (scope !== 'Global' && BRAND_TO_ENTITY[formData.brand] && BRAND_TO_ENTITY[formData.brand] !== scope) {
-                                                                // This is handled by the filtering below, but we could force a clear here if needed
-                                                            }
-                                                        }}
-                                                        style={{
-                                                            padding: '0.6rem 1rem',
-                                                            borderRadius: '12px',
-                                                            fontSize: '0.8rem',
-                                                            fontWeight: 700,
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s',
-                                                            border: isActive ? '2px solid var(--brand)' : '1px solid #e2e8f0',
-                                                            background: isActive ? 'var(--brand-bg)' : 'white',
-                                                            color: isActive ? 'var(--brand)' : '#64748b',
-                                                        }}
-                                                    >
-                                                        {scope}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    {/* Nivel Marca */}
-                                    {((isMetaMode) || hasMultipleMetas) && (
+                                    {/* Nivel Empresa / Razón Social - SOLAMENTE PARA MODO META COMO GERENTE */}
+                                    {isMetaMode && (
                                         <div>
                                             <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-                                                Nivel Marca / Producto
+                                                Nivel Empresa (Razón Social)
                                             </div>
                                             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                                {['Global', 'TYM', 'TAT'].map(scope => {
+                                                    const isActive = scope === 'Global' ? (!formData.brand || formData.brand === 'Global') : formData.brand === scope;
+                                                    return (
+                                                        <button
+                                                            key={scope}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                handleChange('brand', scope);
+                                                            }}
+                                                            style={{
+                                                                padding: '0.6rem 1rem',
+                                                                borderRadius: '12px',
+                                                                fontSize: '0.8rem',
+                                                                fontWeight: 700,
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s',
+                                                                border: isActive ? '2px solid var(--brand)' : '1px solid #e2e8f0',
+                                                                background: isActive ? 'var(--brand-bg)' : 'white',
+                                                                color: isActive ? 'var(--brand)' : '#64748b',
+                                                            }}
+                                                        >
+                                                            {scope}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Nivel Marca */}
+                                    {((isMetaMode) || (!isMetaMode && hasCommercialBrands)) && commercialBrands.length > 0 && (
+                                        <div>
+                                            {isMetaMode && (
+                                                <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                                                    Nivel Marca / Producto
+                                                </div>
+                                            )}
+                                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                                                 {/* Filter brands based on selected entity if not 'Global' */}
-                                                {(isMetaMode ? ['ALPINA', 'ZENU', 'FLEISCHMANN', 'UNILEVER', 'FAMILIA'] : availableBrands)
+                                                {(isMetaMode ? ['ALPINA', 'ZENU', 'FLEISCHMANN', 'UNILEVER', 'FAMILIA'] : commercialBrands)
                                                     .filter(brand => {
-                                                        if (formData.brand === 'TYM' || formData.brand === 'TAT') {
+                                                        if (isMetaMode && (formData.brand === 'TYM' || formData.brand === 'TAT')) {
                                                             return BRAND_TO_ENTITY[brand] === formData.brand;
                                                         }
                                                         return true; // Show all if Global or no selection

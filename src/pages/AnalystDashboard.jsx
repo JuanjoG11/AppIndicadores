@@ -42,15 +42,15 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const pendingKPIs = myAccessKPIs.filter(k => {
         if (k.responsable !== currentUser.cargo) return false;
 
-        // Determinar marcas de la entidad actual
+        // Determinar marcas comerciales de la entidad actual
         const entity = currentUser.company;
         const allMetaBrands = typeof k.meta === 'object' ? Object.keys(k.meta) : [];
-        const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+        const commercialBrands = allMetaBrands.filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT' && BRAND_TO_ENTITY[b] === entity);
 
-        if (entityBrands.length === 0) return !k.hasData;
+        if (commercialBrands.length === 0) return !k.hasData;
 
-        // Es pendiente si alguna marca de su entidad falta
-        return entityBrands.some(brand => {
+        // Es pendiente si alguna marca comercial de su entidad falta
+        return commercialBrands.some(brand => {
             const dataKey = `${entity}-${brand}`;
             const brandData = k.brandValues?.[dataKey];
             return !brandData || brandData.hasData === false;
@@ -167,8 +167,9 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
             {(() => {
                 const entity = currentUser.company;
                 const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
-                const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
-                const pending = entityBrands.filter(brand => {
+                const commercialBrands = allMetaBrands.filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT' && BRAND_TO_ENTITY[b] === entity);
+
+                const pending = commercialBrands.filter(brand => {
                     const dataKey = `${entity}-${brand}`;
                     const brandData = kpi.brandValues?.[dataKey];
                     return !brandData || brandData.hasData === false;
