@@ -9,14 +9,34 @@ import {
     TrendingUp,
     Package,
     ArrowUpRight,
-    ArrowDownRight
+    ArrowDownRight,
+    ChevronDown,
+    ChevronUp,
+    Clock
 } from 'lucide-react';
+import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
 
-const KPIDetailCard = ({ kpi, onEdit, canEdit }) => {
+const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany }) => {
+    const [showBreakdown, setShowBreakdown] = React.useState(false);
+
+    // 1. Determinar marcas de la entidad actual (TYM o TAT)
+    const entity = activeCompany || 'TYM';
+    const allMetaBrands = typeof kpi.meta === 'object' ? Object.keys(kpi.meta) : [];
+    const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+
+    // 2. Identificar cuáles faltan por cargar
+    const pendingBrands = entityBrands.filter(brand => {
+        const dataKey = `${entity}-${brand}`;
+        const brandData = kpi.brandValues?.[dataKey];
+        return !brandData || brandData.hasData === false;
+    });
+
     const isSuccess = kpi.semaphore === 'green';
     const isWarning = kpi.semaphore === 'yellow';
     const color = isSuccess ? '#059669' : (isWarning ? '#f59e0b' : '#ef4444');
     const bgColor = isSuccess ? '#ecfdf5' : (isWarning ? '#fffbeb' : '#fef2f2');
+
+    const isManager = currentUser?.role === 'Gerente';
 
     if (!kpi.hasData) {
         return (
@@ -36,7 +56,25 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit }) => {
                 <div style={{ color: '#94a3b8', marginBottom: '1rem' }}>
                     <Package size={32} strokeWidth={1.5} />
                 </div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem', color: '#1e293b' }}>{kpi.name}</h4>
+                <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.5rem', color: '#1e293b' }}>{kpi.name}</h4>
+
+                {pendingBrands.length > 0 && (
+                    <div style={{
+                        fontSize: '0.75rem',
+                        color: '#f43f5e',
+                        fontWeight: 700,
+                        marginBottom: '1.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        background: '#fff1f2',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '10px'
+                    }}>
+                        <Clock size={12} /> FALTA POR CARGAR: {pendingBrands.join(', ')}
+                    </div>
+                )}
+
                 {canEdit && (
                     <button
                         className="btn-primary"
@@ -170,6 +208,99 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit }) => {
                 </div>
             )}
 
+            {/* Pending Brands Warning (if partial data) */}
+            {kpi.hasData && pendingBrands.length > 0 && (
+                <div style={{
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    color: '#e11d48',
+                    background: '#fff1f2',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                }}>
+                    <AlertCircle size={12} /> FALTAN MARCAS: {pendingBrands.join(', ')}
+                </div>
+            )}
+
+            {/* Breakdown Toggle for Manager */}
+            {isManager && entityBrands.length > 1 && (
+                <button
+                    onClick={() => setShowBreakdown(!showBreakdown)}
+                    style={{
+                        width: '100%',
+                        padding: '0.6rem',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        color: '#64748b',
+                        fontSize: '0.75rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    {showBreakdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {showBreakdown ? 'OCULTAR DESGLOSE' : 'DESGLOSAR POR MARCA'}
+                </button>
+            )}
+
+            {/* Detailed Breakdown Section */}
+            {showBreakdown && isManager && (
+                <div className="fade-in" style={{
+                    marginTop: '0.5rem',
+                    padding: '1rem',
+                    background: '#f8fafc',
+                    borderRadius: '16px',
+                    border: '1px solid #e2e8f0'
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {entityBrands.map(brand => {
+                            const dataKey = `${entity}-${brand}`;
+                            const brandData = kpi.brandValues?.[dataKey];
+                            const brandCompliance = brandData?.compliance;
+                            const brandTarget = kpi.meta[brand];
+
+                            return (
+                                <div key={brand} style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    fontSize: '0.75rem',
+                                    paddingBottom: '0.5rem',
+                                    borderBottom: '1px solid #f1f5f9'
+                                }}>
+                                    <div>
+                                        <div style={{ fontWeight: 900, color: '#1e293b' }}>{brand}</div>
+                                        <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Meta: {brandTarget} {kpi.unit}</div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        {!brandData || brandData.hasData === false ? (
+                                            <span style={{ color: '#ef4444', fontWeight: 800 }}>PENDIENTE</span>
+                                        ) : (
+                                            <>
+                                                <div style={{ fontWeight: 900, color: brandCompliance >= 100 ? '#059669' : '#ef4444' }}>
+                                                    {brandCompliance?.toFixed(1)}%
+                                                </div>
+                                                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>
+                                                    {brandData.currentValue} {kpi.unit}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Footer / Meta info */}
             <div style={{
                 marginTop: 'auto',
@@ -180,7 +311,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit }) => {
                 alignItems: 'center'
             }}>
                 <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>
-                    META: <span style={{ color: '#334155' }}>{kpi.targetMeta}{kpi.unit}</span>
+                    CONSOLIDADO {entity}: <span style={{ color: '#334155' }}>{kpi.targetMeta} {kpi.unit}</span>
                 </div>
                 <div style={{
                     fontSize: '0.6rem',
@@ -190,7 +321,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit }) => {
                     color: '#94a3b8',
                     fontWeight: 800
                 }}>
-                    EST: 2026
+                    FEBRERO 2026
                 </div>
             </div>
         </div>

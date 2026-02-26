@@ -269,6 +269,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                         kpi={kpi}
                         canEdit={canModify}
                         onEdit={setEditingKPI}
+                        currentUser={currentUser}
+                        activeCompany={activeCompany}
                     />
                 ))}
             </div>

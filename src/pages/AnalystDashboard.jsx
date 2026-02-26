@@ -15,7 +15,7 @@ import {
     Shield
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
-import { filterKPIsByEntity } from '../utils/kpiHelpers';
+import { filterKPIsByEntity, BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const [editingKPI, setEditingKPI] = useState(null);
@@ -117,17 +117,49 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 {kpi.name}
             </h3>
 
+            {/* Pending Brands Notice */}
+            {(() => {
+                const entity = currentUser.company;
+                const allMetaBrands = typeof kpi.meta === 'object' ? Object.keys(kpi.meta) : [];
+                const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+                const pending = entityBrands.filter(brand => {
+                    const dataKey = `${entity}-${brand}`;
+                    const brandData = kpi.brandValues?.[dataKey];
+                    return !brandData || brandData.hasData === false;
+                });
+
+                if (pending.length > 0) {
+                    return (
+                        <div style={{
+                            fontSize: '0.65rem',
+                            color: '#e11d48',
+                            fontWeight: 800,
+                            marginBottom: '1rem',
+                            padding: '0.4rem 0.75rem',
+                            background: '#fff1f2',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem'
+                        }}>
+                            FALTA: {pending.join(', ')}
+                        </div>
+                    );
+                }
+                return null;
+            })()}
+
             <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f8fafc', padding: '1rem', borderRadius: '16px' }}>
                 <div>
                     <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
                     <div style={{ fontSize: '1rem', fontWeight: 800, color: '#475569' }}>
-                        {typeof kpi.meta === 'object' ? 'Ver detalle' : `${kpi.meta}${kpi.unit}`}
+                        {typeof kpi.meta === 'object' ? `${kpi.targetMeta} ${kpi.unit}` : `${kpi.meta} ${kpi.unit}`}
                     </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
                     <div style={{ fontSize: '1rem', fontWeight: 800, color: kpi.hasData ? 'var(--brand)' : '#cbd5e1' }}>
-                        {kpi.hasData ? `${kpi.currentValue}${kpi.unit}` : '--'}
+                        {kpi.hasData ? `${kpi.currentValue} ${kpi.unit}` : '--'}
                     </div>
                 </div>
             </div>

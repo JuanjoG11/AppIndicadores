@@ -1,4 +1,5 @@
 import { kpiDefinitions } from './kpiData';
+import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 
 // Datos REALES de los KPIs de Logística basados en el Excel proporcionado
 const realKPIValues = {
@@ -171,10 +172,13 @@ export const generateMockData = () => {
 
         // Obtener meta numérica si es un objeto
         let targetMeta = kpi.meta;
-        if (typeof kpi.meta === 'object' && realData?.brand) {
-            targetMeta = kpi.meta[realData.brand];
-        } else if (typeof kpi.meta === 'object') {
-            targetMeta = Object.values(kpi.meta)[0]; // Fallback al primero
+        if (typeof kpi.meta === 'object') {
+            const brand = realData?.brand;
+            const entity = BRAND_TO_ENTITY[brand] || 'TYM';
+
+            // Priority: direct brand match, then any brand of the same entity, then entity name, then first available
+            const brandKey = brand && kpi.meta[brand] ? brand : Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity);
+            targetMeta = brandKey ? kpi.meta[brandKey] : (kpi.meta[entity] || Object.values(kpi.meta)[0] || 0);
         }
 
         // Calcular semáforo basado en meta

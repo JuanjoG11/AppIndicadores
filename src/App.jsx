@@ -8,7 +8,7 @@ import AnalystDashboard from './pages/AnalystDashboard';
 import Login from './pages/Login';
 import { mockKPIData, getMonthKey } from './data/mockData';
 import { supabase } from './lib/supabase';
-import { filterKPIsByEntity } from './utils/kpiHelpers';
+import { filterKPIsByEntity, BRAND_TO_ENTITY } from './utils/kpiHelpers';
 import { calculateKPIValue, isInverseKPI } from './utils/kpiCalculations';
 import SettingsModal from './components/layout/SettingsModal';
 import './index.css';
@@ -173,9 +173,14 @@ function App() {
           console.error("Error calculating KPI:", e);
         }
 
-        // Determinar meta basada en marca o empresa
+        // Determinar meta basada en marca o empresa usando mapeo
         if (typeof kpi.meta === 'object') {
-          targetMeta = kpi.meta[d.brand] || kpi.meta[d.company] || Object.values(kpi.meta)[0];
+          const brand = d.brand;
+          const entity = d.company || BRAND_TO_ENTITY[brand] || 'TYM';
+
+          // Prioridad: marca directa, luego cualquier marca de la misma entidad, luego la entidad misma, luego el primero
+          const brandKey = brand && kpi.meta[brand] ? brand : Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity);
+          targetMeta = brandKey ? kpi.meta[brandKey] : (kpi.meta[entity] || Object.values(kpi.meta)[0] || 0);
         }
 
         newValue = parseFloat((newValue || 0).toFixed(2));

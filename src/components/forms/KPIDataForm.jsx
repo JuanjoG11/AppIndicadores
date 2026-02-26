@@ -14,25 +14,39 @@ import {
     Activity
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
+import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
 
 const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
     // Determinar si el KPI tiene metas por marca o empresa
     const hasMultipleMetas = typeof kpi.meta === 'object';
 
-    // Filtrar las marcas/empresas disponibles según la empresa del usuario
-    let brands = hasMultipleMetas ? Object.keys(kpi.meta) : [];
+    // 1. Filtrar las marcas/empresas disponibles según la empresa del usuario
+    let availableBrands = [];
+    if (hasMultipleMetas) {
+        const allBrands = Object.keys(kpi.meta);
+        const userEntity = currentUser?.company; // "TYM" or "TAT"
 
-    // Si la empresa del usuario es TYM o TAT, y estas están en las opciones, filtrar solo la del usuario
-    if (currentUser?.company && brands.includes(currentUser.company)) {
-        brands = [currentUser.company];
-    } else if (kpi.brands && currentUser?.company) {
-        // Si el KPI tiene una lista de marcas permitidas explícita y estamos filtrando por empresa
-        // (Esto es por si acaso hay una lógica cruzada, pero por ahora simplificamos)
+        // Mostrar solo marcas que pertenezcan a la entidad del usuario
+        availableBrands = allBrands.filter(b =>
+            BRAND_TO_ENTITY[b] === userEntity || b === userEntity
+        );
     }
+
+    // 2. Determinar cuáles faltan por cargar
+    // Un indicador falta por cargar si no tiene entrada en kpi.brandValues[entity-brand]
+    const isBrandPending = (brandName) => {
+        const userEntity = currentUser?.company || 'TYM';
+        const dataKey = `${userEntity}-${brandName}`;
+        const brandData = kpi.brandValues?.[dataKey];
+        return !brandData || brandData.hasData === false;
+    };
+
+    // 3. Seleccionar por defecto la primera marca que falte por cargar
+    const defaultBrand = availableBrands.find(isBrandPending) || availableBrands[0] || null;
 
     // Inicializar con datos previos si existen
     const [formData, setFormData] = useState({
-        brand: kpi.additionalData?.brand || (brands.length > 0 ? brands[0] : null),
+        brand: kpi.additionalData?.brand || defaultBrand,
         company: currentUser?.company || kpi.additionalData?.company || null,
         ...kpi.additionalData
     });
@@ -384,7 +398,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                         <div>
                             <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.2rem' }}>{kpi.name}</h2>
                             <div style={{ fontSize: '0.75rem', opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                                {kpi.area.replace(/-/g, ' ')} • {typeof currentMeta === 'number' ? `Meta: ${currentMeta}${kpi.unit}` : currentMeta}
+                                {kpi.area.replace(/-/g, ' ')} • {typeof currentMeta === 'number' ? `Meta: ${currentMeta} ${kpi.unit}` : currentMeta}
                             </div>
                         </div>
                     </div>
@@ -407,31 +421,51 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                                     <Box size={16} color="var(--brand)" /> MARCA / PROVEEDOR
                                 </label>
                                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                    {brands.map(brand => (
-                                        <button
-                                            key={brand}
-                                            type="button"
-                                            onClick={() => handleChange('brand', brand)}
-                                            style={{
-                                                padding: '0.75rem 1.25rem',
-                                                borderRadius: '16px',
-                                                fontSize: '0.85rem',
-                                                fontWeight: 700,
-                                                cursor: 'pointer',
-                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                border: formData.brand === brand ? '2px solid var(--brand)' : '1px solid #e2e8f0',
-                                                background: formData.brand === brand ? 'var(--brand-bg)' : 'white',
-                                                color: formData.brand === brand ? 'var(--brand)' : '#64748b',
-                                                boxShadow: formData.brand === brand ? '0 10px 15px -3px rgba(37,99,235,0.15)' : 'none',
-                                                transform: formData.brand === brand ? 'scale(1.05)' : 'scale(1)'
-                                            }}
-                                        >
-                                            {brand}
-                                            <div style={{ fontSize: '0.65rem', opacity: 0.7, fontWeight: 600, marginTop: '2px' }}>
-                                                Meta: {kpi.meta[brand]}{kpi.unit}
-                                            </div>
-                                        </button>
-                                    ))}
+                                    {availableBrands.map(brand => {
+                                        const pending = isBrandPending(brand);
+                                        return (
+                                            <button
+                                                key={brand}
+                                                type="button"
+                                                onClick={() => handleChange('brand', brand)}
+                                                style={{
+                                                    padding: '0.75rem 1.25rem',
+                                                    borderRadius: '16px',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: 700,
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    border: formData.brand === brand ? '2px solid var(--brand)' : '1px solid #e2e8f0',
+                                                    background: formData.brand === brand ? 'var(--brand-bg)' : 'white',
+                                                    color: formData.brand === brand ? 'var(--brand)' : '#64748b',
+                                                    boxShadow: formData.brand === brand ? '0 10px 15px -3px rgba(37,99,235,0.15)' : 'none',
+                                                    transform: formData.brand === brand ? 'scale(1.05)' : 'scale(1)',
+                                                    position: 'relative'
+                                                }}
+                                            >
+                                                {brand}
+                                                {pending && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '-8px',
+                                                        right: '-8px',
+                                                        background: '#f43f5e',
+                                                        color: 'white',
+                                                        fontSize: '0.6rem',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '8px',
+                                                        fontWeight: 900,
+                                                        boxShadow: '0 4px 6px -1px rgba(244, 63, 94, 0.3)'
+                                                    }}>
+                                                        FALTA
+                                                    </div>
+                                                )}
+                                                <div style={{ fontSize: '0.65rem', opacity: 0.7, fontWeight: 600, marginTop: '2px' }}>
+                                                    Meta: {kpi.meta[brand]} {kpi.unit}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -477,7 +511,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                                         <div>
                                             <div style={{ fontSize: '0.85rem', fontWeight: 800, opacity: 0.9, letterSpacing: '0.05em' }}>CÁLCULO AUTOMÁTICO</div>
                                             <div style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1 }}>
-                                                {liveResult}<span style={{ fontSize: '1.5rem', opacity: 0.8, marginLeft: '4px' }}>{kpi.unit}</span>
+                                                {liveResult}<span style={{ fontSize: '1.5rem', opacity: 0.8, marginLeft: '8px' }}>{kpi.unit}</span>
                                             </div>
                                         </div>
                                         <div style={{

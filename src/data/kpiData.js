@@ -704,7 +704,7 @@ export const kpiDefinitions = [
             ALPINA: 12,
             FAMILIA: 10,
             UNILEVER: 8,
-            FLEISHMANN: 10,
+            FLEISCHMANN: 10,
             POLAR: 10,
             ZENU: 11
         },
@@ -741,7 +741,7 @@ export const kpiDefinitions = [
             ALPINA: 0.5,
             FAMILIA: 0.5,
             UNILEVER: 0.5,
-            FLEISHMANN: 0.5,
+            FLEISCHMANN: 0.5,
             POLAR: 0.5,
             ZENU: 0.5
         },
@@ -763,7 +763,7 @@ export const kpiDefinitions = [
             ALPINA: 60000000,
             FAMILIA: 50000000,
             UNILEVER: 55000000,
-            FLEISHMANN: 45000000,
+            FLEISCHMANN: 45000000,
             POLAR: 50000000,
             ZENU: 48000000
         },
@@ -785,7 +785,7 @@ export const kpiDefinitions = [
             ALPINA: 10,
             FAMILIA: 12,
             UNILEVER: 10,
-            FLEISHMANN: 8,
+            FLEISCHMANN: 8,
             POLAR: 10,
             ZENU: 12
         },
@@ -822,7 +822,7 @@ export const kpiDefinitions = [
             ALPINA: 3.5,
             FAMILIA: 3.5,
             UNILEVER: 3.5,
-            FLEISHMANN: 3.5,
+            FLEISCHMANN: 3.5,
             POLAR: 3.5,
             ZENU: 3.5
         },
@@ -875,7 +875,7 @@ export const kpiDefinitions = [
             UNILEVER: 4.2,
             POLAR: 6,
             ZENU: 3.4,
-            FLEISHMANN: 2.5,
+            FLEISCHMANN: 2.5,
             FAMILIA: 1.8
         },
         unit: '%',
@@ -896,7 +896,7 @@ export const kpiDefinitions = [
             ALPINA: 7,
             FAMILIA: 18,
             UNILEVER: 45,
-            FLEISHMANN: 18,
+            FLEISCHMANN: 18,
             POLAR: 18
         },
         unit: 'días',
