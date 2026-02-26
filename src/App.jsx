@@ -164,8 +164,10 @@ function App() {
         let targetMeta = kpi.targetMeta;
 
         // Preserve history per company and brand
-        const currentBrand = d.brand || 'GLOBAL';
-        const currentCompany = d.company || 'GLOBAL';
+        const currentBrand = (d.brand === 'TYM' || d.brand === 'TAT' || d.brand === 'Global' || !d.brand) ? 'GLOBAL' : d.brand;
+        const currentCompany = (d.brand === 'TYM' || d.brand === 'TAT')
+          ? d.brand
+          : (BRAND_TO_ENTITY[d.brand] || d.company || activeCompany || 'TYM');
         const dataKey = `${currentCompany}-${currentBrand}`;
 
         const brandValues = kpi.brandValues || {};

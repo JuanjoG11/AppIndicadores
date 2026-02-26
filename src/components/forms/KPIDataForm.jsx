@@ -370,10 +370,20 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
     };
 
     const handleChange = (fieldName, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [fieldName]: fieldName === 'brand' ? value : (parseFloat(value) || 0)
-        }));
+        setFormData(prev => {
+            const newState = { ...prev, [fieldName]: fieldName === 'brand' ? value : (parseFloat(value) || 0) };
+
+            // Auto-sync company if brand changes
+            if (fieldName === 'brand') {
+                if (value === 'TYM' || value === 'TAT') {
+                    newState.company = value;
+                } else if (BRAND_TO_ENTITY[value]) {
+                    newState.company = BRAND_TO_ENTITY[value];
+                }
+            }
+
+            return newState;
+        });
     };
 
     return (
@@ -451,7 +461,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                                     <button
                                                         key={scope}
                                                         type="button"
-                                                        onClick={() => handleChange('brand', scope === 'Global' ? 'Global' : scope)}
+                                                        onClick={() => {
+                                                            handleChange('brand', scope);
+                                                            // If switching to TYM or TAT, and current brand doesn't belong to it, clear brand
+                                                            if (scope !== 'Global' && BRAND_TO_ENTITY[formData.brand] && BRAND_TO_ENTITY[formData.brand] !== scope) {
+                                                                // This is handled by the filtering below, but we could force a clear here if needed
+                                                            }
+                                                        }}
                                                         style={{
                                                             padding: '0.6rem 1rem',
                                                             borderRadius: '12px',
@@ -478,46 +494,53 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                                 Nivel Marca / Producto
                                             </div>
                                             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                                {/* En modo Meta mostramos todas las marcas estándar agrupadas si el KPI aplica */}
-                                                {(isMetaMode ? ['ALPINA', 'ZENU', 'FLEISCHMANN', 'UNILEVER', 'FAMILIA'] : availableBrands).map(brand => {
-                                                    const isActive = formData.brand === brand;
-                                                    const pending = !isMetaMode && isBrandPending(brand);
-                                                    const entity = BRAND_TO_ENTITY[brand];
+                                                {/* Filter brands based on selected entity if not 'Global' */}
+                                                {(isMetaMode ? ['ALPINA', 'ZENU', 'FLEISCHMANN', 'UNILEVER', 'FAMILIA'] : availableBrands)
+                                                    .filter(brand => {
+                                                        if (formData.brand === 'TYM' || formData.brand === 'TAT') {
+                                                            return BRAND_TO_ENTITY[brand] === formData.brand;
+                                                        }
+                                                        return true; // Show all if Global or no selection
+                                                    })
+                                                    .map(brand => {
+                                                        const isActive = formData.brand === brand;
+                                                        const pending = !isMetaMode && isBrandPending(brand);
+                                                        const entity = BRAND_TO_ENTITY[brand];
 
-                                                    return (
-                                                        <button
-                                                            key={brand}
-                                                            type="button"
-                                                            onClick={() => handleChange('brand', brand)}
-                                                            style={{
-                                                                padding: '0.6rem 1rem',
-                                                                borderRadius: '12px',
-                                                                fontSize: '0.8rem',
-                                                                fontWeight: 700,
-                                                                cursor: 'pointer',
-                                                                transition: 'all 0.2s',
-                                                                border: isActive ? '2px solid var(--brand)' : '1px solid #e2e8f0',
-                                                                background: isActive ? 'var(--brand-bg)' : 'white',
-                                                                color: isActive ? 'var(--brand)' : '#64748b',
-                                                                position: 'relative',
-                                                                display: 'flex',
-                                                                flexDirection: 'column',
-                                                                alignItems: 'center',
-                                                                gap: '2px'
-                                                            }}
-                                                        >
-                                                            <span>{brand}</span>
-                                                            <span style={{ fontSize: '0.6rem', opacity: 0.6 }}>{entity}</span>
-                                                            {pending && (
-                                                                <div style={{
-                                                                    position: 'absolute', top: '-5px', right: '-5px',
-                                                                    background: '#f43f5e', color: 'white', fontSize: '0.5rem',
-                                                                    padding: '1px 4px', borderRadius: '4px'
-                                                                }}>!</div>
-                                                            )}
-                                                        </button>
-                                                    );
-                                                })}
+                                                        return (
+                                                            <button
+                                                                key={brand}
+                                                                type="button"
+                                                                onClick={() => handleChange('brand', brand)}
+                                                                style={{
+                                                                    padding: '0.6rem 1rem',
+                                                                    borderRadius: '12px',
+                                                                    fontSize: '0.8rem',
+                                                                    fontWeight: 700,
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s',
+                                                                    border: isActive ? '2px solid var(--brand)' : '1px solid #e2e8f0',
+                                                                    background: isActive ? 'var(--brand-bg)' : 'white',
+                                                                    color: isActive ? 'var(--brand)' : '#64748b',
+                                                                    position: 'relative',
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'center',
+                                                                    gap: '2px'
+                                                                }}
+                                                            >
+                                                                <span>{brand}</span>
+                                                                <span style={{ fontSize: '0.6rem', opacity: 0.6 }}>{entity}</span>
+                                                                {pending && (
+                                                                    <div style={{
+                                                                        position: 'absolute', top: '-5px', right: '-5px',
+                                                                        background: '#f43f5e', color: 'white', fontSize: '0.5rem',
+                                                                        padding: '1px 4px', borderRadius: '4px'
+                                                                    }}>!</div>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
                                             </div>
                                         </div>
                                     )}
