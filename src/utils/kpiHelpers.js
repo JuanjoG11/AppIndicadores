@@ -42,12 +42,13 @@ export const filterKPIsByEntity = (kpiData, entity) => {
         if (entityKeys.length > 0) {
             const globalKey = `${entity}-GLOBAL`;
             const mainKey = entityKeys.includes(globalKey) ? globalKey : entityKeys[0];
+            const { meta: brandMeta, ...brandData } = kpi.brandValues[mainKey];
 
             return {
                 ...kpi,
-                ...kpi.brandValues[mainKey],
+                ...brandData,
                 targetMeta,
-                hasData: kpi.brandValues[mainKey].hasData !== undefined ? kpi.brandValues[mainKey].hasData : true
+                hasData: brandData.hasData !== undefined ? brandData.hasData : true
             };
         }
 

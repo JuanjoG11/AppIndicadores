@@ -56,6 +56,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
         ...kpi.additionalData
     });
 
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
+
     // Mapeo de iconos por área para el diseño
     const areaIcons = {
         'logistica-entrega': <Truck size={18} />,
@@ -437,6 +440,25 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                 </div>
 
                 <div style={{ padding: '2rem 2.5rem' }}>
+                    {saveSuccess && (
+                        <div style={{
+                            marginBottom: '1.5rem',
+                            padding: '1rem',
+                            background: '#ecfdf5',
+                            borderRadius: '16px',
+                            border: '1px solid #10b981',
+                            color: '#047857',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            fontSize: '0.9rem',
+                            fontWeight: 800,
+                            animation: 'bounceIn 0.5s ease-out'
+                        }}>
+                            <CheckCircle2 size={24} />
+                            ¡MARCA GUARDADA CON ÉXITO! CARGANDO SIGUIENTE...
+                        </div>
+                    )}
                     <form onSubmit={handleSubmit}>
                         {/* BRAND / ENTITY SELECTION - PREMIUM CHIPS */}
                         {(isMetaMode || (!isMetaMode && hasCommercialBrands)) && (
@@ -602,6 +624,44 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* PENDING BRANDS INFO */}
+                        {!isMetaMode && hasCommercialBrands && (
+                            <div style={{
+                                marginBottom: '2.5rem',
+                                padding: '1rem 1.5rem',
+                                background: '#fff7ed',
+                                borderRadius: '16px',
+                                border: '1px solid #fed7aa',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.5rem'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ea580c', fontWeight: 800, fontSize: '0.8rem' }}>
+                                    <AlertTriangle size={16} />
+                                    MARCAS PENDIENTES:
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                    {commercialBrands.filter(isBrandPending).length > 0 ? (
+                                        commercialBrands.filter(isBrandPending).map(b => (
+                                            <span key={b} style={{
+                                                background: 'white',
+                                                padding: '0.2rem 0.6rem',
+                                                borderRadius: '8px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 700,
+                                                color: '#9a3412',
+                                                border: '1px solid #ffedd5'
+                                            }}>
+                                                {b}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700 }}>¡Todas las marcas cargadas!</span>
+                                    )}
+                                </div>
                             </div>
                         )}
 

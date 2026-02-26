@@ -100,22 +100,44 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
             animationDelay: `${idx * 0.05}s`
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
-                <div style={{
-                    padding: '0.4rem 0.8rem',
-                    borderRadius: '10px',
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
-                    background: kpi.hasData ? '#ecfdf5' : '#fff7ed',
-                    color: kpi.hasData ? '#059669' : '#ea580c',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem'
-                }}>
-                    {kpi.hasData ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                    {kpi.hasData ? 'LISTO' : 'POR CARGAR'}
-                </div>
+                {(() => {
+                    const entity = currentUser.company;
+                    const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
+                    const commercialBrands = allMetaBrands.filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT' && BRAND_TO_ENTITY[b] === entity);
+                    const pendingCount = commercialBrands.filter(brand => {
+                        const dataKey = `${entity}-${brand}`;
+                        const brandData = kpi.brandValues?.[dataKey];
+                        return !brandData || brandData.hasData === false;
+                    }).length;
+
+                    const isPartial = kpi.hasData && pendingCount > 0;
+                    const isFullyLoaded = kpi.hasData && pendingCount === 0;
+
+                    let bg = '#fff7ed'; let color = '#ea580c'; let text = 'POR CARGAR';
+                    if (isFullyLoaded) { bg = '#ecfdf5'; color = '#059669'; text = 'LISTO'; }
+                    else if (isPartial) { bg = '#fef3c7'; color = '#d97706'; text = 'CARGA PARCIAL'; }
+
+                    return (
+                        <div style={{
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '10px',
+                            fontSize: '0.65rem',
+                            fontWeight: 800,
+                            background: bg,
+                            color: color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            boxShadow: isPartial ? '0 0 10px rgba(217, 119, 6, 0.2)' : 'none'
+                        }}>
+                            {isFullyLoaded ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                            {text}
+                        </div>
+                    );
+                })()}
 
                 {kpi.responsable === currentUser.cargo ? (
+                    // ... (rest of the action buttons)
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
                             onClick={() => handleStartEdit(kpi, 'data')}
@@ -178,18 +200,21 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 if (pending.length > 0) {
                     return (
                         <div style={{
-                            fontSize: '0.65rem',
+                            fontSize: '0.75rem',
                             color: '#e11d48',
-                            fontWeight: 800,
-                            marginBottom: '1rem',
-                            padding: '0.4rem 0.75rem',
+                            fontWeight: 900,
+                            marginBottom: '1.25rem',
+                            padding: '0.6rem 1rem',
                             background: '#fff1f2',
-                            borderRadius: '10px',
+                            borderRadius: '12px',
+                            border: '1px solid #fee2e2',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.3rem'
+                            gap: '0.5rem',
+                            boxShadow: '0 4px 6px -1px rgba(225, 29, 72, 0.1)'
                         }}>
-                            FALTA: {pending.join(', ')}
+                            <AlertCircle size={14} />
+                            <span>FALTA CARGAR: {pending.join(', ')}</span>
                         </div>
                     );
                 }

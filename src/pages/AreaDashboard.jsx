@@ -106,9 +106,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         }));
 
     const handleSaveKPI = (kpiId, data) => {
-        if (onUpdateKPI) {
-            onUpdateKPI(kpiId, data);
-        }
+        if (onUpdateKPI) onUpdateKPI(kpiId, data);
         setEditingKPI(null);
     };
 

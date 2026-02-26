@@ -155,6 +155,28 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {(() => {
+                        const isPartial = kpi.hasData && pendingBrands.length > 0;
+                        const isFullyLoaded = kpi.hasData && pendingBrands.length === 0;
+
+                        let bg = '#ecfdf5'; let colorText = '#059669'; let text = 'LISTO';
+                        if (!kpi.hasData) { bg = '#fff7ed'; colorText = '#ea580c'; text = 'VACÍO'; }
+                        else if (isPartial) { bg = '#fef3c7'; colorText = '#d97706'; text = 'PARCIAL'; }
+
+                        return (
+                            <div style={{
+                                padding: '0.3rem 0.6rem',
+                                borderRadius: '8px',
+                                fontSize: '0.6rem',
+                                fontWeight: 900,
+                                background: bg,
+                                color: colorText,
+                                marginRight: '0.5rem'
+                            }}>
+                                {text}
+                            </div>
+                        );
+                    })()}
                     <div style={{
                         width: '32px', height: '32px',
                         borderRadius: '50%', background: bgColor,
@@ -244,17 +266,19 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
             {/* Pending Brands Warning (if partial data) */}
             {kpi.hasData && pendingBrands.length > 0 && (
                 <div style={{
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
+                    fontSize: '0.7rem',
+                    fontWeight: 900,
                     color: '#e11d48',
                     background: '#fff1f2',
-                    padding: '0.5rem 0.75rem',
+                    padding: '0.6rem 0.85rem',
                     borderRadius: '12px',
+                    border: '1px solid #fee2e2',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem'
+                    gap: '0.5rem',
+                    boxShadow: '0 2px 4px rgba(225, 29, 72, 0.05)'
                 }}>
-                    <AlertCircle size={12} /> FALTAN MARCAS: {pendingBrands.join(', ')}
+                    <AlertCircle size={14} /> <span>FALTAN MARCAS: {pendingBrands.join(', ')}</span>
                 </div>
             )}
 
