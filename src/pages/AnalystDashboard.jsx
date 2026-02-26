@@ -12,13 +12,20 @@ import {
     Truck,
     DollarSign,
     Users,
-    Shield
+    Shield as ShieldIcon,
+    Settings
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const [editingKPI, setEditingKPI] = useState(null);
+    const [editMode, setEditMode] = useState('data');
+
+    const handleStartEdit = (kpi, mode = 'data') => {
+        setEditingKPI(kpi);
+        setEditMode(mode);
+    };
 
     // 1. Get filtered data for ONLY the current user's company
     const companyKPIsRaw = filterKPIsByEntity(kpiData, currentUser.company);
@@ -32,13 +39,32 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
     // Split into EXACTLY two lists as requested
     // List 1: "Indicadores por Alimentar" (Mine + Pending)
-    const pendingKPIs = myAccessKPIs.filter(k => k.responsable === currentUser.cargo && !k.hasData);
+    const pendingKPIs = myAccessKPIs.filter(k => {
+        if (k.responsable !== currentUser.cargo) return false;
 
-    // List 2: "Indicadores de mi Área" (Mine + Ready AND Monitoring)
-    const areaKPIs = myAccessKPIs.filter(k =>
-        (k.responsable === currentUser.cargo && k.hasData) || // Mine + Ready
-        (k.responsable !== currentUser.cargo) // Monitoring
-    );
+        // Determinar marcas de la entidad actual
+        const entity = currentUser.company;
+        const allMetaBrands = typeof k.meta === 'object' ? Object.keys(k.meta) : [];
+        const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+
+        if (entityBrands.length === 0) return !k.hasData;
+
+        // Es pendiente si alguna marca de su entidad falta
+        return entityBrands.some(brand => {
+            const dataKey = `${entity}-${brand}`;
+            const brandData = k.brandValues?.[dataKey];
+            return !brandData || brandData.hasData === false;
+        });
+    });
+
+    // List 2: "Indicadores de mi Área" (Monitoring + Fully Fed Mine)
+    const areaKPIs = myAccessKPIs.filter(k => {
+        const isMine = k.responsable === currentUser.cargo;
+        if (!isMine) return true; // Monitoring
+
+        // Mine must be fully fed for all entity brands to move here
+        return !pendingKPIs.find(pk => pk.id === k.id);
+    });
 
     // Global stats
     const totalMyKPIs = myAccessKPIs.filter(k => k.responsable === currentUser.cargo).length;
@@ -90,25 +116,45 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 </div>
 
                 {kpi.responsable === currentUser.cargo ? (
-                    <button
-                        onClick={() => setEditingKPI(kpi)}
-                        style={{
-                            background: kpi.hasData ? 'var(--bg-app)' : 'var(--brand)',
-                            color: kpi.hasData ? 'var(--text-main)' : 'white',
-                            border: 'none',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '10px',
-                            fontSize: '0.75rem',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        {kpi.hasData ? 'Editar' : 'Cargar'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            onClick={() => handleStartEdit(kpi, 'data')}
+                            style={{
+                                background: kpi.hasData ? 'var(--bg-app)' : 'var(--brand)',
+                                color: kpi.hasData ? 'var(--text-main)' : 'white',
+                                border: 'none',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '10px',
+                                fontSize: '0.75rem',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {kpi.hasData ? 'Editar' : 'Cargar'}
+                        </button>
+                    </div>
                 ) : (
-                    <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', background: '#f8fafc', padding: '0.4rem 0.8rem', borderRadius: '10px' }}>
-                        Lectura
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {currentUser.role === 'Gerente' && (
+                            <button
+                                onClick={() => handleStartEdit(kpi, 'meta')}
+                                style={{
+                                    background: 'white',
+                                    color: 'var(--brand)',
+                                    border: '1px solid #e2e8f0',
+                                    padding: '0.4rem',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer'
+                                }}
+                                title="Gestionar Metas"
+                            >
+                                <Settings size={14} />
+                            </button>
+                        )}
+                        <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', background: '#f8fafc', padding: '0.4rem 0.8rem', borderRadius: '10px' }}>
+                            Lectura
+                        </div>
                     </div>
                 )}
             </div>
@@ -120,7 +166,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
             {/* Pending Brands Notice */}
             {(() => {
                 const entity = currentUser.company;
-                const allMetaBrands = typeof kpi.meta === 'object' ? Object.keys(kpi.meta) : [];
+                const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
                 const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
                 const pending = entityBrands.filter(brand => {
                     const dataKey = `${entity}-${brand}`;
@@ -153,7 +199,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 <div>
                     <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
                     <div style={{ fontSize: '1rem', fontWeight: 800, color: '#475569' }}>
-                        {typeof kpi.meta === 'object' ? `${kpi.targetMeta} ${kpi.unit}` : `${kpi.meta} ${kpi.unit}`}
+                        {kpi.meta && typeof kpi.meta === 'object' ? `${kpi.targetMeta} ${kpi.unit}` : `${kpi.meta} ${kpi.unit}`}
                     </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
@@ -187,7 +233,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '2rem' }}>
                     <div style={{ flex: 1, minWidth: '300px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                            <div style={{ background: 'var(--brand)', padding: '0.4rem', borderRadius: '8px' }}><Shield size={18} /></div>
+                            <div style={{ background: 'var(--brand)', padding: '0.4rem', borderRadius: '8px' }}><ShieldIcon size={18} /></div>
                             <span style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.1em', opacity: 0.8 }}>CONSOLA DE ALIMENTACIÓN</span>
                         </div>
                         <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
@@ -271,6 +317,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                     currentUser={currentUser}
                     onSave={handleSaveKPI}
                     onCancel={() => setEditingKPI(null)}
+                    mode={editMode}
                 />
             )}
 

@@ -149,8 +149,11 @@ function App() {
 
   // Función interna para aplicar actualizaciones de KPIs
   const applyKPIUpdate = (kpiId, newData, shouldPersist = true) => {
-    setKpiData(prevData => prevData.map(kpi => {
-      if (kpi.id === kpiId) {
+    setKpiData(prevData => prevData.map(oldKpi => {
+      if (oldKpi.id === kpiId) {
+        // Deep clone to avoid mutations
+        const kpi = JSON.parse(JSON.stringify(oldKpi));
+
         const updatedAdditionalData = {
           ...kpi.additionalData,
           ...newData
@@ -168,22 +171,46 @@ function App() {
         const brandValues = kpi.brandValues || {};
 
         try {
-          newValue = calculateKPIValue(kpiId, d);
+          if (d.type === 'META_UPDATE') {
+            newValue = kpi.currentValue; // Preserve current value during meta updates
+          } else {
+            newValue = calculateKPIValue(kpiId, d);
+          }
         } catch (e) {
           console.error("Error calculating KPI:", e);
         }
 
-        // Determinar meta basada en marca o empresa usando mapeo
-        if (typeof kpi.meta === 'object') {
-          const brand = d.brand;
-          const entity = d.company || BRAND_TO_ENTITY[brand] || 'TYM';
-
-          // Prioridad: marca directa, luego cualquier marca de la misma entidad, luego la entidad misma, luego el primero
-          const brandKey = brand && kpi.meta[brand] ? brand : Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity);
-          targetMeta = brandKey ? kpi.meta[brandKey] : (kpi.meta[entity] || Object.values(kpi.meta)[0] || 0);
+        // Si es una actualización de META (por el gerente)
+        if (d.type === 'META_UPDATE') {
+          const scope = d.brand; // Puede ser "TYM", "TAT", nombre de marca o null (Global)
+          if (!scope || scope === 'Global' || scope === 'global') {
+            kpi.meta = d.newMeta;
+          } else {
+            const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
+            kpi.meta = { ...currentMeta, [scope]: d.newMeta };
+          }
         }
 
-        newValue = parseFloat((newValue || 0).toFixed(2));
+        // Determinar meta basada en marca o empresa usando mapeos
+        if (kpi.meta && typeof kpi.meta === 'object') {
+          const entity = d.company || activeCompany || 'TYM';
+          const brand = d.brand;
+
+          if (brand && kpi.meta[brand]) {
+            targetMeta = kpi.meta[brand];
+          } else if (kpi.meta[entity]) {
+            targetMeta = kpi.meta[entity];
+          } else if (kpi.meta.global) {
+            targetMeta = kpi.meta.global;
+          } else {
+            const brandKey = Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity);
+            targetMeta = brandKey ? kpi.meta[brandKey] : (Object.values(kpi.meta)[0] || 0);
+          }
+        } else {
+          targetMeta = kpi.meta;
+        }
+
+        newValue = parseFloat((newValue || kpi.currentValue || 0).toFixed(2));
 
         let semaphore = kpi.semaphore;
         let compliance = kpi.compliance;
@@ -201,13 +228,15 @@ function App() {
 
         // Update brand/company values history
         brandValues[dataKey] = {
+          ...brandValues[dataKey],
           value: newValue,
           meta: targetMeta,
           compliance,
           semaphore,
           additionalData: updatedAdditionalData,
           company: currentCompany,
-          brand: currentBrand
+          brand: currentBrand,
+          hasData: d.type === 'META_UPDATE' ? (brandValues[dataKey]?.hasData) : true
         };
 
         // Si la actualización viene del usuario (local), persistir en Supabase
@@ -216,16 +245,17 @@ function App() {
         }
 
         const targetMonth = getMonthKey(d.updatedAt || null);
-        const targetCompany = d.company || 'TYM'; // La empresa viene del additional_data
+        const targetCompany = d.company || 'TYM';
+
         return {
           ...kpi,
           currentValue: newValue,
           targetMeta,
           compliance,
           semaphore,
-          hasData: true,
+          hasData: d.type === 'META_UPDATE' ? kpi.hasData : true,
           additionalData: updatedAdditionalData,
-          brandValues,
+          brandValues: { ...brandValues },
           history: kpi.history.map(h =>
             h.month === targetMonth
               ? { ...h, [targetCompany]: newValue }
@@ -233,7 +263,7 @@ function App() {
           )
         };
       }
-      return kpi;
+      return oldKpi;
     }));
   };
 
@@ -250,17 +280,27 @@ function App() {
     }
   };
 
-  const handleUpdateKPI = (kpiId, newData) => {
-    // Validar permisos antes de actualizar
-    const kpi = kpiData.find(k => k.id === kpiId);
-
-    if (!kpi) {
-      console.error('KPI no encontrado:', kpiId);
+  const handleUpdateKPI = (id, data) => {
+    if (!data || typeof data !== 'object') {
+      console.warn('handleUpdateKPI received invalid data:', data);
       return;
     }
 
-    // Verificar que el usuario tiene permiso para actualizar este KPI
-    if (kpi.responsable !== currentUser?.cargo) {
+    const kpi = kpiData.find(k => k.id === id);
+    if (!kpi) {
+      console.error('KPI no encontrado:', id);
+      return;
+    }
+
+    const isMetaUpdate = data.type === 'META_UPDATE';
+    const isManager = currentUser?.role === 'Gerente';
+
+    if (isMetaUpdate && !isManager) {
+      console.error('Solo gerentes pueden actualizar metas');
+      return;
+    }
+
+    if (!isMetaUpdate && kpi.responsable !== currentUser?.cargo) {
       console.error('Permiso denegado:', {
         kpi: kpi.name,
         responsable: kpi.responsable,
@@ -270,8 +310,7 @@ function App() {
       return;
     }
 
-    // Si tiene permiso, proceder con la actualización
-    applyKPIUpdate(kpiId, newData, true);
+    applyKPIUpdate(id, data, true);
   };
 
   return (
@@ -293,6 +332,6 @@ function App() {
       />
     </BrowserRouter>
   );
-}
+};
 
 export default App;

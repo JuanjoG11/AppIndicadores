@@ -7,13 +7,35 @@ import {
     Target,
     Users,
     Settings as SettingsIcon,
-    Check
+    Check,
+    ChevronRight,
+    Layout
 } from 'lucide-react';
+import KPIDataForm from '../forms/KPIDataForm';
 
 const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme, onClose }) => {
     const [activeTab, setActiveTab] = useState('general');
     const [localKPIs, setLocalKPIs] = useState([...kpiData]);
     const [saveStatus, setSaveStatus] = useState('');
+    const [editingKPI, setEditingKPI] = useState(null);
+
+    // Agrupar KPIs por área
+    const kpisByArea = kpiData.reduce((acc, kpi) => {
+        const area = kpi.area || 'Otros';
+        if (!acc[area]) acc[area] = [];
+        acc[area].push(kpi);
+        return acc;
+    }, {});
+
+    const areaLabels = {
+        'logistica': 'Logística',
+        'comercial': 'Comercial',
+        'caja': 'Caja',
+        'cartera': 'Cartera',
+        'contabilidad': 'Contabilidad',
+        'talento-humano': 'Talento Humano',
+        'inventario': 'Información e Inventario'
+    };
 
     const handleExportCSV = () => {
         const headers = ['ID', 'Nombre', 'Area', 'Responsable', 'Meta', 'Valor Actual', 'Cumplimiento', 'Semaforo'];
@@ -44,12 +66,10 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
         document.body.removeChild(link);
     };
 
-    const handleUpdateMeta = (kpiId, newMeta) => {
-        const value = parseFloat(newMeta);
-        if (isNaN(value)) return;
-
-        onUpdateKPI(kpiId, { targetMeta: value });
-        setSaveStatus('Meta actualizada correctamente');
+    const handleSaveMeta = (kpiId, data) => {
+        onUpdateKPI(kpiId, data);
+        setEditingKPI(null);
+        setSaveStatus('Meta actualizada y sincronizada');
         setTimeout(() => setSaveStatus(''), 3000);
     };
 
@@ -182,28 +202,68 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
                                         <Check size={16} /> {saveStatus}
                                     </div>
                                 )}
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Ajusta las metas estratégicas para toda la organización. Estos cambios afectan el semáforo de cumplimiento.</p>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                    {kpiData.map(k => (
-                                        <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-soft)', borderRadius: '16px' }}>
-                                            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>{k.name}</span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <input
-                                                    type="number"
-                                                    defaultValue={typeof k.meta === 'number' ? k.meta : 0}
-                                                    onBlur={(e) => handleUpdateMeta(k.id, e.target.value)}
-                                                    style={{
-                                                        width: '80px',
-                                                        padding: '0.4rem',
-                                                        borderRadius: '8px',
-                                                        border: '1px solid var(--border-soft)',
-                                                        background: 'var(--bg-card)',
-                                                        color: 'var(--text-main)',
-                                                        textAlign: 'right',
-                                                        fontWeight: 700
-                                                    }}
-                                                />
-                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{k.unit}</span>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Seleccione un indicador para ajustar sus metas estratégicas por empresa o marca.</p>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                    {Object.entries(kpisByArea).map(([areaId, kpis]) => (
+                                        <div key={areaId}>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.5rem',
+                                                marginBottom: '1rem',
+                                                padding: '0.5rem 0',
+                                                borderBottom: '2px solid var(--brand-bg)'
+                                            }}>
+                                                <Layout size={16} className="text-brand" />
+                                                <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                    {areaLabels[areaId] || areaId}
+                                                </h3>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                {kpis.map(k => (
+                                                    <button
+                                                        key={k.id}
+                                                        onClick={() => setEditingKPI(k)}
+                                                        style={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center',
+                                                            padding: '1rem 1.25rem',
+                                                            background: 'var(--bg-soft)',
+                                                            borderRadius: '16px',
+                                                            border: '1px solid transparent',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s',
+                                                            textAlign: 'left',
+                                                            width: '100%'
+                                                        }}
+                                                        onMouseOver={e => {
+                                                            e.currentTarget.style.background = 'white';
+                                                            e.currentTarget.style.borderColor = 'var(--brand-bg)';
+                                                            e.currentTarget.style.transform = 'translateX(4px)';
+                                                        }}
+                                                        onMouseOut={e => {
+                                                            e.currentTarget.style.background = 'var(--bg-soft)';
+                                                            e.currentTarget.style.borderColor = 'transparent';
+                                                            e.currentTarget.style.transform = 'translateX(0)';
+                                                        }}
+                                                    >
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{k.name}</span>
+                                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{k.subArea || k.objetivo}</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--brand)' }}>
+                                                                    {typeof k.meta === 'object' ? 'Multimeta' : `${k.meta} ${k.unit}`}
+                                                                </div>
+                                                                <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#94a3b8' }}>META ACTUAL</div>
+                                                            </div>
+                                                            <ChevronRight size={18} color="#94a3b8" />
+                                                        </div>
+                                                    </button>
+                                                ))}
                                             </div>
                                         </div>
                                     ))}
@@ -284,6 +344,20 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
                     </div>
                 </div>
             </div>
+
+            {editingKPI && (
+                <div
+                    onClick={e => e.stopPropagation()}
+                    style={{ position: 'fixed', inset: 0, zIndex: 1100 }}>
+                    <KPIDataForm
+                        kpi={editingKPI}
+                        currentUser={currentUser}
+                        onSave={handleSaveMeta}
+                        onCancel={() => setEditingKPI(null)}
+                        mode="meta"
+                    />
+                </div>
+            )}
         </div>
     );
 };

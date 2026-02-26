@@ -11,14 +11,16 @@ import {
     Truck,
     DollarSign,
     Users,
-    Activity
+    Activity,
+    Shield as ShieldIcon
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
 
-const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
+const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
+    const isMetaMode = mode === 'meta';
     // Determinar si el KPI tiene metas por marca o empresa
-    const hasMultipleMetas = typeof kpi.meta === 'object';
+    const hasMultipleMetas = kpi.meta && typeof kpi.meta === 'object';
 
     // 1. Filtrar las marcas/empresas disponibles según la empresa del usuario
     let availableBrands = [];
@@ -26,10 +28,15 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
         const allBrands = Object.keys(kpi.meta);
         const userEntity = currentUser?.company; // "TYM" or "TAT"
 
-        // Mostrar solo marcas que pertenezcan a la entidad del usuario
-        availableBrands = allBrands.filter(b =>
-            BRAND_TO_ENTITY[b] === userEntity || b === userEntity
-        );
+        if (isMetaMode) {
+            // Managers see all brands/entities present in the meta object
+            availableBrands = allBrands;
+        } else {
+            // Analysts see only their entity's brands
+            availableBrands = allBrands.filter(b =>
+                BRAND_TO_ENTITY[b] === userEntity || b === userEntity
+            );
+        }
     }
 
     // 2. Determinar cuáles faltan por cargar
@@ -348,13 +355,18 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
 
     const fields = getFormulaFields();
     const liveResult = calculateLiveResult();
-    const currentMeta = hasMultipleMetas ? kpi.meta[formData.brand] : kpi.meta;
+    const currentMeta = hasMultipleMetas
+        ? (kpi.meta[formData.brand] || kpi.meta[formData.brand?.toLowerCase()] || Object.values(kpi.meta)[0])
+        : kpi.meta;
     const isInverse = isInverseKPI(kpi.id);
     const isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(kpi.id, formData);
+        const dataToSave = isMetaMode
+            ? { ...formData, type: 'META_UPDATE' }
+            : formData;
+        onSave(kpi.id, dataToSave);
     };
 
     const handleChange = (fieldName, value) => {
@@ -365,12 +377,14 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
     };
 
     return (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(15, 23, 42, 0.85)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, padding: '1.5rem', backdropFilter: 'blur(8px)'
-        }}>
+        <div
+            onClick={e => e.stopPropagation()}
+            style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(15, 23, 42, 0.85)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 1000, padding: '1.5rem', backdropFilter: 'blur(8px)'
+            }}>
             <div className="card fade-in" style={{
                 maxWidth: '650px', width: '100%', maxHeight: '95vh',
                 overflow: 'auto', padding: 0, border: 'none',
@@ -396,9 +410,11 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                             {areaIcons[kpi.area] || <Calculator size={24} />}
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.2rem' }}>{kpi.name}</h2>
+                            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.2rem' }}>
+                                {isMetaMode ? `Ajustar Meta: ${kpi.name}` : kpi.name}
+                            </h2>
                             <div style={{ fontSize: '0.75rem', opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                                {kpi.area.replace(/-/g, ' ')} • {typeof currentMeta === 'number' ? `Meta: ${currentMeta} ${kpi.unit}` : currentMeta}
+                                {kpi.area.replace(/-/g, ' ')} • {typeof currentMeta === 'number' ? `Actual: ${currentMeta} ${kpi.unit}` : currentMeta}
                             </div>
                         </div>
                     </div>
@@ -414,93 +430,162 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
 
                 <div style={{ padding: '2rem 2.5rem' }}>
                     <form onSubmit={handleSubmit}>
-                        {/* BRAND SELECTION - PREMIUM CHIPS */}
-                        {hasMultipleMetas && (
+                        {/* BRAND / ENTITY SELECTION - PREMIUM CHIPS */}
+                        {(hasMultipleMetas || isMetaMode) && (
                             <div style={{ marginBottom: '2rem' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1rem', color: '#1e293b' }}>
-                                    <Box size={16} color="var(--brand)" /> MARCA / PROVEEDOR
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1.25rem', color: '#1e293b' }}>
+                                    <Box size={16} color="var(--brand)" />
+                                    {isMetaMode ? 'SELECCIONAR NIVEL DE META' : 'MARCA / PROVEEDOR'}
                                 </label>
-                                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                    {availableBrands.map(brand => {
-                                        const pending = isBrandPending(brand);
-                                        return (
-                                            <button
-                                                key={brand}
-                                                type="button"
-                                                onClick={() => handleChange('brand', brand)}
-                                                style={{
-                                                    padding: '0.75rem 1.25rem',
-                                                    borderRadius: '16px',
-                                                    fontSize: '0.85rem',
-                                                    fontWeight: 700,
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    border: formData.brand === brand ? '2px solid var(--brand)' : '1px solid #e2e8f0',
-                                                    background: formData.brand === brand ? 'var(--brand-bg)' : 'white',
-                                                    color: formData.brand === brand ? 'var(--brand)' : '#64748b',
-                                                    boxShadow: formData.brand === brand ? '0 10px 15px -3px rgba(37,99,235,0.15)' : 'none',
-                                                    transform: formData.brand === brand ? 'scale(1.05)' : 'scale(1)',
-                                                    position: 'relative'
-                                                }}
-                                            >
-                                                {brand}
-                                                {pending && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: '-8px',
-                                                        right: '-8px',
-                                                        background: '#f43f5e',
-                                                        color: 'white',
-                                                        fontSize: '0.6rem',
-                                                        padding: '2px 8px',
-                                                        borderRadius: '8px',
-                                                        fontWeight: 900,
-                                                        boxShadow: '0 4px 6px -1px rgba(244, 63, 94, 0.3)'
-                                                    }}>
-                                                        FALTA
-                                                    </div>
-                                                )}
-                                                <div style={{ fontSize: '0.65rem', opacity: 0.7, fontWeight: 600, marginTop: '2px' }}>
-                                                    Meta: {kpi.meta[brand]} {kpi.unit}
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                    {/* Nivel Empresa / Razón Social */}
+                                    <div>
+                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                                            Nivel Empresa (Razón Social)
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                            {['Global', 'TYM', 'TAT'].map(scope => {
+                                                const isActive = scope === 'Global' ? (!formData.brand || formData.brand === 'Global') : formData.brand === scope;
+                                                return (
+                                                    <button
+                                                        key={scope}
+                                                        type="button"
+                                                        onClick={() => handleChange('brand', scope === 'Global' ? 'Global' : scope)}
+                                                        style={{
+                                                            padding: '0.6rem 1rem',
+                                                            borderRadius: '12px',
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: 700,
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s',
+                                                            border: isActive ? '2px solid var(--brand)' : '1px solid #e2e8f0',
+                                                            background: isActive ? 'var(--brand-bg)' : 'white',
+                                                            color: isActive ? 'var(--brand)' : '#64748b',
+                                                        }}
+                                                    >
+                                                        {scope}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Nivel Marca */}
+                                    {((isMetaMode) || hasMultipleMetas) && (
+                                        <div>
+                                            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                                                Nivel Marca / Producto
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                                {/* En modo Meta mostramos todas las marcas estándar agrupadas si el KPI aplica */}
+                                                {(isMetaMode ? ['ALPINA', 'ZENU', 'FLEISCHMANN', 'UNILEVER', 'FAMILIA'] : availableBrands).map(brand => {
+                                                    const isActive = formData.brand === brand;
+                                                    const pending = !isMetaMode && isBrandPending(brand);
+                                                    const entity = BRAND_TO_ENTITY[brand];
+
+                                                    return (
+                                                        <button
+                                                            key={brand}
+                                                            type="button"
+                                                            onClick={() => handleChange('brand', brand)}
+                                                            style={{
+                                                                padding: '0.6rem 1rem',
+                                                                borderRadius: '12px',
+                                                                fontSize: '0.8rem',
+                                                                fontWeight: 700,
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s',
+                                                                border: isActive ? '2px solid var(--brand)' : '1px solid #e2e8f0',
+                                                                background: isActive ? 'var(--brand-bg)' : 'white',
+                                                                color: isActive ? 'var(--brand)' : '#64748b',
+                                                                position: 'relative',
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                alignItems: 'center',
+                                                                gap: '2px'
+                                                            }}
+                                                        >
+                                                            <span>{brand}</span>
+                                                            <span style={{ fontSize: '0.6rem', opacity: 0.6 }}>{entity}</span>
+                                                            {pending && (
+                                                                <div style={{
+                                                                    position: 'absolute', top: '-5px', right: '-5px',
+                                                                    background: '#f43f5e', color: 'white', fontSize: '0.5rem',
+                                                                    padding: '1px 4px', borderRadius: '4px'
+                                                                }}>!</div>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
 
                         {/* INPUT FIELDS - CLEAN & BOLD */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                            {fields.map(field => (
-                                <div key={field.name}>
-                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.6rem', color: '#334155' }}>
-                                        {field.label}
-                                    </label>
-                                    <div style={{ position: 'relative' }}>
-                                        <input
-                                            type={field.type}
-                                            step="any"
-                                            required
-                                            value={formData[field.name] || ''}
-                                            onChange={(e) => handleChange(field.name, e.target.value)}
-                                            style={{
-                                                width: '100%', padding: '1.1rem 1.25rem',
-                                                border: '2px solid #e2e8f0', borderRadius: '18px',
-                                                fontSize: '1.25rem', fontWeight: 800, color: '#1e293b',
-                                                transition: 'all 0.2s', outline: 'none', background: '#f8fafc'
-                                            }}
-                                            onFocus={e => e.currentTarget.style.borderColor = 'var(--brand)'}
-                                            onBlur={e => e.currentTarget.style.borderColor = '#e2e8f0'}
-                                            placeholder={field.placeholder || "0"}
-                                        />
+                        {/* INPUT FIELDS - CLEAN & BOLD */}
+                        {isMetaMode ? (
+                            <div style={{ marginBottom: '2.5rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.6rem', color: '#334155' }}>
+                                    Nueva Meta para {formData.brand || 'Global'} ({kpi.unit})
+                                </label>
+                                <input
+                                    type="number"
+                                    step="any"
+                                    required
+                                    value={formData.newMeta || ''}
+                                    onChange={(e) => handleChange('newMeta', e.target.value)}
+                                    placeholder={`Meta actual: ${(kpi.meta && typeof kpi.meta === 'object'
+                                        ? (kpi.meta[formData.brand || 'global'] || kpi.meta[formData.brand || 'Global'] || Object.values(kpi.meta)[0])
+                                        : kpi.meta)
+                                        }`}
+                                    style={{
+                                        width: '100%', padding: '1.1rem 1.25rem',
+                                        border: '2px solid var(--brand)', borderRadius: '18px',
+                                        fontSize: '1.5rem', fontWeight: 800, color: '#1e293b',
+                                        background: 'white', outline: 'none'
+                                    }}
+                                />
+                                <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <ShieldIcon size={14} />
+                                    Meta actual: {currentMeta} {kpi.unit}
+                                </p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                                {fields.map(field => (
+                                    <div key={field.name}>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.6rem', color: '#334155' }}>
+                                            {field.label}
+                                        </label>
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type={field.type}
+                                                step="any"
+                                                required
+                                                value={formData[field.name] || ''}
+                                                onChange={(e) => handleChange(field.name, e.target.value)}
+                                                style={{
+                                                    width: '100%', padding: '1.1rem 1.25rem',
+                                                    border: '2px solid #e2e8f0', borderRadius: '18px',
+                                                    fontSize: '1.25rem', fontWeight: 800, color: '#1e293b',
+                                                    transition: 'all 0.2s', outline: 'none', background: '#f8fafc'
+                                                }}
+                                                onFocus={e => e.currentTarget.style.borderColor = 'var(--brand)'}
+                                                onBlur={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+                                                placeholder={field.placeholder || "0"}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* LIVE RESULT CARD - WOW FACTOR */}
-                        {liveResult !== null && (
+                        {!isMetaMode && liveResult !== null && (
                             <div className="premium-shadow" style={{
                                 marginBottom: '2.5rem', padding: '2rem',
                                 background: isMeetingMeta ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)' : 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
@@ -525,7 +610,6 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                                             </div>
                                         </div>
                                     </div>
-
                                     <div style={{
                                         display: 'flex', gap: '1rem', marginTop: '1.5rem',
                                         paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)',
@@ -539,7 +623,6 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                                         </div>
                                     </div>
                                 </div>
-                                {/* Decorative background element */}
                                 <Calculator size={120} style={{ position: 'absolute', right: '-20px', bottom: '-20px', opacity: 0.1, transform: 'rotate(-10deg)' }} />
                             </div>
                         )}
@@ -555,7 +638,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                             </button>
                             <button type="submit" style={{
                                 flex: 2, padding: '1.25rem', borderRadius: '18px', border: 'none',
-                                background: 'var(--bg-sidebar)', color: 'white', fontWeight: 900, cursor: 'pointer',
+                                background: isMetaMode ? 'var(--brand)' : 'var(--bg-sidebar)', color: 'white', fontWeight: 900, cursor: 'pointer',
                                 boxShadow: '0 15px 30px -10px rgba(15,23,42,0.4)', fontSize: '1.1rem',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
                                 transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
@@ -566,7 +649,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                                 e.currentTarget.style.transform = 'scale(1)';
                                 e.currentTarget.style.boxShadow = '0 15px 30px -10px rgba(15,23,42,0.4)';
                             }}>
-                                <Save size={22} /> GUARDAR INDICADOR
+                                <Save size={22} /> {isMetaMode ? 'ACTUALIZAR META' : 'GUARDAR INDICADOR'}
                             </button>
                         </div>
                     </form>
@@ -577,7 +660,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel }) => {
                     }}>
                         <Info size={20} color="var(--brand)" />
                         <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: 1.5 }}>
-                            <strong>Instrucción:</strong> Ingresa los valores solicitados para la marca <strong>{formData.brand || 'General'}</strong>. El sistema calculará automáticamente el resultado y lo enviará al tablero directivo.
+                            <strong>Instrucción:</strong> {isMetaMode
+                                ? `Como Gerente, puedes redefinir la meta para ${formData.brand || 'este indicador'}. Este cambio se aplicará a todos los tableros.`
+                                : `Ingresa los valores solicitados para la marca ${formData.brand || 'General'}. El sistema calculará el resultado automáticamente.`}
                         </div>
                     </div>
                 </div>

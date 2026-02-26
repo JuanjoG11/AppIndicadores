@@ -19,14 +19,17 @@ import {
     Cell
 } from 'recharts';
 import {
-    ArrowLeft,
+    ArrowLeft as ArrowLeftIcon,
     LayoutDashboard,
     Activity,
-    PieChart as PieIcon,
     TrendingUp,
     ShieldCheck,
-    AlertCircle
+    AlertCircle,
+    Package,
+    Filter,
+    ChevronRight
 } from 'lucide-react';
+import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 
 const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => {
     const { areaId } = useParams();
@@ -34,6 +37,13 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const area = getAreaById(areaId);
     const [activeSubArea, setActiveSubArea] = useState(areaId === 'logistica' ? 'Logística de Entrega' : 'all');
     const [editingKPI, setEditingKPI] = useState(null);
+    const [editMode, setEditMode] = useState('data');
+    const [selectedBrand, setSelectedBrand] = useState('all');
+
+    const handleStartEdit = (kpi, mode = 'data') => {
+        setEditingKPI(kpi);
+        setEditMode(mode);
+    };
 
     // Restricted access: Manager (Gerente) cannot edit
     const canModify = currentUser?.role !== 'Gerente';
@@ -55,10 +65,24 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     // 2. Sub-areas filter logic for Logistics
     const subAreas = areaId === 'logistica' ? ['Logística de Entrega', 'Logística de Picking', 'Logística de Depósito'] : [];
 
-    // 3. Filtered KPIs for the CURRENT view (Area or Sub-Area)
-    const filteredKPIs = areaId === 'logistica' && activeSubArea !== 'all'
+    // 3. Brand filter logic for specific areas
+    const brandsForEntity = Object.entries(BRAND_TO_ENTITY)
+        .filter(([_, entity]) => entity === activeCompany)
+        .map(([name]) => name);
+
+    const showBrandFilter = areaId === 'logistica' || areaId === 'comercial';
+
+    // 4. Filtered KPIs for the CURRENT view (Area or Sub-Area + Brand)
+    let filteredKPIs = areaId === 'logistica' && activeSubArea !== 'all'
         ? areaKPIs.filter(kpi => kpi.subArea === activeSubArea)
         : areaKPIs;
+
+    if (selectedBrand !== 'all') {
+        filteredKPIs = filteredKPIs.filter(kpi => {
+            if (!kpi.meta || typeof kpi.meta !== 'object') return false; // Solo KPIs con marcas
+            return kpi.meta.hasOwnProperty(selectedBrand);
+        });
+    }
 
     // 4. Analytics based on FILTERED data
     const kpisWithData = filteredKPIs.filter(kpi => kpi.hasData);
@@ -107,7 +131,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                             boxShadow: 'var(--shadow-sm)'
                         }}
                     >
-                        <ArrowLeft size={14} /> Volver
+                        <ArrowLeftIcon size={14} /> Volver
                     </button>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{
@@ -254,6 +278,62 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                 </div>
             )}
 
+            {/* Brand Filtering row */}
+            {showBrandFilter && (
+                <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '0.75rem',
+                    marginBottom: '2.5rem',
+                    padding: '0.4rem',
+                    background: '#f8fafc',
+                    borderRadius: '16px',
+                    width: 'fit-content'
+                }}>
+                    <button
+                        onClick={() => setSelectedBrand('all')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '12px',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            background: selectedBrand === 'all' ? '#1e293b' : 'white',
+                            color: selectedBrand === 'all' ? 'white' : '#64748b'
+                        }}
+                    >
+                        <Filter size={12} /> TODAS LAS MARCAS
+                    </button>
+                    {brandsForEntity.map(brand => (
+                        <button
+                            key={brand}
+                            onClick={() => setSelectedBrand(brand)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '12px',
+                                border: '1px solid #e2e8f0',
+                                fontSize: '0.75rem',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                background: selectedBrand === brand ? 'var(--brand)' : 'white',
+                                color: selectedBrand === brand ? 'white' : '#64748b'
+                            }}
+                        >
+                            <Package size={12} /> {brand}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             {/* Bottom Grid Row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
                 <div style={{ width: '24px', height: '4px', background: 'var(--brand)', borderRadius: '2px' }}></div>
@@ -268,9 +348,10 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                         key={kpi.id}
                         kpi={kpi}
                         canEdit={canModify}
-                        onEdit={setEditingKPI}
+                        onEdit={handleStartEdit}
                         currentUser={currentUser}
                         activeCompany={activeCompany}
+                        selectedBrand={selectedBrand}
                     />
                 ))}
             </div>
@@ -282,6 +363,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     currentUser={currentUser}
                     onSave={handleSaveKPI}
                     onCancel={() => setEditingKPI(null)}
+                    mode={editMode}
                 />
             )}
 

@@ -12,27 +12,46 @@ import {
     ArrowDownRight,
     ChevronDown,
     ChevronUp,
-    Clock
+    Clock,
+    Settings
 } from 'lucide-react';
 import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
 
-const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany }) => {
+const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selectedBrand }) => {
     const [showBreakdown, setShowBreakdown] = React.useState(false);
 
     // 1. Determinar marcas de la entidad actual (TYM o TAT)
     const entity = activeCompany || 'TYM';
-    const allMetaBrands = typeof kpi.meta === 'object' ? Object.keys(kpi.meta) : [];
+    const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
     const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
 
+    // Si hay una marca seleccionada, enfocarse en ella
+    const isBrandFocus = selectedBrand && selectedBrand !== 'all';
+
+    // Meta y Valor según el enfoque (consolidado o marca específica)
+    let displayValue = kpi.currentValue;
+    let displayTarget = kpi.targetMeta;
+    let displayCompliance = kpi.compliance;
+
+    if (isBrandFocus) {
+        const dataKey = `${entity}-${selectedBrand}`;
+        const bData = kpi.brandValues?.[dataKey];
+        displayValue = bData?.currentValue || 0;
+        displayTarget = kpi.meta[selectedBrand] || 0;
+        displayCompliance = bData?.compliance;
+    }
+
     // 2. Identificar cuáles faltan por cargar
-    const pendingBrands = entityBrands.filter(brand => {
+    // Si hay filtro de marca, solo importa esa marca. Si no, importan todas las de la entidad.
+    const relevantBrandsToTrack = isBrandFocus ? [selectedBrand] : entityBrands;
+    const pendingBrands = relevantBrandsToTrack.filter(brand => {
         const dataKey = `${entity}-${brand}`;
         const brandData = kpi.brandValues?.[dataKey];
         return !brandData || brandData.hasData === false;
     });
 
-    const isSuccess = kpi.semaphore === 'green';
-    const isWarning = kpi.semaphore === 'yellow';
+    const isSuccess = displayCompliance >= 100 || (isBrandFocus ? false : kpi.semaphore === 'green');
+    const isWarning = (displayCompliance < 100 && displayCompliance >= 80) || (isBrandFocus ? false : kpi.semaphore === 'yellow');
     const color = isSuccess ? '#059669' : (isWarning ? '#f59e0b' : '#ef4444');
     const bgColor = isSuccess ? '#ecfdf5' : (isWarning ? '#fffbeb' : '#fef2f2');
 
@@ -146,7 +165,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany }) => 
                     </div>
                     {canEdit && (
                         <button
-                            onClick={() => onEdit && onEdit(kpi)}
+                            onClick={() => onEdit && onEdit(kpi, 'data')}
                             style={{
                                 background: 'transparent', border: 'none',
                                 color: '#94a3b8', cursor: 'pointer',
@@ -156,6 +175,20 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany }) => 
                             <Edit2 size={16} />
                         </button>
                     )}
+                    {isManager && (
+                        <button
+                            onClick={() => onEdit && onEdit(kpi, 'meta')}
+                            style={{
+                                background: 'transparent', border: 'none',
+                                color: 'var(--brand)', cursor: 'pointer',
+                                padding: '0.25rem',
+                                opacity: 0.8
+                            }}
+                            title="Gestionar Metas"
+                        >
+                            <Settings size={16} />
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -163,21 +196,21 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany }) => 
             <div style={{ margin: '0.5rem 0' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
                     <span style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.04em' }}>
-                        {formatKPIValue(kpi.currentValue, kpi.unit).split(' ')[0]}
+                        {formatKPIValue(displayValue, kpi.unit).split(' ')[0]}
                     </span>
                     <span style={{ fontSize: '1rem', fontWeight: 700, color: '#64748b' }}>
                         {kpi.unit}
                     </span>
                 </div>
 
-                {kpi.compliance !== undefined && (
+                {displayCompliance !== undefined && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem' }}>
                         <div style={{
                             display: 'flex', alignItems: 'center',
                             color: color, fontWeight: 800, fontSize: '0.85rem'
                         }}>
                             {isSuccess ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                            {kpi.compliance.toFixed(1)}%
+                            {displayCompliance.toFixed(1)}%
                         </div>
                         <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>CUMPLIMIENTO</span>
                     </div>
@@ -311,7 +344,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany }) => 
                 alignItems: 'center'
             }}>
                 <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>
-                    CONSOLIDADO {entity}: <span style={{ color: '#334155' }}>{kpi.targetMeta} {kpi.unit}</span>
+                    {isBrandFocus ? `META ${selectedBrand}:` : `CONSOLIDADO ${entity}:`} <span style={{ color: '#334155' }}>{displayTarget} {kpi.unit}</span>
                 </div>
                 <div style={{
                     fontSize: '0.6rem',

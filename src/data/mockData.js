@@ -172,7 +172,7 @@ export const generateMockData = () => {
 
         // Obtener meta numérica si es un objeto
         let targetMeta = kpi.meta;
-        if (typeof kpi.meta === 'object') {
+        if (kpi.meta && typeof kpi.meta === 'object') {
             const brand = realData?.brand;
             const entity = BRAND_TO_ENTITY[brand] || 'TYM';
 
@@ -249,14 +249,15 @@ export const calculateOverallScore = (data) => {
     return Math.round(totalCompliance / kpisWithData.length);
 };
 
-export const getCriticalAlerts = (data) => {
-    return data
+export const getCriticalAlerts = (data, entity = 'TYM') => {
+    const alerts = [];
+
+    // 1. Alertas de Semáforo Rojo
+    const redKPIs = data
         .filter(kpi => kpi.semaphore === 'red' && kpi.hasData)
         .map(kpi => {
             let metaDisplay = kpi.meta;
-            if (typeof kpi.meta === 'object') {
-                // If meta is an object (brand specific), verify if we have targetMeta populated or just grab the first value/brand
-                // Ideally we use the 'targetMeta' property we added in generateMockData
+            if (kpi.meta && typeof kpi.meta === 'object') {
                 metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
             }
 
@@ -268,9 +269,52 @@ export const getCriticalAlerts = (data) => {
                 meta: metaDisplay,
                 unit: kpi.unit,
                 severity: 'critical',
-                message: `${kpi.name} está en ${kpi.currentValue}${kpi.unit === '%' ? '%' : ''} (Meta: ${metaDisplay}${kpi.unit === '%' ? '%' : ''})`
+                type: 'compliance',
+                message: `${kpi.name} bajo desempeño: ${kpi.currentValue}${kpi.unit === '%' ? '%' : ''} vs Meta ${metaDisplay}`
             };
         });
+
+    alerts.push(...redKPIs);
+
+    // 2. Alertas de Datos Pendientes (Solo para la entidad activa)
+    data.forEach(kpi => {
+        const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
+        const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+
+        // Si es un indicador simple (No por marca)
+        if (entityBrands.length === 0 && !kpi.hasData && kpi.area !== 'talento-humano') {
+            alerts.push({
+                id: kpi.id,
+                kpiName: kpi.name,
+                area: kpi.area,
+                severity: 'warning',
+                type: 'pending',
+                message: `Falta alimentar: ${kpi.name}`
+            });
+            return;
+        }
+
+        // Si es por marca, ver cuáles faltan
+        const pendingBrands = entityBrands.filter(brand => {
+            const dataKey = `${entity}-${brand}`;
+            const brandData = kpi.brandValues?.[dataKey];
+            return !brandData || brandData.hasData === false;
+        });
+
+        if (pendingBrands.length > 0) {
+            alerts.push({
+                id: kpi.id,
+                kpiName: kpi.name,
+                area: kpi.area,
+                severity: 'warning',
+                type: 'pending',
+                brand: pendingBrands[0],
+                message: `Pendiente (${pendingBrands.join(', ')}): ${kpi.name}`
+            });
+        }
+    });
+
+    return alerts;
 };
 
 export const getWarningAlerts = (data) => {
@@ -278,7 +322,7 @@ export const getWarningAlerts = (data) => {
         .filter(kpi => kpi.semaphore === 'yellow' && kpi.hasData)
         .map(kpi => {
             let metaDisplay = kpi.meta;
-            if (typeof kpi.meta === 'object') {
+            if (kpi.meta && typeof kpi.meta === 'object') {
                 metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
             }
 

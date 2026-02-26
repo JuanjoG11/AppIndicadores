@@ -24,8 +24,8 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
         meta: {
             ALPINA: 50,
+            FLEISCHMANN: 50,
             UNILEVER: 80,
-            POLAR: 75,
             ZENU: 80
         },
         unit: 'pedidos',
@@ -43,8 +43,8 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
         meta: {
             ALPINA: 65,
+            FLEISCHMANN: 65,
             UNILEVER: 80,
-            POLAR: 75,
             ZENU: 80
         },
         unit: 'pedidos',
@@ -62,8 +62,8 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 3.4,
+            FLEISCHMANN: 3.4,
             UNILEVER: 3.4,
-            POLAR: 3.4,
             ZENU: 3.4
         },
         unit: '%',
@@ -81,8 +81,8 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 4.5,
+            FLEISCHMANN: 4.5,
             UNILEVER: 4.2,
-            POLAR: 6,
             ZENU: 3.4
         },
         unit: '%',
@@ -100,8 +100,8 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 1.5,
+            FLEISCHMANN: 1.5,
             UNILEVER: 1,
-            POLAR: 2,
             ZENU: 1
         },
         unit: 'horas',

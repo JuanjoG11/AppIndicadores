@@ -34,7 +34,7 @@ export const calculateHistoricalTrend = (kpis, company = null) => {
                     kpi.id === 'he-rn-nomina' ||
                     kpi.id === 'tiempo-contratacion';
 
-                const targetMeta = typeof kpi.meta === 'object'
+                const targetMeta = (kpi.meta && typeof kpi.meta === 'object')
                     ? (company ? kpi.meta[company] : Object.values(kpi.meta)[0])
                     : kpi.meta;
 

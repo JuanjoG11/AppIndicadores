@@ -9,7 +9,7 @@ const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuTog
     const [showUserMenu, setShowUserMenu] = useState(false);
 
     // Get alerts
-    const criticalAlerts = kpiData ? getCriticalAlerts(kpiData) : [];
+    const criticalAlerts = kpiData ? getCriticalAlerts(kpiData, activeCompany) : [];
     const hasAlerts = criticalAlerts.length > 0;
 
     const handleAlertClick = (areaId) => {

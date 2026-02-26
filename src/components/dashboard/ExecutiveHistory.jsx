@@ -25,7 +25,7 @@ const getAreaScoreByMonth = (kpis, areaId, company) => {
                 kpi.id === 'rotacion-personal' || kpi.id === 'ausentismo' ||
                 kpi.id === 'he-rn-nomina' || kpi.id === 'tiempo-contratacion';
 
-            const meta = typeof kpi.meta === 'object'
+            const meta = (kpi.meta && typeof kpi.meta === 'object')
                 ? (kpi.meta[company] || Object.values(kpi.meta)[0])
                 : kpi.meta;
             if (!meta) return;
@@ -56,7 +56,7 @@ const getOverallByMonth = (kpis, company) => {
                     kpi.id === 'notas-errores-venta' || kpi.id.includes('nomina') ||
                     kpi.id === 'rotacion-personal' || kpi.id === 'ausentismo' ||
                     kpi.id === 'he-rn-nomina' || kpi.id === 'tiempo-contratacion';
-                const meta = typeof kpi.meta === 'object'
+                const meta = (kpi.meta && typeof kpi.meta === 'object')
                     ? (kpi.meta[company] || Object.values(kpi.meta)[0])
                     : kpi.meta;
                 if (!meta) return;

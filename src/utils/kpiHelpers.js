@@ -3,7 +3,6 @@
  */
 export const BRAND_TO_ENTITY = {
     'ALPINA': 'TYM',
-    'POLAR': 'TYM',
     'ZENU': 'TYM',
     'FLEISCHMANN': 'TYM',
     'UNILEVER': 'TAT',
@@ -23,7 +22,7 @@ export const filterKPIsByEntity = (kpiData, entity) => {
 
     return kpiData.filter(kpi => {
         // If meta is an object, it MUST contain at least one brand from this entity or the entity name itself
-        if (typeof kpi.meta === 'object') {
+        if (kpi.meta && typeof kpi.meta === 'object') {
             const hasEntityBrand = Object.keys(kpi.meta).some(b => BRAND_TO_ENTITY[b] === entity || b === entity);
             if (!hasEntityBrand) return false;
         }
@@ -31,7 +30,7 @@ export const filterKPIsByEntity = (kpiData, entity) => {
     }).map(kpi => {
         // 1. Resolve Meta (Target)
         let targetMeta = kpi.meta;
-        if (typeof kpi.meta === 'object') {
+        if (kpi.meta && typeof kpi.meta === 'object') {
             // Find the first brand in the meta object that belongs to this entity
             const brandKey = Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity || b === entity);
             targetMeta = brandKey ? kpi.meta[brandKey] : Object.values(kpi.meta)[0] || 0;
