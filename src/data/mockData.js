@@ -253,31 +253,41 @@ export const getCriticalAlerts = (data, entity = 'TYM') => {
     const alerts = [];
 
     // 1. Alertas de Semáforo Rojo
-    const redKPIs = data
-        .filter(kpi => kpi.semaphore === 'red' && kpi.hasData)
-        .map(kpi => {
-            let metaDisplay = kpi.meta;
-            if (kpi.meta && typeof kpi.meta === 'object') {
-                metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
-            }
+    data.filter(kpi => kpi.semaphore === 'red' && kpi.hasData).forEach(kpi => {
+        let metaDisplay = kpi.meta;
+        if (kpi.meta && typeof kpi.meta === 'object') {
+            metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
+        }
 
-            return {
-                id: kpi.id,
-                kpiName: kpi.name,
-                area: kpi.area,
-                currentValue: kpi.currentValue,
-                meta: metaDisplay,
-                unit: kpi.unit,
-                severity: 'critical',
-                type: 'compliance',
-                message: `${kpi.name} bajo desempeño: ${kpi.currentValue}${kpi.unit === '%' ? '%' : ''} vs Meta ${metaDisplay}`
-            };
+        // Brand progress for multi-brand KPIs
+        let progressDetail = '';
+        const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
+        const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+
+        if (entityBrands.length > 0) {
+            const pending = entityBrands.filter(b => !kpi.brandValues?.[`${entity}-${b}`]?.hasData);
+            const loaded = entityBrands.filter(b => kpi.brandValues?.[`${entity}-${b}`]?.hasData);
+            progressDetail = ` | Cargado: (${loaded.join(', ')}) - Pendiente: (${pending.join(', ')})`;
+        }
+
+        alerts.push({
+            id: kpi.id,
+            kpiName: kpi.name,
+            area: kpi.area,
+            currentValue: kpi.currentValue,
+            meta: metaDisplay,
+            unit: kpi.unit,
+            severity: 'critical',
+            type: 'compliance',
+            message: `${entity}${progressDetail} - ${kpi.name} bajo desempeño: ${kpi.currentValue}${kpi.unit === '%' ? '%' : ''} vs Meta ${metaDisplay}`
         });
-
-    alerts.push(...redKPIs);
+    });
 
     // 2. Alertas de Datos Pendientes (Solo para la entidad activa)
     data.forEach(kpi => {
+        // Skip if already added as red (to avoid duplication if it has some data but is red)
+        if (kpi.semaphore === 'red' && kpi.hasData) return;
+
         const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
         const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
 
@@ -289,19 +299,22 @@ export const getCriticalAlerts = (data, entity = 'TYM') => {
                 area: kpi.area,
                 severity: 'warning',
                 type: 'pending',
-                message: `Falta alimentar: ${kpi.name}`
+                message: `${entity} - Pendiente de carga: ${kpi.name}`
             });
             return;
         }
 
-        // Si es por marca, ver cuáles faltan
-        const pendingBrands = entityBrands.filter(brand => {
-            const dataKey = `${entity}-${brand}`;
-            const brandData = kpi.brandValues?.[dataKey];
-            return !brandData || brandData.hasData === false;
-        });
+        // Si es por marca, ver cuáles faltan y cuáles ya están
+        const pendingBrands = entityBrands.filter(brand => !kpi.brandValues?.[`${entity}-${brand}`]?.hasData);
+        const loadedBrands = entityBrands.filter(brand => kpi.brandValues?.[`${entity}-${brand}`]?.hasData);
 
         if (pendingBrands.length > 0) {
+            let statusText = `${entity} | `;
+            if (loadedBrands.length > 0) {
+                statusText += `Cargado: (${loadedBrands.join(', ')}) - `;
+            }
+            statusText += `Pendiente: (${pendingBrands.join(', ')})`;
+
             alerts.push({
                 id: kpi.id,
                 kpiName: kpi.name,
@@ -309,7 +322,7 @@ export const getCriticalAlerts = (data, entity = 'TYM') => {
                 severity: 'warning',
                 type: 'pending',
                 brand: pendingBrands[0],
-                message: `Pendiente (${pendingBrands.join(', ')}): ${kpi.name}`
+                message: `${statusText}: ${kpi.name}`
             });
         }
     });
@@ -317,10 +330,22 @@ export const getCriticalAlerts = (data, entity = 'TYM') => {
     return alerts;
 };
 
-export const getWarningAlerts = (data) => {
+export const getWarningAlerts = (data, entity = 'TYM') => {
     return data
         .filter(kpi => kpi.semaphore === 'yellow' && kpi.hasData)
         .map(kpi => {
+            const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
+            const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+
+            let progressDetail = "";
+            if (entityBrands.length > 0) {
+                const pending = entityBrands.filter(b => !kpi.brandValues?.[`${entity}-${b}`]?.hasData);
+                const loaded = entityBrands.filter(b => kpi.brandValues?.[`${entity}-${b}`]?.hasData);
+                if (entityBrands.length > 1 || (entityBrands.length === 1 && entityBrands[0] !== entity)) {
+                    progressDetail = ` | Cargado: (${loaded.length > 0 ? loaded.join(', ') : 'Ninguna'}) - Pendiente: (${pending.join(', ')})`;
+                }
+            }
+
             let metaDisplay = kpi.meta;
             if (kpi.meta && typeof kpi.meta === 'object') {
                 metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
@@ -334,7 +359,7 @@ export const getWarningAlerts = (data) => {
                 meta: metaDisplay,
                 unit: kpi.unit,
                 severity: 'medium',
-                message: `${kpi.name} requiere atención (Meta: ${metaDisplay}${kpi.unit === '%' ? '%' : ''})`
+                message: `${entity}${progressDetail} - ${kpi.name} requiere atención (Meta: ${metaDisplay}${kpi.unit === '%' ? '%' : ''})`
             };
         });
 };

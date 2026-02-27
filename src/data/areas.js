@@ -39,7 +39,7 @@ export const areas = [
     id: 'comercial',
     name: 'Comercial',
     description: 'Ventas y gestión comercial',
-    responsible: 'Coordinador por Marca',
+    responsible: 'Analistas (Varios)',
     color: '#ea580c'
   },
   {

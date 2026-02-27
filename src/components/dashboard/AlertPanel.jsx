@@ -5,10 +5,10 @@ import { getCriticalAlerts, getWarningAlerts } from '../../data/mockData';
 import { formatKPIValue, formatPercent } from '../../utils/formatters';
 import { areas } from '../../data/areas';
 
-const AlertPanel = ({ kpiData }) => {
+const AlertPanel = ({ kpiData, activeCompany = 'TYM' }) => {
     const navigate = useNavigate();
-    const criticalAlerts = getCriticalAlerts(kpiData);
-    const warningAlerts = getWarningAlerts(kpiData).slice(0, 3); // Top 3 warnings
+    const criticalAlerts = getCriticalAlerts(kpiData, activeCompany);
+    const warningAlerts = getWarningAlerts(kpiData, activeCompany).slice(0, 3); // Top 3 warnings
 
     const getAreaName = (areaId) => {
         return areas.find(a => a.id === areaId)?.name || areaId;
