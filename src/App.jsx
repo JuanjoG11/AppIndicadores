@@ -61,7 +61,7 @@ const AppContent = ({ currentUser, kpiData, activeCompany, setActiveCompany, the
         </div>
       </main>
 
-      {showSettings && (
+      {showSettings && currentUser?.role === 'Gerente' && (
         <SettingsModal
           currentUser={currentUser}
           kpiData={kpiData}

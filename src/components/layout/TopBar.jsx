@@ -225,14 +225,16 @@ const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuTog
                     </div>
                 )}
 
-                {/* Settings Icon */}
-                <div
-                    style={{ cursor: 'pointer', opacity: 0.6 }}
-                    className="hover:opacity-100 transition-opacity"
-                    onClick={onOpenSettings}
-                >
-                    <Settings size={20} className="text-slate-600" />
-                </div>
+                {/* Settings Icon (Only for Gerente) */}
+                {currentUser?.role === 'Gerente' && (
+                    <div
+                        style={{ cursor: 'pointer', opacity: 0.6 }}
+                        className="hover:opacity-100 transition-opacity"
+                        onClick={onOpenSettings}
+                    >
+                        <Settings size={20} className="text-slate-600" />
+                    </div>
+                )}
 
                 {/* User Profile */}
                 <div style={{
