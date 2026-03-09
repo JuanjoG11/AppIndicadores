@@ -9,8 +9,10 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar el % mas alto de efectividad en la entrega',
         meta: {
             ALPINA: 1.80,
-            ZENÚ: 1.80,
-            FLEISCHMANN: 1.80
+            ZENU: 1.80,
+            FLEISCHMANN: 1.80,
+            UNILEVER: 1.80,
+            FAMILIA: 1.80
         },
         unit: '%',
         frecuencia: 'DIARIO',
@@ -27,8 +29,10 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
         meta: {
             ALPINA: 50,
+            ZENU: 80,
+            FLEISCHMANN: 50,
             UNILEVER: 80,
-            ZENU: 80
+            FAMILIA: 80
         },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
@@ -45,8 +49,10 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
         meta: {
             ALPINA: 65,
+            ZENU: 80,
+            FLEISCHMANN: 65,
             UNILEVER: 80,
-            ZENU: 80
+            FAMILIA: 80
         },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
@@ -63,8 +69,10 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 3.4,
+            ZENU: 3.4,
+            FLEISCHMANN: 3.4,
             UNILEVER: 3.4,
-            ZENU: 3.4
+            FAMILIA: 3.4
         },
         unit: '%',
         frecuencia: 'MENSUAL',
@@ -81,8 +89,10 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 4.5,
+            ZENU: 3.4,
+            FLEISCHMANN: 4.5,
             UNILEVER: 4.2,
-            ZENU: 3.4
+            FAMILIA: 4.2
         },
         unit: '%',
         frecuencia: 'SEMANAL',
@@ -99,8 +109,10 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 1.5,
+            ZENU: 1,
+            FLEISCHMANN: 1.5,
             UNILEVER: 1,
-            ZENU: 1
+            FAMILIA: 1
         },
         unit: 'horas',
         frecuencia: 'MENSUAL',
@@ -116,7 +128,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la productividad en el picking de productos',
         meta: {
-            ALPINA: 8
+            ALPINA: 8,
+            ZENU: 8,
+            FLEISCHMANN: 8,
+            UNILEVER: 8,
+            FAMILIA: 8
         },
         unit: 'segundos',
         frecuencia: 'DIARIO',
@@ -132,7 +148,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la productividad en le piking de productos',
         meta: {
-            ALPINA: 218000000
+            ALPINA: 218000000,
+            ZENU: 218000000,
+            FLEISCHMANN: 218000000,
+            UNILEVER: 218000000,
+            FAMILIA: 218000000
         },
         unit: '$',
         frecuencia: 'MENSUAL',
@@ -148,7 +168,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
         meta: {
-            ALPINA: 100
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100
         },
         unit: '%',
         frecuencia: 'DIARIO',
@@ -165,8 +189,10 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la eficiencia del turno de separacion',
         meta: {
             ALPINA: 1,
-            ZENÚ: 1,
-            FLEISCHMANN: 1
+            ZENU: 1,
+            FLEISCHMANN: 1,
+            UNILEVER: 1,
+            FAMILIA: 1
         },
         unit: '%',
         frecuencia: 'DIARIO',
@@ -182,7 +208,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
         meta: {
-            FLEISCHMANN: 100
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100
         },
         unit: '%',
         frecuencia: 'DIARIO',
@@ -199,8 +229,10 @@ export const kpiDefinitions = [
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
-            FAMILIA: 1,
-            UNILEVER: 1
+            ZENU: 1,
+            FLEISCHMANN: 1,
+            UNILEVER: 1,
+            FAMILIA: 1
         },
         unit: '%',
         frecuencia: 'MENSUAL',
@@ -216,8 +248,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
-            TYM: 0.05,
-            TAT: 0.05
+            ALPINA: 0.05,
+            ZENU: 0.05,
+            FLEISCHMANN: 0.05,
+            UNILEVER: 0.05,
+            FAMILIA: 0.05
         },
         unit: '%',
         frecuencia: 'MENSUAL',
@@ -235,7 +270,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Depósito',
         objetivo: 'Reducir la perdida de embalajes',
         meta: {
-            ALPINA: 0
+            ALPINA: 0,
+            ZENU: 0,
+            FLEISCHMANN: 0,
+            UNILEVER: 0,
+            FAMILIA: 0
         },
         unit: 'cantidad',
         frecuencia: 'SEMANAL',
@@ -251,8 +290,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
-            TYM: 0.4,
-            TAT: 0.4
+            ALPINA: 0.4,
+            ZENU: 0.4,
+            FLEISCHMANN: 0.4,
+            UNILEVER: 0.4,
+            FAMILIA: 0.4
         },
         unit: '%',
         frecuencia: 'MENSUAL',
@@ -268,8 +310,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
-            TYM: 0.05,
-            TAT: 0.05
+            ALPINA: 0.05,
+            ZENU: 0.05,
+            FLEISCHMANN: 0.05,
+            UNILEVER: 0.05,
+            FAMILIA: 0.05
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
@@ -286,7 +331,10 @@ export const kpiDefinitions = [
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             ALPINA: 0.20,
-            ZENÚ: 0.20
+            ZENU: 0.20,
+            FLEISCHMANN: 0.20,
+            UNILEVER: 0.20,
+            FAMILIA: 0.20
         },
         unit: '%',
         frecuencia: 'SEMANAL',
@@ -303,8 +351,11 @@ export const kpiDefinitions = [
         area: 'talento-humano',
         objetivo: 'Reducir la rotación de personal en las diferentes áreas',
         meta: {
-            TYM: 5,
-            TAT: 5
+            ALPINA: 5,
+            ZENU: 5,
+            FLEISCHMANN: 5,
+            UNILEVER: 5,
+            FAMILIA: 5
         },
         brands: ['TYM', 'TAT'],
         unit: '%',
@@ -320,8 +371,11 @@ export const kpiDefinitions = [
         area: 'talento-humano',
         objetivo: 'Reducir el ausentismo en los equipos',
         meta: {
-            TYM: 2.5,
-            TAT: 2.5
+            ALPINA: 2.5,
+            ZENU: 2.5,
+            FLEISCHMANN: 2.5,
+            UNILEVER: 2.5,
+            FAMILIA: 2.5
         },
         brands: ['TYM', 'TAT'],
         unit: '%',
@@ -350,8 +404,11 @@ export const kpiDefinitions = [
         area: 'talento-humano',
         objetivo: 'Reducir el pago por H.E-R.N',
         meta: {
-            TYM: 3,
-            TAT: 3
+            ALPINA: 3,
+            ZENU: 3,
+            FLEISCHMANN: 3,
+            UNILEVER: 3,
+            FAMILIA: 3
         },
         brands: ['TYM', 'TAT'],
         unit: '%',
@@ -367,8 +424,11 @@ export const kpiDefinitions = [
         area: 'talento-humano',
         objetivo: 'Garantizar la rentabilidad de la compañía en la nómina',
         meta: {
-            TYM: 11,
-            TAT: 11 // Adjusted per user instruction or kept consistent validation needed
+            ALPINA: 11,
+            ZENU: 11,
+            FLEISCHMANN: 11,
+            UNILEVER: 11,
+            FAMILIA: 11
         },
         brands: ['TYM', 'TAT'],
         unit: '%',
@@ -383,7 +443,13 @@ export const kpiDefinitions = [
         name: 'Cumplimiento de Actividades',
         area: 'talento-humano',
         objetivo: 'Fortalecer la cultura organizacional por medio de actividades',
-        meta: 100,
+        meta: {
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -396,7 +462,13 @@ export const kpiDefinitions = [
         name: 'Tiempo de Cobertura de Vacantes',
         area: 'talento-humano',
         objetivo: 'Reducir el tiempo de respuesta en contrataciones',
-        meta: 8,
+        meta: {
+            ALPINA: 8,
+            ZENU: 8,
+            FLEISCHMANN: 8,
+            UNILEVER: 8,
+            FAMILIA: 8
+        },
         unit: 'días',
         frecuencia: 'QUINCENAL',
         responsable: 'GESTIÓN HUMANA',
@@ -409,7 +481,13 @@ export const kpiDefinitions = [
         name: 'Cumplimiento de Arqueos',
         area: 'caja',
         objetivo: 'Garantizar el control permanente del efectivo',
-        meta: 8,
+        meta: {
+            ALPINA: 8,
+            ZENU: 8,
+            FLEISCHMANN: 8,
+            UNILEVER: 8,
+            FAMILIA: 8
+        },
         unit: 'arqueos',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
@@ -422,7 +500,13 @@ export const kpiDefinitions = [
         name: 'Cierre de Planillas',
         area: 'caja',
         objetivo: 'Ejecutar el cierre de planillas diario',
-        meta: 100,
+        meta: {
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
@@ -435,7 +519,13 @@ export const kpiDefinitions = [
         name: 'Participación de Vales en Caja',
         area: 'caja',
         objetivo: 'Reducir el valor de vales generados en caja por descuadres',
-        meta: 0.5,
+        meta: {
+            ALPINA: 0.5,
+            ZENU: 0.5,
+            FLEISCHMANN: 0.5,
+            UNILEVER: 0.5,
+            FAMILIA: 0.5
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
@@ -452,9 +542,10 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
             ALPINA: 10,
-            FAMILIA: 10,
+            ZENU: 10,
+            FLEISCHMANN: 10,
             UNILEVER: 10,
-            ZENU: 10
+            FAMILIA: 10
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
@@ -470,9 +561,10 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
             ALPINA: 90,
-            FAMILIA: 90,
+            ZENU: 90,
+            FLEISCHMANN: 90,
             UNILEVER: 90,
-            ZENU: 90
+            FAMILIA: 90
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
@@ -488,9 +580,10 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
             ALPINA: 8,
-            FAMILIA: 8,
+            ZENU: 8,
+            FLEISCHMANN: 8,
             UNILEVER: 8,
-            ZENU: 8
+            FAMILIA: 8
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
@@ -506,9 +599,10 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
             ALPINA: 2,
-            FAMILIA: 2,
+            ZENU: 2,
+            FLEISCHMANN: 2,
             UNILEVER: 2,
-            ZENU: 2
+            FAMILIA: 2
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
@@ -523,8 +617,11 @@ export const kpiDefinitions = [
         area: 'cartera',
         objetivo: 'Fortalecer el control interno con la cartera a la calle',
         meta: {
-            TYM: 2,
-            TAT: 2
+            ALPINA: 2,
+            ZENU: 2,
+            FLEISCHMANN: 2,
+            UNILEVER: 2,
+            FAMILIA: 2
         },
         unit: 'cantidad',
         frecuencia: 'BIMESTRAL',
@@ -843,7 +940,13 @@ export const kpiDefinitions = [
         description: 'Gastos de personal / total venta',
         area: 'comercial',
         objetivo: 'Controlar costos operativos comerciales',
-        meta: 5,
+        meta: {
+            ALPINA: 5,
+            ZENU: 5,
+            FLEISCHMANN: 5,
+            UNILEVER: 5,
+            FAMILIA: 5
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -858,7 +961,13 @@ export const kpiDefinitions = [
         description: 'Gastos de viaje / total ventas',
         area: 'comercial',
         objetivo: 'Optimizar gastos de representación y viaje',
-        meta: 0.2,
+        meta: {
+            ALPINA: 0.2,
+            ZENU: 0.2,
+            FLEISCHMANN: 0.2,
+            UNILEVER: 0.2,
+            FAMILIA: 0.2
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
@@ -897,9 +1006,10 @@ export const kpiDefinitions = [
         objetivo: 'Optimizar rotación de inventarios para flujo de caja',
         meta: {
             ALPINA: 7,
-            FAMILIA: 18,
+            ZENU: 7,
+            FLEISCHMANN: 7,
             UNILEVER: 45,
-            FLEISCHMANN: 18,
+            FAMILIA: 18,
             POLAR: 18
         },
         unit: 'días',
@@ -918,7 +1028,13 @@ export const kpiDefinitions = [
         description: '# de inventarios realizados / programados',
         area: 'administrativo',
         objetivo: 'Garantizar el control físico de existencias',
-        meta: 16,
+        meta: {
+            ALPINA: 16,
+            ZENU: 16,
+            FLEISCHMANN: 16,
+            UNILEVER: 16,
+            FAMILIA: 16
+        },
         unit: 'cantidad',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -933,7 +1049,13 @@ export const kpiDefinitions = [
         description: '(Valor correcto / valor verificado) x100',
         area: 'administrativo',
         objetivo: 'Asegurar la exactitud de los registros contables',
-        meta: 100,
+        meta: {
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -948,7 +1070,13 @@ export const kpiDefinitions = [
         description: '# de quiebres de inventario en el periodo',
         area: 'administrativo',
         objetivo: 'Minimizar pedidos no servidos por falta de stock',
-        meta: 0,
+        meta: {
+            ALPINA: 0,
+            ZENU: 0,
+            FLEISCHMANN: 0,
+            UNILEVER: 0,
+            FAMILIA: 0
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -963,7 +1091,13 @@ export const kpiDefinitions = [
         description: '(Inventario obsoleto / inventario total) x 100',
         area: 'administrativo',
         objetivo: 'Reducir pérdidas por productos vencidos o sin rotación',
-        meta: 0,
+        meta: {
+            ALPINA: 0,
+            ZENU: 0,
+            FLEISCHMANN: 0,
+            UNILEVER: 0,
+            FAMILIA: 0
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -978,7 +1112,13 @@ export const kpiDefinitions = [
         description: '(Valor mermas / inventario total) x 100',
         area: 'administrativo',
         objetivo: 'Controlar pérdidas físicas de mercancía',
-        meta: 0,
+        meta: {
+            ALPINA: 0,
+            ZENU: 0,
+            FLEISCHMANN: 0,
+            UNILEVER: 0,
+            FAMILIA: 0
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -993,7 +1133,13 @@ export const kpiDefinitions = [
         description: 'Valor diferencia fisica - valor del inventario',
         area: 'administrativo',
         objetivo: 'Eliminar descuadres entre stock físico y sistema',
-        meta: 0,
+        meta: {
+            ALPINA: 0,
+            ZENU: 0,
+            FLEISCHMANN: 0,
+            UNILEVER: 0,
+            FAMILIA: 0
+        },
         unit: '$',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -1008,7 +1154,13 @@ export const kpiDefinitions = [
         description: 'Cantidad de veces revisados / meta',
         area: 'administrativo',
         objetivo: 'Verificar rentabilidad parametrizada',
-        meta: 4,
+        meta: {
+            ALPINA: 4,
+            ZENU: 4,
+            FLEISCHMANN: 4,
+            UNILEVER: 4,
+            FAMILIA: 4
+        },
         unit: 'veces',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -1023,7 +1175,13 @@ export const kpiDefinitions = [
         description: 'Cantidad de veces revisados / meta',
         area: 'administrativo',
         objetivo: 'Evitar errores de facturación al cliente',
-        meta: 4,
+        meta: {
+            ALPINA: 4,
+            ZENU: 4,
+            FLEISCHMANN: 4,
+            UNILEVER: 4,
+            FAMILIA: 4
+        },
         unit: 'veces',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
