@@ -3,11 +3,15 @@ export const kpiDefinitions = [
     // ========== LOGÍSTICA DE ENTREGA ==========
     {
         id: 'pedidos-devueltos',
-        name: '% de pedidos devueltos',
+        name: 'Índice de Devoluciones',
         area: 'logistica',
         subArea: 'Logística de Entrega',
         objetivo: 'Garantizar el % mas alto de efectividad en la entrega',
-        meta: 1.80,
+        meta: {
+            ALPINA: 1.80,
+            ZENÚ: 1.80,
+            FLEISCHMANN: 1.80
+        },
         unit: '%',
         frecuencia: 'DIARIO',
         responsable: 'LOGISTICA',
@@ -17,7 +21,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'promedio-pedidos-auxiliar',
-        name: 'Promedio de pedidos entregados por AUXILIAR x marca',
+        name: 'Productividad de Auxiliares por Marca',
         area: 'logistica',
         subArea: 'Logística de Entrega',
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
@@ -35,7 +39,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'promedio-pedidos-carro',
-        name: 'Promedio de pedidos entregados por CARRO',
+        name: 'Productividad por Vehículo',
         area: 'logistica',
         subArea: 'Logística de Entrega',
         objetivo: 'Mejorar la productividad en la entrega de pedidos',
@@ -53,7 +57,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'gasto-nomina-venta',
-        name: '(Gasto de nomina / Venta total)',
+        name: 'Participación de Nómina en Ventas',
         area: 'logistica',
         subArea: 'Logística de Entrega',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
@@ -71,7 +75,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'gasto-fletes-venta',
-        name: '(Gasto de Fletes / Venta total)',
+        name: 'Participación de Fletes en Ventas',
         area: 'logistica',
         subArea: 'Logística de Entrega',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
@@ -89,7 +93,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'horas-extras-auxiliares',
-        name: 'Numero de horas extras trabajadas en el periodo / Auxiliares',
+        name: 'Promedio de Horas Extra por Auxiliar',
         area: 'logistica',
         subArea: 'Logística de Entrega',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
@@ -107,11 +111,13 @@ export const kpiDefinitions = [
     },
     {
         id: 'segundos-unidad-separada',
-        name: 'Segundos x unidad separada',
+        name: 'Tiempo de Separación por Unidad',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la productividad en el picking de productos',
-        meta: 8,
+        meta: {
+            ALPINA: 8
+        },
         unit: 'segundos',
         frecuencia: 'DIARIO',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -121,11 +127,13 @@ export const kpiDefinitions = [
     },
     {
         id: 'pesos-separados-hombre',
-        name: '$ Separados hombre',
+        name: 'Valor Separado por Operario',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la productividad en le piking de productos',
-        meta: 218000000,
+        meta: {
+            ALPINA: 218000000
+        },
         unit: '$',
         frecuencia: 'MENSUAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -135,11 +143,13 @@ export const kpiDefinitions = [
     },
     {
         id: 'pedidos-separar-total',
-        name: '# Pedidos a separar / Total pedidos a separar',
+        name: 'Avance en Separación de Pedidos',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
-        meta: 100,
+        meta: {
+            ALPINA: 100
+        },
         unit: '%',
         frecuencia: 'DIARIO',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -149,11 +159,15 @@ export const kpiDefinitions = [
     },
     {
         id: 'notas-errores-venta',
-        name: '$ de notas generadas por errores / Venta',
+        name: 'Impacto de Notas por Error',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
-        meta: 1,
+        meta: {
+            ALPINA: 1,
+            ZENÚ: 1,
+            FLEISCHMANN: 1
+        },
         unit: '%',
         frecuencia: 'DIARIO',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -163,7 +177,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'planillas-separadas',
-        name: '# de planillas separadas / # de planillas a separar',
+        name: 'Cumplimiento de Separación de Planillas',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
@@ -179,7 +193,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'nomina-venta-picking',
-        name: '$ Nómina / Total De La Venta',
+        name: 'Participación de Nómina en Ventas',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
@@ -197,7 +211,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'horas-extras-venta-picking',
-        name: '# De horas extras trabajada en el periodo / Venta',
+        name: 'Relación Horas Extra vs Ventas',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
@@ -216,11 +230,13 @@ export const kpiDefinitions = [
     // ========== LOGÍSTICA DE DEPÓSITO ==========
     {
         id: 'embalajes-perdidos',
-        name: '# de embalajes por tamaño perdidos',
+        name: 'Pérdida de Embalajes',
         area: 'logistica',
         subArea: 'Logística de Depósito',
         objetivo: 'Reducir la perdida de embalajes',
-        meta: 0,
+        meta: {
+            ALPINA: 0
+        },
         unit: 'cantidad',
         frecuencia: 'SEMANAL',
         responsable: 'LOGISTICA',
@@ -230,7 +246,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'nomina-compra-deposito',
-        name: 'Gasto de nomina / Total de la compra',
+        name: 'Participación de Nómina en Compras',
         area: 'logistica',
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
@@ -247,7 +263,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'horas-extras-venta-deposito',
-        name: '# De horas extras trabajada en el periodo / Venta',
+        name: 'Relación Horas Extra vs Ventas',
         area: 'logistica',
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
@@ -264,11 +280,14 @@ export const kpiDefinitions = [
     },
     {
         id: 'averias-venta',
-        name: 'Averias / Venta',
+        name: 'Índice de Averías',
         area: 'logistica',
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
-        meta: 0.20,
+        meta: {
+            ALPINA: 0.20,
+            ZENÚ: 0.20
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'LOGISTICA',
@@ -280,7 +299,7 @@ export const kpiDefinitions = [
     // ========== TALENTO HUMANO ==========
     {
         id: 'rotacion-personal',
-        name: 'Rotación De Personal',
+        name: 'Rotación de Personal',
         area: 'talento-humano',
         objetivo: 'Reducir la rotación de personal en las diferentes áreas',
         meta: {
@@ -297,7 +316,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'ausentismo',
-        name: 'Ausentismo',
+        name: 'Índice de Ausentismo',
         area: 'talento-humano',
         objetivo: 'Reducir el ausentismo en los equipos',
         meta: {
@@ -314,7 +333,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'calificacion-auditoria',
-        name: '% Calificación Auditoría',
+        name: 'Cumplimiento de Actividades',
         area: 'talento-humano',
         objetivo: 'Ejecutar el Sistema de Gestión',
         meta: 90,
@@ -327,7 +346,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'he-rn-nomina',
-        name: 'Valor H.E-R.N / Total Nómina',
+        name: 'Participación de Horas Extra en Nómina',
         area: 'talento-humano',
         objetivo: 'Reducir el pago por H.E-R.N',
         meta: {
@@ -344,7 +363,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'gasto-nomina-venta-rrhh',
-        name: 'Gasto De Nómina RRHH / Venta',
+        name: 'Participación de Nómina en Ventas',
         area: 'talento-humano',
         objetivo: 'Garantizar la rentabilidad de la compañía en la nómina',
         meta: {
@@ -361,7 +380,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'actividades-cultura',
-        name: '# De Actividades / Meta',
+        name: 'Cumplimiento de Actividades',
         area: 'talento-humano',
         objetivo: 'Fortalecer la cultura organizacional por medio de actividades',
         meta: 100,
@@ -374,7 +393,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'tiempo-contratacion',
-        name: '# De Días De Respuesta En Vacantes',
+        name: 'Tiempo de Cobertura de Vacantes',
         area: 'talento-humano',
         objetivo: 'Reducir el tiempo de respuesta en contrataciones',
         meta: 8,
@@ -387,7 +406,7 @@ export const kpiDefinitions = [
     // ========== CAJA ==========
     {
         id: 'arqueos-realizados',
-        name: '# De Arqueos Realizados / Meta',
+        name: 'Cumplimiento de Arqueos',
         area: 'caja',
         objetivo: 'Garantizar el control permanente del efectivo',
         meta: 8,
@@ -400,7 +419,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'planillas-cerradas',
-        name: '# Planillas Cerradas / # Planillas Generadas',
+        name: 'Cierre de Planillas',
         area: 'caja',
         objetivo: 'Ejecutar el cierre de planillas diario',
         meta: 100,
@@ -413,7 +432,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'vales-descuadres',
-        name: 'Valor De Vales Día / Total Cuadre De Caja',
+        name: 'Participación de Vales en Caja',
         area: 'caja',
         objetivo: 'Reducir el valor de vales generados en caja por descuadres',
         meta: 0.5,
@@ -428,7 +447,7 @@ export const kpiDefinitions = [
     // ========== CARTERA ==========
     {
         id: 'cartera-no-vencida',
-        name: '% De Cartera No Vencida',
+        name: 'Cartera al Día',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
@@ -446,7 +465,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'cartera-11-30',
-        name: '% De Cartera 11-30 Días',
+        name: 'Cartera 11 a 30 Días',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
@@ -464,7 +483,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'cartera-31-45',
-        name: '% De Cartera 31-45 Días',
+        name: 'Cartera 31 a 45 Días',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
@@ -482,7 +501,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'cartera-mayor-45',
-        name: '% De Cartera Mayor A 45 Días',
+        name: 'Cartera Mayor a 45 Días',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
@@ -500,7 +519,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'recircularizaciones',
-        name: '# Recircularizaciones Efectuadas / Programadas',
+        name: 'Cumplimiento de Recircularizaciones',
         area: 'cartera',
         objetivo: 'Fortalecer el control interno con la cartera a la calle',
         meta: {
@@ -516,7 +535,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'valor-cartera-venta',
-        name: 'Valor De Cartera / Venta',
+        name: 'Relación Cartera vs Ventas',
         area: 'cartera',
         objetivo: 'Garantizar los Flujos de las compañías',
         meta: {
@@ -536,7 +555,7 @@ export const kpiDefinitions = [
     // ========== CONTABILIDAD ==========
     {
         id: 'dias-cierre',
-        name: 'Total Días Al Cierre / Meta',
+        name: 'Cumplimiento de Tiempo de Cierre',
         area: 'contabilidad',
         objetivo: 'Ejecutar los cierres contables de mes en los tiempos óptimos',
         meta: 12,
@@ -549,7 +568,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'ajustes-posteriores',
-        name: '# De Ajustes Posteriores Al Cierre',
+        name: 'Ajustes Posteriores al Cierre',
         area: 'contabilidad',
         objetivo: 'Garantizar la confiabilidad de los cierres contables',
         meta: 1,
@@ -562,7 +581,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'ajustes-revisoria',
-        name: '# De Ajustes Por Revisoría Fiscal',
+        name: 'Ajustes por Revisoría Fiscal',
         area: 'contabilidad',
         objetivo: 'Garantizar la confiabilidad de los cierres contables',
         meta: 1,
@@ -575,7 +594,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'rotacion-cxc',
-        name: 'Rotación Cuentas Por Cobrar',
+        name: 'Rotación de Cuentas por Cobrar',
         area: 'contabilidad',
         objetivo: 'Mejorar la rotación en las cuentas por cobrar a clientes',
         meta: {
@@ -591,7 +610,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'rotacion-cxp',
-        name: 'Rotación Cuentas Por Pagar',
+        name: 'Rotación de Cuentas por Pagar',
         area: 'contabilidad',
         objetivo: 'Garantizar la rotación en las cuentas por pagar a proveedores',
         meta: {
@@ -607,7 +626,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'conciliaciones-bancarias',
-        name: 'Conciliaciones Bancarias / Requeridas',
+        name: 'Cumplimiento de Conciliaciones Bancarias',
         area: 'contabilidad',
         objetivo: 'Fortalecer el control interno',
         meta: 2,
@@ -620,7 +639,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'activos-conciliados',
-        name: 'Activos Conciliados / Activos Registrados',
+        name: 'Conciliación de Activos',
         area: 'contabilidad',
         objetivo: 'Fortalecer el control interno',
         meta: {
@@ -636,7 +655,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'multas-sanciones',
-        name: 'Valor De Multas O Sanciones Tributarias / Ingreso',
+        name: 'Impacto de Sanciones Tributarias',
         area: 'contabilidad',
         objetivo: 'Fortalecer el control interno',
         meta: {
@@ -652,7 +671,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'optimizacion-tributaria',
-        name: 'Optimizar La Carga Tributaria',
+        name: 'Optimización de Impuestos',
         area: 'contabilidad',
         objetivo: 'Optimizar la carga tributaria buscando mejores flujos y rentabilidad',
         meta: {
@@ -670,7 +689,7 @@ export const kpiDefinitions = [
     // ========== COMERCIAL ==========
     {
         id: 'venta-realizada-esperada',
-        name: 'Garantizar La Venta Necesaria Por Mes En Cifras Internas',
+        name: 'Cumplimiento de Ventas',
         description: 'Venta realizada / esperada',
         area: 'comercial',
         objetivo: 'Cumplimiento de presupuesto de ventas',
@@ -685,7 +704,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'primer-margen',
-        name: 'Garantizar El Primer Margen',
+        name: 'Margen Bruto',
         description: '(ventas - costo de ventas) / ventas x 100',
         area: 'comercial',
         objetivo: 'Optimizar la rentabilidad bruta',
@@ -706,7 +725,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'devoluciones-buen-estado',
-        name: 'Reducir Las Devoluciones En Buen Estado',
+        name: 'Devoluciones en Buen Estado',
         description: '$ devolucion buen estado / total de la venta',
         area: 'comercial',
         objetivo: 'Controlar devoluciones aptas para re-venta',
@@ -721,7 +740,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'devoluciones-mal-estado-comercial',
-        name: 'Reducir Las Devoluciones En Mal Estado',
+        name: 'Devoluciones en Mal Estado',
         description: '$ devolucion mal estado / venta',
         area: 'comercial',
         objetivo: 'Disminuir mermas por devoluciones averiadas',
@@ -742,7 +761,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'promedio-venta-vendedor',
-        name: 'Garantizar El Promedio De Venta Por Vendedor',
+        name: 'Ventas Promedio por Vendedor',
         description: 'Ventas totales / # vendedores',
         area: 'comercial',
         objetivo: 'Aumentar la productividad de la fuerza comercial',
@@ -763,7 +782,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'participacion-venta-credito',
-        name: 'Disminuir La Participación De La Venta De Crédito',
+        name: 'Participación de Ventas a Crédito',
         description: 'Venta credito / Venta total',
         area: 'comercial',
         objetivo: 'Optimizar el recaudo inmediato',
@@ -784,7 +803,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'cobro-optimo-cartera',
-        name: 'Ejecutar El Cobro Óptimo De La Cartera',
+        name: 'Cartera Vencida',
         description: 'Cartera vencida / Total de cartera',
         area: 'comercial',
         objetivo: 'Reducir la mora en el recaudo',
@@ -799,7 +818,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'rotacion-equipo-comercial',
-        name: 'Reducir La Rotación Del Equipo A Cargo',
+        name: 'Rotación de Personal',
         description: '(# de salidas / promedio empleados) x 100',
         area: 'comercial',
         objetivo: 'Fomentar la estabilidad laboral',
@@ -820,7 +839,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'gasto-personal-comercial',
-        name: 'Disminuir El Gasto Del Equipo Comercial (Nómina)',
+        name: 'Participación de Gastos de Personal',
         description: 'Gastos de personal / total venta',
         area: 'comercial',
         objetivo: 'Controlar costos operativos comerciales',
@@ -835,7 +854,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'gasto-viaje-comercial',
-        name: 'Disminuir El Gasto Del Equipo Comercial (Viaje)',
+        name: 'Participación de Gastos de Viaje',
         description: 'Gastos de viaje / total ventas',
         area: 'comercial',
         objetivo: 'Optimizar gastos de representación y viaje',
@@ -850,7 +869,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'gasto-fletes-comercial',
-        name: 'Control Del Gasto Asignado Por Concepto De Fletes',
+        name: 'Participación de Gastos de Fletes',
         description: 'Gastos de fletes / ventas totales',
         area: 'comercial',
         objetivo: 'Eficiencia en el costo logístico comercial',
@@ -872,7 +891,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'dias-inventario-comercial',
-        name: 'Garantizar Los Flujos De Caja De Las Operaciones (Inventario)',
+        name: 'Días Promedio de Inventario',
         description: 'Dias promedio de inventario / meta',
         area: 'comercial',
         objetivo: 'Optimizar rotación de inventarios para flujo de caja',
@@ -895,7 +914,7 @@ export const kpiDefinitions = [
     // ========== ADMINISTRATIVO (INFORMACIÓN / INVENTARIO) ==========
     {
         id: 'inventarios-realizados',
-        name: 'Ejecutar El Control Interno De Los Inventarios',
+        name: 'Cumplimiento de Inventarios',
         description: '# de inventarios realizados / programados',
         area: 'administrativo',
         objetivo: 'Garantizar el control físico de existencias',
@@ -910,7 +929,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'fiabilidad-inventarios',
-        name: 'Garantizar La Fiabilidad De Los Inventarios',
+        name: 'Exactitud de Inventario',
         description: '(Valor correcto / valor verificado) x100',
         area: 'administrativo',
         objetivo: 'Asegurar la exactitud de los registros contables',
@@ -925,7 +944,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'quiebres-inventario',
-        name: 'Garantizar La Disponibilidad De Inventario',
+        name: 'Quiebres de Inventario',
         description: '# de quiebres de inventario en el periodo',
         area: 'administrativo',
         objetivo: 'Minimizar pedidos no servidos por falta de stock',
@@ -940,7 +959,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'obsolescencia',
-        name: 'Disminuir La Obsolescencia En Inventarios',
+        name: 'Inventario Obsoleto',
         description: '(Inventario obsoleto / inventario total) x 100',
         area: 'administrativo',
         objetivo: 'Reducir pérdidas por productos vencidos o sin rotación',
@@ -955,7 +974,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'mermas',
-        name: 'Fortalecer El Control Del Inventario (Mermas)',
+        name: 'Mermas de Inventario',
         description: '(Valor mermas / inventario total) x 100',
         area: 'administrativo',
         objetivo: 'Controlar pérdidas físicas de mercancía',
@@ -970,7 +989,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'diferencia-inventarios',
-        name: 'Disminuir La Diferencia En Los Inventarios',
+        name: 'Diferencia de Inventario',
         description: 'Valor diferencia fisica - valor del inventario',
         area: 'administrativo',
         objetivo: 'Eliminar descuadres entre stock físico y sistema',
@@ -985,7 +1004,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'revision-margenes',
-        name: 'Garantizar Los Márgenes En El Sistema',
+        name: 'Cumplimiento de Revisiones',
         description: 'Cantidad de veces revisados / meta',
         area: 'administrativo',
         objetivo: 'Verificar rentabilidad parametrizada',
@@ -1000,7 +1019,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'revision-precios',
-        name: 'Garantizar Los Precios A La Calle (Precio De Lista) Estén Bien',
+        name: 'Cumplimiento de Revisiones',
         description: 'Cantidad de veces revisados / meta',
         area: 'administrativo',
         objetivo: 'Evitar errores de facturación al cliente',

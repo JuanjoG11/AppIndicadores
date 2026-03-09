@@ -103,23 +103,27 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a', lineHeight: 1.2, marginBottom: '0.4rem' }}>
                         {kpi.name}
                     </h4>
-                    {kpi.additionalData?.brand && (
-                        <div style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                            fontSize: '0.65rem',
-                            fontWeight: 800,
-                            color: 'var(--brand)',
-                            background: 'var(--brand-bg)',
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '20px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.02em'
-                        }}>
-                            <Package size={10} /> {kpi.additionalData.brand}
-                        </div>
-                    )}
+                    {/* Brand Tag / Entity Tag */}
+                    {(() => {
+                        const displayBrand = isBrandFocus ? selectedBrand : (kpi.additionalData?.brand || activeCompany);
+                        return (
+                            <div style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                fontSize: '0.65rem',
+                                fontWeight: 800,
+                                color: 'var(--brand)',
+                                background: 'var(--brand-bg)',
+                                padding: '0.2rem 0.6rem',
+                                borderRadius: '20px',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.02em'
+                            }}>
+                                <Package size={10} /> {displayBrand}
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -201,31 +205,39 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                     </div>
                 )}
                 {/* DETALLE DE CÁLCULO (Input values) */}
-                {kpi.additionalData && Object.keys(kpi.additionalData).length > 2 && (
-                    <div style={{
-                        marginTop: '1.25rem',
-                        padding: '0.75rem',
-                        background: '#f8fafc',
-                        borderRadius: '12px',
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: '0.75rem'
-                    }}>
-                        {Object.entries(kpi.additionalData)
-                            .filter(([key]) => !['brand', 'company', 'updatedAt', 'type', 'newMeta'].includes(key))
-                            .map(([key, val]) => (
-                                <div key={key}>
-                                    <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>
-                                        {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+                {(() => {
+                    const dataToRender = isBrandFocus
+                        ? kpi.brandValues?.[`${entity}-${selectedBrand}`]?.additionalData
+                        : kpi.additionalData;
+
+                    if (!dataToRender || Object.keys(dataToRender).length <= 2) return null;
+
+                    return (
+                        <div style={{
+                            marginTop: '1.25rem',
+                            padding: '0.75rem',
+                            background: '#f8fafc',
+                            borderRadius: '12px',
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '0.75rem'
+                        }}>
+                            {Object.entries(dataToRender)
+                                .filter(([key]) => !['brand', 'company', 'updatedAt', 'type', 'newMeta'].includes(key))
+                                .map(([key, val]) => (
+                                    <div key={key}>
+                                        <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>
+                                            {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+                                        </div>
+                                        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#334155' }}>
+                                            {typeof val === 'number' ? (val > 1000 ? `$${val.toLocaleString()}` : val) : val}
+                                        </div>
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#334155' }}>
-                                        {typeof val === 'number' ? (val > 1000 ? `$${val.toLocaleString()}` : val) : val}
-                                    </div>
-                                </div>
-                            ))
-                        }
-                    </div>
-                )}
+                                ))
+                            }
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* Sparkline */}

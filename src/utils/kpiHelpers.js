@@ -27,13 +27,17 @@ export const filterKPIsByEntity = (kpiData, entity) => {
         }
         return true;
     }).map(kpi => {
-        // 1. Resolver Meta (Target)
+        // 1. Resolver Meta (Target) - Promedio si hay marcas de la misma entidad
         let targetMeta = kpi.meta;
         let entityBrands = [];
         if (kpi.meta && typeof kpi.meta === 'object') {
             entityBrands = Object.keys(kpi.meta).filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
-            const brandKey = entityBrands[0];
-            targetMeta = brandKey ? kpi.meta[brandKey] : Object.values(kpi.meta)[0] || 0;
+            if (entityBrands.length > 0) {
+                const totalMeta = entityBrands.reduce((sum, b) => sum + (kpi.meta[b] || 0), 0);
+                targetMeta = totalMeta / entityBrands.length;
+            } else {
+                targetMeta = Object.values(kpi.meta)[0] || 0;
+            }
         }
 
         // 2. Resolver Datos Agregados para la Entidad
@@ -59,7 +63,7 @@ export const filterKPIsByEntity = (kpiData, entity) => {
             entityKeys.forEach(key => {
                 const data = brandValues[key];
                 if (data.hasData) {
-                    totalValue += (data.value || 0);
+                    totalValue += (data.currentValue || 0);
                     totalCompliance += (data.compliance || 0);
                     filledCount++;
                 }
@@ -75,6 +79,9 @@ export const filterKPIsByEntity = (kpiData, entity) => {
                 else semaphore = 'red';
             }
 
+            // Si hay múltiples marcas, la marca en additionalData debe reflejar el consolidado
+            const baseAdditionalData = brandValues[entityKeys[entityKeys.length - 1]].additionalData || {};
+
             return {
                 ...kpi,
                 currentValue: parseFloat(avgValue.toFixed(2)),
@@ -82,7 +89,10 @@ export const filterKPIsByEntity = (kpiData, entity) => {
                 semaphore: semaphore,
                 targetMeta,
                 hasData: allFilled,
-                additionalData: brandValues[entityKeys[entityKeys.length - 1]].additionalData
+                additionalData: {
+                    ...baseAdditionalData,
+                    brand: entityBrands.length === 1 ? entityBrands[0] : (entity === 'TYM' ? 'Tiendas y Marcas' : 'TAT Distribuciones')
+                }
             };
         }
 

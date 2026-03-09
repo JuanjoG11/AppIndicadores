@@ -95,7 +95,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             brandValues[dataKey] = {
                 ...brandValues[dataKey],
-                value: newValue,
+                currentValue: newValue,
                 meta: targetMeta,
                 compliance,
                 semaphore,

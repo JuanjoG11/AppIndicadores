@@ -38,8 +38,6 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const [activeSubArea, setActiveSubArea] = useState(areaId === 'logistica' ? 'Logística de Entrega' : 'all');
     const [editingKPI, setEditingKPI] = useState(null);
     const [editMode, setEditMode] = useState('data');
-    const [selectedBrand, setSelectedBrand] = useState('all');
-
     const handleStartEdit = (kpi, mode = 'data') => {
         setEditingKPI(kpi);
         setEditMode(mode);
@@ -66,20 +64,37 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const subAreas = areaId === 'logistica' ? ['Logística de Entrega', 'Logística de Picking', 'Logística de Depósito'] : [];
 
     // 3. Brand filter logic for specific areas
+    const brandAreas = ['logistica', 'comercial', 'cartera'];
+    const isBrandSpecificArea = brandAreas.includes(areaId);
+
     const brandsForEntity = Object.entries(BRAND_TO_ENTITY)
         .filter(([_, entity]) => entity === activeCompany)
         .map(([name]) => name);
 
-    const showBrandFilter = areaId === 'logistica' || areaId === 'comercial';
+    const [selectedBrand, setSelectedBrand] = useState('all');
+
+    // Reset or set default brand when area or company changes
+    React.useEffect(() => {
+        if (isBrandSpecificArea) {
+            const firstBrand = Object.entries(BRAND_TO_ENTITY)
+                .find(([_, entity]) => entity === activeCompany)?.[0];
+            setSelectedBrand(firstBrand || 'all');
+        } else {
+            setSelectedBrand('all');
+        }
+    }, [areaId, activeCompany, isBrandSpecificArea]);
+
+    const showBrandFilter = isBrandSpecificArea;
 
     // 4. Filtered KPIs for the CURRENT view (Area or Sub-Area + Brand)
     let filteredKPIs = areaId === 'logistica' && activeSubArea !== 'all'
         ? areaKPIs.filter(kpi => kpi.subArea === activeSubArea)
         : areaKPIs;
 
-    if (selectedBrand !== 'all') {
+    // Apply brand filter ONLY if we are in a brand-specific area and a brand is selected
+    if (isBrandSpecificArea && selectedBrand !== 'all') {
         filteredKPIs = filteredKPIs.filter(kpi => {
-            if (!kpi.meta || typeof kpi.meta !== 'object') return false; // Solo KPIs con marcas
+            if (!kpi.meta || typeof kpi.meta !== 'object') return false;
             return kpi.meta.hasOwnProperty(selectedBrand);
         });
     }
@@ -320,25 +335,6 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     borderRadius: '16px',
                     width: 'fit-content'
                 }}>
-                    <button
-                        onClick={() => setSelectedBrand('all')}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '12px',
-                            border: '1px solid #e2e8f0',
-                            fontSize: '0.75rem',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            background: selectedBrand === 'all' ? '#1e293b' : 'white',
-                            color: selectedBrand === 'all' ? 'white' : '#64748b'
-                        }}
-                    >
-                        <Filter size={12} /> CONSOLIDADO
-                    </button>
                     {brandsForEntity.map(brand => (
                         <button
                             key={brand}
