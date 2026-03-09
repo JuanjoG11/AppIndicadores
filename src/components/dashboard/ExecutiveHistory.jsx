@@ -77,7 +77,7 @@ const semColor = (score) => {
 };
 
 const semLabel = (score) => {
-    if (score === null || score === undefined) return 'Sin datos';
+    if (score === null || score === undefined) return 'S.D.';
     if (score >= 95) return '🟢';
     return '🔴';
 };
@@ -144,8 +144,8 @@ const ExecutiveHistory = ({ kpiData }) => {
     }, [months, heatmapTYM, heatmapTAT]);
 
     const lastMonth = months[months.length - 1];
-    const tymLast = tymOverall.find(m => m.month === lastMonth)?.score ?? 0;
-    const tatLast = tatOverall.find(m => m.month === lastMonth)?.score ?? 0;
+    const tymLast = tymOverall.find(m => m.month === lastMonth)?.score ?? null;
+    const tatLast = tatOverall.find(m => m.month === lastMonth)?.score ?? null;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -162,10 +162,10 @@ const ExecutiveHistory = ({ kpiData }) => {
                             <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 Cumplimiento Global — {co.name}
                             </p>
-                            <p style={{ margin: '0.25rem 0 0', fontSize: '2rem', fontWeight: 900, color: semColor(co.score) }}>
-                                {co.score}%
+                            <p style={{ margin: '0.25rem 0 0', fontSize: '2rem', fontWeight: 900, color: co.score !== null ? semColor(co.score) : '#cbd5e1' }}>
+                                {co.score !== null ? `${co.score}%` : '0%'}
                             </p>
-                            <p style={{ margin: '0.1rem 0 0', fontSize: '0.78rem', color: '#64748b' }}>{lastMonth} 2026</p>
+                            <p style={{ margin: '0.1rem 0 0', fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>{co.score !== null ? `${lastMonth} 2026` : 'PENDIENTE DE CARGA'}</p>
                         </div>
                         <div style={{
                             width: 60, height: 60, borderRadius: '50%',
@@ -376,7 +376,7 @@ const ExecutiveHistory = ({ kpiData }) => {
                                             {kpi.compliance}% {semLabel(kpi.compliance)}
                                         </p>
                                     ) : (
-                                        <p style={{ margin: '0.4rem 0 0', color: '#94a3b8', fontSize: '0.8rem' }}>Sin datos</p>
+                                        <p style={{ margin: '0.4rem 0 0', color: '#cbd5e1', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Pendiente</p>
                                     )}
                                 </div>
                             ))}

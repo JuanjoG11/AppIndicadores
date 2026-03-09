@@ -18,17 +18,11 @@ import {
 import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
 
 const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selectedBrand }) => {
-    const [showBreakdown, setShowBreakdown] = React.useState(false);
 
-    // 1. Determinar marcas de la entidad actual (TYM o TAT)
-    const entity = activeCompany || 'TYM';
-    const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
-    const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
-
-    // Si hay una marca seleccionada, enfocarse en ella
+    // Simplificado para usar valores consolidados o marca específica
     const isBrandFocus = selectedBrand && selectedBrand !== 'all';
+    const entity = activeCompany || 'TYM';
 
-    // Meta y Valor según el enfoque (consolidado o marca específica)
     let displayValue = kpi.currentValue;
     let displayTarget = kpi.targetMeta;
     let displayCompliance = kpi.compliance;
@@ -41,17 +35,8 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
         displayCompliance = bData?.compliance;
     }
 
-    // 2. Identificar cuáles faltan por cargar
-    // Si hay filtro de marca, solo importa esa marca. Si no, importan todas las de la entidad.
-    const relevantBrandsToTrack = isBrandFocus ? [selectedBrand] : entityBrands;
-    const pendingBrands = relevantBrandsToTrack.filter(brand => {
-        const dataKey = `${entity}-${brand}`;
-        const brandData = kpi.brandValues?.[dataKey];
-        return !brandData || brandData.hasData === false;
-    });
-
-    const isSuccess = displayCompliance >= 100 || (isBrandFocus ? false : kpi.semaphore === 'green');
-    const isWarning = (displayCompliance < 100 && displayCompliance >= 80) || (isBrandFocus ? false : kpi.semaphore === 'yellow');
+    const isSuccess = kpi.semaphore === 'green';
+    const isWarning = kpi.semaphore === 'yellow';
     const color = isSuccess ? '#059669' : (isWarning ? '#f59e0b' : '#ef4444');
     const bgColor = isSuccess ? '#ecfdf5' : (isWarning ? '#fffbeb' : '#fef2f2');
 
@@ -75,24 +60,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                 <div style={{ color: '#94a3b8', marginBottom: '1rem' }}>
                     <Package size={32} strokeWidth={1.5} />
                 </div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.5rem', color: '#1e293b' }}>{kpi.name}</h4>
-
-                {pendingBrands.length > 0 && (
-                    <div style={{
-                        fontSize: '0.75rem',
-                        color: '#f43f5e',
-                        fontWeight: 700,
-                        marginBottom: '1.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                        background: '#fff1f2',
-                        padding: '0.4rem 0.8rem',
-                        borderRadius: '10px'
-                    }}>
-                        <Clock size={12} /> FALTA POR CARGAR: {pendingBrands.join(', ')}
-                    </div>
-                )}
+                <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem', color: '#1e293b' }}>{kpi.name}</h4>
 
                 {canEdit && (
                     <button
@@ -156,12 +124,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {(() => {
-                        const isPartial = kpi.hasData && pendingBrands.length > 0;
-                        const isFullyLoaded = kpi.hasData && pendingBrands.length === 0;
-
-                        let bg = '#ecfdf5'; let colorText = '#059669'; let text = 'LISTO';
-                        if (!kpi.hasData) { bg = '#fff7ed'; colorText = '#ea580c'; text = 'VACÍO'; }
-                        else if (isPartial) { bg = '#fef3c7'; colorText = '#d97706'; text = 'PARCIAL'; }
+                        const statusColor = kpi.hasData ? { bg: '#ecfdf5', text: '#059669', label: 'LISTO' } : { bg: '#fff7ed', text: '#ea580c', label: 'VACÍO' };
 
                         return (
                             <div style={{
@@ -169,11 +132,11 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                                 borderRadius: '8px',
                                 fontSize: '0.6rem',
                                 fontWeight: 900,
-                                background: bg,
-                                color: colorText,
+                                background: statusColor.bg,
+                                color: statusColor.text,
                                 marginRight: '0.5rem'
                             }}>
-                                {text}
+                                {statusColor.label}
                             </div>
                         );
                     })()}
@@ -263,100 +226,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                 </div>
             )}
 
-            {/* Pending Brands Warning (if partial data) */}
-            {kpi.hasData && pendingBrands.length > 0 && (
-                <div style={{
-                    fontSize: '0.7rem',
-                    fontWeight: 900,
-                    color: '#e11d48',
-                    background: '#fff1f2',
-                    padding: '0.6rem 0.85rem',
-                    borderRadius: '12px',
-                    border: '1px solid #fee2e2',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    boxShadow: '0 2px 4px rgba(225, 29, 72, 0.05)'
-                }}>
-                    <AlertCircle size={14} /> <span>FALTAN MARCAS: {pendingBrands.join(', ')}</span>
-                </div>
-            )}
 
-            {/* Breakdown Toggle for Manager */}
-            {isManager && entityBrands.length > 1 && (
-                <button
-                    onClick={() => setShowBreakdown(!showBreakdown)}
-                    style={{
-                        width: '100%',
-                        padding: '0.6rem',
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '12px',
-                        color: '#64748b',
-                        fontSize: '0.75rem',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        transition: 'all 0.2s'
-                    }}
-                >
-                    {showBreakdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    {showBreakdown ? 'OCULTAR DESGLOSE' : 'DESGLOSAR POR MARCA'}
-                </button>
-            )}
-
-            {/* Detailed Breakdown Section */}
-            {showBreakdown && isManager && (
-                <div className="fade-in" style={{
-                    marginTop: '0.5rem',
-                    padding: '1rem',
-                    background: '#f8fafc',
-                    borderRadius: '16px',
-                    border: '1px solid #e2e8f0'
-                }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {entityBrands.map(brand => {
-                            const dataKey = `${entity}-${brand}`;
-                            const brandData = kpi.brandValues?.[dataKey];
-                            const brandCompliance = brandData?.compliance;
-                            const brandTarget = kpi.meta[brand];
-
-                            return (
-                                <div key={brand} style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    fontSize: '0.75rem',
-                                    paddingBottom: '0.5rem',
-                                    borderBottom: '1px solid #f1f5f9'
-                                }}>
-                                    <div>
-                                        <div style={{ fontWeight: 900, color: '#1e293b' }}>{brand}</div>
-                                        <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Meta: {brandTarget} {kpi.unit}</div>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        {!brandData || brandData.hasData === false ? (
-                                            <span style={{ color: '#ef4444', fontWeight: 800 }}>PENDIENTE</span>
-                                        ) : (
-                                            <>
-                                                <div style={{ fontWeight: 900, color: brandCompliance >= 100 ? '#059669' : '#ef4444' }}>
-                                                    {brandCompliance?.toFixed(1)}%
-                                                </div>
-                                                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>
-                                                    {brandData.currentValue} {kpi.unit}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
 
             {/* Footer / Meta info */}
             <div style={{
@@ -368,7 +238,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                 alignItems: 'center'
             }}>
                 <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>
-                    {isBrandFocus ? `META ${selectedBrand}:` : `CONSOLIDADO ${entity}:`} <span style={{ color: '#334155' }}>{displayTarget} {kpi.unit}</span>
+                    {isBrandFocus ? `META ${selectedBrand}:` : `META CONSOLIDADA ${activeCompany || 'TYM'}:`} <span style={{ color: '#334155' }}>{displayTarget} {kpi.unit}</span>
                 </div>
                 <div style={{
                     fontSize: '0.6rem',

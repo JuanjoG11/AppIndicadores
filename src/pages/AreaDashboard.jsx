@@ -84,6 +84,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         });
     }
 
+
+
     // 4. Analytics based on FILTERED data
     const kpisWithData = filteredKPIs.filter(kpi => kpi.hasData);
     const greenCount = filteredKPIs.filter(kpi => kpi.semaphore === 'green').length;
@@ -148,19 +150,49 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     </div>
                 </div>
 
-                <div className="glass" style={{
-                    padding: '1.5rem 2.5rem',
-                    borderRadius: '24px',
-                    background: 'white',
-                    border: '1px solid #f1f5f9',
-                    textAlign: 'center',
-                    boxShadow: 'var(--shadow-premium)'
-                }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                        EJECUCIÓN
-                    </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 900, color: groupCompliance > 80 ? '#059669' : groupCompliance > 60 ? '#f59e0b' : '#ef4444' }}>
-                        {groupCompliance}%
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <button
+                        onClick={() => {
+                            const companyFull = activeCompany === 'TYM' ? 'Tiendas y Marcas' : 'TAT Distribuciones';
+                            import('../utils/ExportService').then(m => {
+                                m.exportToPDF(areaKPIs, activeCompany, companyFull, area.name);
+                            });
+                        }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.6rem',
+                            background: '#eff6ff',
+                            border: '1px solid #dbeafe',
+                            color: '#2563eb',
+                            padding: '0.75rem 1.25rem',
+                            borderRadius: '14px',
+                            fontSize: '0.85rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.1)'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = '#dbeafe'}
+                        onMouseOut={e => e.currentTarget.style.background = '#eff6ff'}
+                    >
+                        <TrendingUp size={16} /> Exportar Área PDF
+                    </button>
+
+                    <div className="glass" style={{
+                        padding: '1.5rem 2.5rem',
+                        borderRadius: '24px',
+                        background: 'white',
+                        border: '1px solid #f1f5f9',
+                        textAlign: 'center',
+                        boxShadow: 'var(--shadow-premium)'
+                    }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                            EJECUCIÓN
+                        </div>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 900, color: groupCompliance > 80 ? '#059669' : groupCompliance > 60 ? '#f59e0b' : '#ef4444' }}>
+                            {groupCompliance}%
+                        </div>
                     </div>
                 </div>
             </div>
@@ -276,7 +308,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                 </div>
             )}
 
-            {/* Brand Filtering row */}
+            {/* Brand Filter row */}
             {showBrandFilter && (
                 <div style={{
                     display: 'flex',
@@ -305,7 +337,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                             color: selectedBrand === 'all' ? 'white' : '#64748b'
                         }}
                     >
-                        <Filter size={12} /> TODAS LAS MARCAS
+                        <Filter size={12} /> CONSOLIDADO
                     </button>
                     {brandsForEntity.map(brand => (
                         <button

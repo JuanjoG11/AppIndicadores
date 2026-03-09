@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
@@ -6,283 +6,82 @@ import ExecutiveDashboard from './pages/ExecutiveDashboard';
 import AreaDashboard from './pages/AreaDashboard';
 import AnalystDashboard from './pages/AnalystDashboard';
 import Login from './pages/Login';
-import { mockKPIData, getMonthKey } from './data/mockData';
-import { supabase } from './lib/supabase';
-import { filterKPIsByEntity, BRAND_TO_ENTITY } from './utils/kpiHelpers';
-import { calculateKPIValue, isInverseKPI } from './utils/kpiCalculations';
 import SettingsModal from './components/layout/SettingsModal';
+import CommandPalette from './components/common/CommandPalette';
+import { DashboardSkeleton, AnalystSkeleton } from './components/common/SkeletonLoader';
+import { ToastProvider, useToast } from './context/ToastContext';
+import { useAuth } from './hooks/useAuth';
+import { useKPIs } from './hooks/useKPIs';
+import { filterKPIsByEntity } from './utils/kpiHelpers';
 import './index.css';
 import './App.css';
 
-const AppContent = ({ currentUser, kpiData, activeCompany, setActiveCompany, theme, toggleTheme, showSettings, setShowSettings, isSidebarOpen, setIsSidebarOpen, handleLogin, handleLogout, onUpdateKPI }) => {
-  if (!currentUser) {
-    return <Login onLogin={handleLogin} />;
-  }
+// ─── Inner App (needs Toast context) ────────────────────────────────────────
+const AppInner = () => {
+  const addToast = useToast();
 
-  return (
-    <div style={{ display: 'flex', background: 'var(--bg-app)', minHeight: '100vh', color: 'var(--text-main)' }}>
-      <Sidebar currentUser={currentUser} onLogout={handleLogout} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <main style={{
-        marginLeft: isSidebarOpen && window.innerWidth > 900 ? '260px' : '0',
-        flex: 1,
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'margin-left 0.3s ease',
-        width: '100%'
-      }}>
-        <TopBar
-          currentUser={currentUser}
-          kpiData={kpiData}
-          activeCompany={activeCompany}
-          onOpenSettings={() => setShowSettings(true)}
-          onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
-        <div className="app-container" style={{ padding: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                currentUser.role === 'Gerente'
-                  ? <ExecutiveDashboard kpiData={kpiData} activeCompany={activeCompany} setActiveCompany={setActiveCompany} />
-                  : <Navigate to="/mis-indicadores" />
-              }
-            />
-            <Route
-              path="/area/:areaId"
-              element={<AreaDashboard kpiData={kpiData} activeCompany={activeCompany} currentUser={currentUser} onUpdateKPI={onUpdateKPI} />}
-            />
-            <Route
-              path="/mis-indicadores"
-              element={<AnalystDashboard kpiData={kpiData} currentUser={currentUser} onUpdateKPI={onUpdateKPI} />}
-            />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </div>
-      </main>
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  const { currentUser, handleLogin, handleLogout } = useAuth();
 
-      {showSettings && currentUser?.role === 'Gerente' && (
-        <SettingsModal
-          currentUser={currentUser}
-          kpiData={kpiData}
-          onUpdateKPI={onUpdateKPI}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          onClose={() => setShowSettings(false)}
-        />
-      )}
-    </div>
-  );
-};
-
-function App() {
-  const [currentUser, setCurrentUser] = useState(null);
+  // ── UI State ──────────────────────────────────────────────────────────────
   const [activeCompany, setActiveCompany] = useState('TYM');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [showSettings, setShowSettings] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 900);
-  const [kpiData, setKpiData] = useState(mockKPIData);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 900) setIsSidebarOpen(true);
-      else setIsSidebarOpen(false);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // ── KPI Data (via custom hook) ────────────────────────────────────────────
+  const { kpiData, isLoading, lastSyncTime, applyKPIUpdate } = useKPIs(
+    currentUser,
+    activeCompany,
+    addToast
+  );
 
+  // ── Theme ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
-  // 1. Cargar datos iniciales de Supabase y Suscribirse a cambios
+  // ── Responsive sidebar ────────────────────────────────────────────────────
   useEffect(() => {
-    const fetchInitialData = async () => {
-      const { data, error } = await supabase
-        .from('kpi_updates')
-        .select('*')
-        .order('updated_at', { ascending: true });
-
-      if (data && !error) {
-        data.forEach(update => {
-          // Inject updatedAt so applyKPIUpdate places value in correct month
-          applyKPIUpdate(update.kpi_id, { ...update.additional_data, updatedAt: update.updated_at }, false);
-        });
-      }
+    const handleResize = () => {
+      setIsSidebarOpen(window.innerWidth > 900);
     };
-
-    fetchInitialData();
-
-    // Suscripción en tiempo real
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'kpi_updates' },
-        (payload) => {
-          applyKPIUpdate(payload.new.kpi_id, payload.new.additional_data, false);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleLogin = (user) => {
-    setCurrentUser(user);
-    if (user.company) {
-      setActiveCompany(user.company);
-    }
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-  };
-
-  // Función interna para aplicar actualizaciones de KPIs
-  const applyKPIUpdate = (kpiId, newData, shouldPersist = true) => {
-    setKpiData(prevData => prevData.map(oldKpi => {
-      if (oldKpi.id === kpiId) {
-        // Deep clone to avoid mutations
-        const kpi = JSON.parse(JSON.stringify(oldKpi));
-
-        const updatedAdditionalData = {
-          ...kpi.additionalData,
-          ...newData
-        };
-
-        const d = updatedAdditionalData;
-        let newValue = kpi.currentValue;
-        let targetMeta = kpi.targetMeta;
-
-        // Preserve history per company and brand
-        const currentBrand = d.brand || 'GLOBAL';
-        const currentCompany = d.company || BRAND_TO_ENTITY[currentBrand] || activeCompany || 'TYM';
-        const dataKey = `${currentCompany}-${currentBrand}`;
-
-        const brandValues = kpi.brandValues || {};
-
-        try {
-          if (d.type === 'META_UPDATE') {
-            newValue = kpi.currentValue; // Preserve current value during meta updates
-          } else {
-            newValue = calculateKPIValue(kpiId, d);
-          }
-        } catch (e) {
-          console.error("Error calculating KPI:", e);
-        }
-
-        // Si es una actualización de META (por el gerente)
-        if (d.type === 'META_UPDATE') {
-          const scope = d.brand; // Puede ser "TYM", "TAT", nombre de marca o null (Global)
-          if (!scope || scope === 'Global' || scope === 'global') {
-            kpi.meta = d.newMeta;
-          } else {
-            const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
-            kpi.meta = { ...currentMeta, [scope]: d.newMeta };
-          }
-        }
-
-        // Determinar meta basada en marca o empresa usando mapeos
-        if (kpi.meta && typeof kpi.meta === 'object') {
-          const entity = d.company || activeCompany || 'TYM';
-          const brand = d.brand;
-
-          if (brand && kpi.meta[brand]) {
-            targetMeta = kpi.meta[brand];
-          } else if (kpi.meta[entity]) {
-            targetMeta = kpi.meta[entity];
-          } else if (kpi.meta.global) {
-            targetMeta = kpi.meta.global;
-          } else {
-            const brandKey = Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity);
-            targetMeta = brandKey ? kpi.meta[brandKey] : (Object.values(kpi.meta)[0] || 0);
-          }
-        } else {
-          targetMeta = kpi.meta;
-        }
-
-        newValue = parseFloat((newValue || kpi.currentValue || 0).toFixed(2));
-
-        let semaphore = kpi.semaphore;
-        let compliance = kpi.compliance;
-
-        if (typeof targetMeta === 'number' && targetMeta !== 0) {
-          const isInverse = isInverseKPI(kpiId);
-          compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
-          compliance = Math.min(Math.round(compliance), 100);
-          if (newValue === 0 && isInverse) compliance = 100;
-
-          if (compliance >= 95) semaphore = 'green';
-          else if (compliance >= 85) semaphore = 'yellow';
-          else semaphore = 'red';
-        }
-
-        // Update brand/company values history
-        brandValues[dataKey] = {
-          ...brandValues[dataKey],
-          value: newValue,
-          meta: targetMeta,
-          compliance,
-          semaphore,
-          additionalData: updatedAdditionalData,
-          company: currentCompany,
-          brand: currentBrand,
-          hasData: d.type === 'META_UPDATE' ? (brandValues[dataKey]?.hasData) : true
-        };
-
-        // Si la actualización viene del usuario (local), persistir en Supabase
-        if (shouldPersist) {
-          persistUpdate(kpiId, updatedAdditionalData, newValue);
-        }
-
-        const targetMonth = getMonthKey(d.updatedAt || null);
-        const targetCompany = d.company || 'TYM';
-
-        return {
-          ...kpi,
-          currentValue: newValue,
-          targetMeta,
-          compliance,
-          semaphore,
-          hasData: d.type === 'META_UPDATE' ? kpi.hasData : true,
-          additionalData: updatedAdditionalData,
-          brandValues: { ...brandValues },
-          history: kpi.history.map(h =>
-            h.month === targetMonth
-              ? { ...h, [targetCompany]: newValue }
-              : h
-          )
-        };
+  // ── Command Palette keyboard shortcut (Ctrl+K / Cmd+K) ───────────────────
+  useEffect(() => {
+    const handleKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(prev => !prev);
       }
-      return oldKpi;
-    }));
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, []);
+
+  // ── Login/Logout handlers ─────────────────────────────────────────────────
+  const onLoginSuccess = (user) => {
+    handleLogin(user);
+    if (user.company) setActiveCompany(user.company);
+    addToast('success', `¡Bienvenido, ${user.name}! 🎉`);
   };
 
-  const persistUpdate = async (kpiId, additionalData, value) => {
-    try {
-      await supabase.from('kpi_updates').insert({
-        kpi_id: kpiId,
-        additional_data: additionalData,
-        value: value,
-        cargo: currentUser?.cargo || 'Sistema'
-      });
-    } catch (err) {
-      console.error("Error persistiendo en Supabase:", err);
-    }
+  const onLogout = () => {
+    handleLogout();
+    addToast('info', 'Sesión cerrada correctamente');
   };
 
-  const handleUpdateKPI = (id, data) => {
+  // ── KPI Update handler (with permission checks) ───────────────────────────
+  const handleUpdateKPI = useCallback((id, data) => {
     if (!data || typeof data !== 'object') {
-      console.warn('handleUpdateKPI received invalid data:', data);
+      console.warn('handleUpdateKPI: datos inválidos', data);
       return;
     }
 
@@ -296,42 +95,119 @@ function App() {
     const isManager = currentUser?.role === 'Gerente';
 
     if (isMetaUpdate && !isManager) {
-      console.error('Solo gerentes pueden actualizar metas');
+      addToast('error', '🔒 Solo gerentes pueden actualizar metas');
       return;
     }
 
     if (!isMetaUpdate && kpi.responsable !== currentUser?.cargo) {
-      console.error('Permiso denegado:', {
-        kpi: kpi.name,
-        responsable: kpi.responsable,
-        usuario: currentUser?.cargo
-      });
-      alert(`No tienes permiso para actualizar este indicador.\n\nIndicador: ${kpi.name}\nResponsable: ${kpi.responsable}\nTu cargo: ${currentUser?.cargo}`);
+      addToast('error', `⛔ Sin permiso para: ${kpi.name}`);
       return;
     }
 
     applyKPIUpdate(id, data, true);
-  };
+
+    if (isMetaUpdate) {
+      addToast('success', `✅ Meta actualizada: ${kpi.name}`);
+    } else {
+      addToast('success', `📊 Indicador actualizado: ${kpi.name}`);
+    }
+  }, [kpiData, currentUser, applyKPIUpdate, addToast]);
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  if (!currentUser) {
+    return <Login onLogin={onLoginSuccess} />;
+  }
 
   return (
-    <BrowserRouter>
-      <AppContent
+    <div style={{ display: 'flex', background: 'var(--bg-app)', minHeight: '100vh', color: 'var(--text-main)' }}>
+      <Sidebar
         currentUser={currentUser}
+        onLogout={onLogout}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
         kpiData={kpiData}
         activeCompany={activeCompany}
-        setActiveCompany={setActiveCompany}
-        theme={theme}
-        toggleTheme={toggleTheme}
-        showSettings={showSettings}
-        setShowSettings={setShowSettings}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        handleLogin={handleLogin}
-        handleLogout={handleLogout}
-        onUpdateKPI={handleUpdateKPI}
       />
-    </BrowserRouter>
+
+      <main style={{
+        marginLeft: isSidebarOpen && window.innerWidth > 900 ? '260px' : '0',
+        flex: 1,
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'margin-left 0.3s ease',
+        width: '100%',
+      }}>
+        <TopBar
+          currentUser={currentUser}
+          kpiData={kpiData}
+          activeCompany={activeCompany}
+          onOpenSettings={() => setShowSettings(true)}
+          onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          onLogout={onLogout}
+          onOpenCommandPalette={() => setShowCommandPalette(true)}
+          lastSyncTime={lastSyncTime}
+        />
+
+        <div className="app-container" style={{ padding: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {isLoading ? (
+            currentUser?.role === 'Gerente' ? <DashboardSkeleton /> : <AnalystSkeleton />
+          ) : (
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  currentUser.role === 'Gerente'
+                    ? <ExecutiveDashboard kpiData={kpiData} activeCompany={activeCompany} setActiveCompany={setActiveCompany} />
+                    : <Navigate to="/mis-indicadores" />
+                }
+              />
+              <Route
+                path="/area/:areaId"
+                element={<AreaDashboard kpiData={kpiData} activeCompany={activeCompany} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} />}
+              />
+              <Route
+                path="/mis-indicadores"
+                element={<AnalystDashboard kpiData={kpiData} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} />}
+              />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          )}
+        </div>
+      </main>
+
+      {/* Settings Modal (Gerente only) */}
+      {showSettings && currentUser?.role === 'Gerente' && (
+        <SettingsModal
+          currentUser={currentUser}
+          kpiData={kpiData}
+          onUpdateKPI={handleUpdateKPI}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        kpiData={kpiData}
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        currentUser={currentUser}
+      />
+    </div>
   );
 };
+
+// ─── Root App (provides Toast context + Router) ───────────────────────────────
+function App() {
+  return (
+    <BrowserRouter>
+      <ToastProvider>
+        <AppInner />
+      </ToastProvider>
+    </BrowserRouter>
+  );
+}
 
 export default App;

@@ -2,14 +2,15 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Logo from '../common/Logo';
 import { areas } from '../../data/areas';
+import { exportToPDF } from '../../utils/ExportService';
 import {
     Home,
     LogOut,
-    Shield,
-    X
+    X,
+    Printer
 } from 'lucide-react';
 
-const Sidebar = ({ currentUser, onLogout, isOpen, onClose }) => {
+const Sidebar = ({ currentUser, onLogout, isOpen, onClose, kpiData = [], activeCompany = 'TYM' }) => {
     const location = useLocation();
 
     return (
@@ -131,7 +132,45 @@ const Sidebar = ({ currentUser, onLogout, isOpen, onClose }) => {
                 </nav>
 
                 {/* FOOTER ACTIONS */}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem', marginTop: 'auto' }}>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem', marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+
+                    {/* Exportar PDF (solo Gerente) */}
+                    {currentUser.role === 'Gerente' && (
+                        <button
+                            onClick={() => exportToPDF(
+                                kpiData,
+                                activeCompany,
+                                activeCompany === 'TYM' ? 'Tiendas y Marcas' : 'TAT Distribuciones'
+                            )}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '1rem',
+                                padding: '0.85rem 1rem',
+                                width: '100%',
+                                background: 'rgba(37, 99, 235, 0.12)',
+                                border: '1px solid rgba(37, 99, 235, 0.25)',
+                                color: '#93c5fd',
+                                cursor: 'pointer',
+                                borderRadius: '10px',
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s',
+                            }}
+                            onMouseOver={e => {
+                                e.currentTarget.style.background = 'rgba(37, 99, 235, 0.22)';
+                                e.currentTarget.style.color = '#bfdbfe';
+                            }}
+                            onMouseOut={e => {
+                                e.currentTarget.style.background = 'rgba(37, 99, 235, 0.12)';
+                                e.currentTarget.style.color = '#93c5fd';
+                            }}
+                        >
+                            <Printer size={18} />
+                            <span>Exportar Reporte PDF</span>
+                        </button>
+                    )}
+
                     <button
                         onClick={onLogout}
                         style={{

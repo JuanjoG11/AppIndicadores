@@ -1,110 +1,8 @@
 import { kpiDefinitions } from './kpiData';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 
-// Datos REALES de los KPIs de Logística basados en el Excel proporcionado
-const realKPIValues = {
-    // LOGÍSTICA DE ENTREGA
-    'pedidos-devueltos': {
-        pedidosFacturados: 1400,
-        pedidosDevueltos: 10,
-        // currentValue se calculará como 0.71
-    },
-    'promedio-pedidos-auxiliar': {
-        numeroPedidos: 8400,
-        auxiliares: 228,
-        brand: 'ALPINA' // Para seleccionar la meta correcta
-    },
-    'promedio-pedidos-carro': {
-        numeroPedidos: 8400,
-        vehiculos: 216,
-        brand: 'ALPINA'
-    },
-    'gasto-nomina-venta': {
-        nominaLogistica: 115000000,
-        ventaTotal: 3500000000,
-        brand: 'ALPINA'
-    },
-    'gasto-fletes-venta': {
-        valorFletes: 160000000,
-        ventaTotal: 3500000000,
-        brand: 'ALPINA'
-    },
-    'horas-extras-auxiliares': {
-        totalHorasExtras: 912,
-        auxiliares: 38,
-        brand: 'ALPINA'
-    },
-
-    // LOGÍSTICA DE PICKING
-    'segundos-unidad-separada': {
-        currentValue: 1.8,
-        unidadesSeparadas: 40000,
-        segundosUtilizados: 72000,
-        meta: 8
-    },
-    'pesos-separados-hombre': {
-        currentValue: 205882353,
-        valorVenta: 3500000000,
-        auxiliaresSeparacion: 17,
-        meta: 218000000
-    },
-    'pedidos-separar-total': {
-        currentValue: 100,
-        pedidosFacturados: 1200,
-        pedidosSeparados: 1200,
-        meta: 100
-    },
-    'notas-errores-venta': {
-        currentValue: 1.3,
-        notasDevolucion: 2000000,
-        valorVenta: 160000000,
-        meta: 1
-    },
-    'planillas-separadas': {
-        currentValue: 100,
-        planillasGeneradas: 15,
-        planillasSeparadas: 15,
-        meta: 100
-    },
-    'nomina-venta-picking': {
-        currentValue: 1.9,
-        valorNomina: 65000000,
-        ventaTotal: 3500000000,
-        meta: 1
-    },
-    'horas-extras-venta-picking': {
-        currentValue: 0.0571,
-        horasExtras: 2000000,
-        ventaTotal: 3500000000,
-        meta: 0.05
-    },
-
-    // LOGÍSTICA DE DEPÓSITO
-    'embalajes-perdidos': {
-        currentValue: 0,
-        canastillasRecibidas: 5000,
-        canastillasGestionadas: 5000,
-        meta: 0
-    },
-    'nomina-compra-deposito': {
-        currentValue: 0.4,
-        nominaDeposito: 13000000,
-        ventaTotal: 3200000000,
-        meta: 0.4
-    },
-    'horas-extras-venta-deposito': {
-        currentValue: 0.0043,
-        horasExtras: 150000,
-        ventaTotal: 3500000000,
-        meta: 0.05
-    },
-    'averias-venta': {
-        currentValue: 0.20,
-        totalAverias: 7000000,
-        ventaTotal: 3500000000,
-        meta: 0.20
-    }
-};
+// Datos REALES de los KPIs (Inicia vacío para producción)
+const realKPIValues = {};
 
 // Nombres de meses en español
 const MONTH_NAMES = [
@@ -112,12 +10,9 @@ const MONTH_NAMES = [
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-// Mes en que inicia el tracking real de la app
 const START_YEAR = 2026;
-const START_MONTH = 1; // 0-indexed: Febrero = 1
+const START_MONTH = 1; // Febrero
 
-// Genera array de meses desde Feb 2026 hasta el mes actual
-// Cada slot guarda por separado TYM y TAT
 export const generateRealHistory = () => {
     const now = new Date();
     const history = [];
@@ -136,7 +31,6 @@ export const getMonthKey = (date) => {
     return MONTH_NAMES[d.getMonth()];
 };
 
-// Generar datos con valores reales donde estén disponibles
 export const generateMockData = () => {
     return kpiDefinitions.map(kpi => {
         const realData = realKPIValues[kpi.id];
@@ -146,10 +40,10 @@ export const generateMockData = () => {
         let additionalData = {};
 
         if (realData) {
-            hasData = true;
+            // SIEMPRE empezamos en false para que el analista deba cargar la información manualmente
+            hasData = false;
             additionalData = { ...realData };
 
-            // Cálculo dinámico para Logística de Entrega
             if (kpi.id === 'pedidos-devueltos') {
                 currentValue = (realData.pedidosDevueltos / realData.pedidosFacturados) * 100;
             } else if (kpi.id === 'promedio-pedidos-auxiliar') {
@@ -161,7 +55,6 @@ export const generateMockData = () => {
             } else if (kpi.id === 'gasto-fletes-venta') {
                 currentValue = (realData.valorFletes / realData.ventaTotal) * 100;
             } else if (kpi.id === 'horas-extras-auxiliares') {
-                // Según el Excel: 912 HE / 38 Aux = 24. El resultado final es 2. Sustraemos un factor de 12 (meses o periodos)
                 currentValue = (realData.totalHorasExtras / realData.auxiliares) / 12;
             } else {
                 currentValue = realData.currentValue;
@@ -170,23 +63,18 @@ export const generateMockData = () => {
             currentValue = parseFloat(currentValue.toFixed(2));
         }
 
-        // Obtener meta numérica si es un objeto
         let targetMeta = kpi.meta;
         if (kpi.meta && typeof kpi.meta === 'object') {
-            const brand = realData?.brand;
+            const brand = realData?.brand || 'ALPINA';
             const entity = BRAND_TO_ENTITY[brand] || 'TYM';
-
-            // Priority: direct brand match, then any brand of the same entity, then entity name, then first available
             const brandKey = brand && kpi.meta[brand] ? brand : Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity);
             targetMeta = brandKey ? kpi.meta[brandKey] : (kpi.meta[entity] || Object.values(kpi.meta)[0] || 0);
         }
 
-        // Calcular semáforo basado en meta
         let semaphore = 'gray';
         let compliance = null;
 
         if (hasData && currentValue !== null && typeof targetMeta === 'number') {
-            // Para indicadores donde menor es mejor
             const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('perdidos') ||
                 kpi.id.includes('averias') || kpi.id.includes('ajustes') ||
                 kpi.id.includes('quiebres') || kpi.id.includes('mermas') ||
@@ -195,22 +83,60 @@ export const generateMockData = () => {
                 kpi.id.includes('notas-errores');
 
             if (isInverse) {
-                // Para indicadores inversos, menor es mejor
                 compliance = (targetMeta / currentValue) * 100;
-                // Si el valor actual es menor que la meta, el cumplimiento es > 100%
-                // Cap at 110% for visual purposes or leave it
             } else {
-                // Para indicadores normales, mayor es mejor
                 compliance = (currentValue / targetMeta) * 100;
             }
 
-            // Determinar semáforo
             if (compliance >= 95) semaphore = 'green';
             else if (compliance >= 85) semaphore = 'yellow';
             else semaphore = 'red';
 
             compliance = Math.min(Math.round(compliance), 100);
         }
+
+        const currentMonth = getMonthKey();
+        const kpiHistory = generateRealHistory().map(h => {
+            if (h.month === currentMonth) {
+                // Si realData tiene brand, inferimos la empresa (ALPINA -> TYM, UNILEVER -> TAT)
+                const entity = realData?.brand ? (BRAND_TO_ENTITY[realData.brand] || 'TYM') : 'TYM';
+                return { ...h, [entity]: currentValue };
+            }
+            return h;
+        });
+
+        // 3. Generar brandValues para el desglose (Para que el filtro por marca funcione)
+        const brandValues = {};
+        const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
+
+        // Marcas para TYM y TAT
+        const tymBrands = ['ALPINA', 'ZENU', 'FLEISCHMANN'];
+        const tatBrands = ['UNILEVER', 'FAMILIA'];
+
+        // Poblar datos por marca de forma proporcional al consolidado
+        const brandsToPopulate = [...tymBrands, ...tatBrands].filter(b => allMetaBrands.includes(b));
+
+        brandsToPopulate.forEach(brand => {
+            const entityOfBrand = BRAND_TO_ENTITY[brand];
+            const dataKey = `${entityOfBrand}-${brand}`;
+
+            // Variación ligera por marca deshabilitada para producción (inicia en 0)
+            const brandVal = 0;
+            const brandTarget = kpi.meta[brand] || targetMeta;
+
+            let brandCompliance = null;
+            if (brandVal !== null) {
+                const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('perdidos') ||
+                    kpi.id.includes('averias') || kpi.id.includes('fletes');
+                brandCompliance = isInverse ? (brandTarget / brandVal) * 100 : (brandVal / brandTarget) * 100;
+            }
+
+            brandValues[dataKey] = {
+                currentValue: parseFloat(brandVal.toFixed(2)),
+                compliance: Math.min(Math.round(brandCompliance || 0), 100),
+                hasData: false // No simulamos datos, deben ser cargados manualmente
+            };
+        });
 
         return {
             ...kpi,
@@ -219,13 +145,12 @@ export const generateMockData = () => {
             compliance,
             semaphore,
             additionalData,
-            targetMeta, // Incluimos la meta seleccionada para facilitar UI
-            history: generateRealHistory()
+            targetMeta,
+            brandValues,
+            history: kpiHistory
         };
     });
 };
-
-
 
 export const mockKPIData = generateMockData();
 
@@ -234,42 +159,34 @@ export const getKPIsBySemaphore = (data, status) => {
 };
 
 export const calculateAreaScore = (data, areaId) => {
-    const areaKPIs = data.filter(kpi => kpi.area === areaId && kpi.hasData);
-    if (areaKPIs.length === 0) return null;
+    const allAreaKPIs = data.filter(kpi => kpi.area === areaId);
+    if (allAreaKPIs.length === 0) return null;
 
-    const totalCompliance = areaKPIs.reduce((sum, kpi) => sum + (kpi.compliance || 0), 0);
-    return Math.round(totalCompliance / areaKPIs.length);
+    // Sumamos el cumplimiento de los que tienen datos (los que no tienen suman 0%)
+    const totalCompliance = allAreaKPIs.reduce((sum, kpi) =>
+        sum + (kpi.hasData ? (kpi.compliance || 0) : 0), 0
+    );
+
+    // El divisor es el total de indicadores existentes para esa área
+    return Math.round(totalCompliance / allAreaKPIs.length);
 };
 
 export const calculateOverallScore = (data) => {
-    const kpisWithData = data.filter(kpi => kpi.hasData);
-    if (kpisWithData.length === 0) return null;
+    if (data.length === 0) return null;
 
-    const totalCompliance = kpisWithData.reduce((sum, kpi) => sum + (kpi.compliance || 0), 0);
-    return Math.round(totalCompliance / kpisWithData.length);
+    // Sumamos cumplimiento de lo cargado (lo pendiente pesa 0%)
+    const totalCompliance = data.reduce((sum, kpi) =>
+        sum + (kpi.hasData ? (kpi.compliance || 0) : 0), 0
+    );
+
+    // El divisor es el total de indicadores de la entidad seleccionada
+    return Math.round(totalCompliance / data.length);
 };
 
 export const getCriticalAlerts = (data, entity = 'TYM') => {
     const alerts = [];
-
-    // 1. Alertas de Semáforo Rojo
     data.filter(kpi => kpi.semaphore === 'red' && kpi.hasData).forEach(kpi => {
-        let metaDisplay = kpi.meta;
-        if (kpi.meta && typeof kpi.meta === 'object') {
-            metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
-        }
-
-        // Brand progress for multi-brand KPIs
-        let progressDetail = '';
-        const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
-        const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
-
-        if (entityBrands.length > 0) {
-            const pending = entityBrands.filter(b => !kpi.brandValues?.[`${entity}-${b}`]?.hasData);
-            const loaded = entityBrands.filter(b => kpi.brandValues?.[`${entity}-${b}`]?.hasData);
-            progressDetail = ` | Cargado: (${loaded.join(', ')}) - Pendiente: (${pending.join(', ')})`;
-        }
-
+        let metaDisplay = kpi.targetMeta || (typeof kpi.meta === 'number' ? kpi.meta : 0);
         alerts.push({
             id: kpi.id,
             kpiName: kpi.name,
@@ -279,54 +196,9 @@ export const getCriticalAlerts = (data, entity = 'TYM') => {
             unit: kpi.unit,
             severity: 'critical',
             type: 'compliance',
-            message: `${entity}${progressDetail} - ${kpi.name} bajo desempeño: ${kpi.currentValue}${kpi.unit === '%' ? '%' : ''} vs Meta ${metaDisplay}`
+            message: `${entity} - ${kpi.name} bajo desempeño: ${kpi.currentValue}${kpi.unit === '%' ? '%' : ''} vs Meta ${metaDisplay}`
         });
     });
-
-    // 2. Alertas de Datos Pendientes (Solo para la entidad activa)
-    data.forEach(kpi => {
-        // Skip if already added as red (to avoid duplication if it has some data but is red)
-        if (kpi.semaphore === 'red' && kpi.hasData) return;
-
-        const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
-        const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
-
-        // Si es un indicador simple (No por marca)
-        if (entityBrands.length === 0 && !kpi.hasData && kpi.area !== 'talento-humano') {
-            alerts.push({
-                id: kpi.id,
-                kpiName: kpi.name,
-                area: kpi.area,
-                severity: 'warning',
-                type: 'pending',
-                message: `${entity} - Pendiente de carga: ${kpi.name}`
-            });
-            return;
-        }
-
-        // Si es por marca, ver cuáles faltan y cuáles ya están
-        const pendingBrands = entityBrands.filter(brand => !kpi.brandValues?.[`${entity}-${brand}`]?.hasData);
-        const loadedBrands = entityBrands.filter(brand => kpi.brandValues?.[`${entity}-${brand}`]?.hasData);
-
-        if (pendingBrands.length > 0) {
-            let statusText = `${entity} | `;
-            if (loadedBrands.length > 0) {
-                statusText += `Cargado: (${loadedBrands.join(', ')}) - `;
-            }
-            statusText += `Pendiente: (${pendingBrands.join(', ')})`;
-
-            alerts.push({
-                id: kpi.id,
-                kpiName: kpi.name,
-                area: kpi.area,
-                severity: 'warning',
-                type: 'pending',
-                brand: pendingBrands[0],
-                message: `${statusText}: ${kpi.name}`
-            });
-        }
-    });
-
     return alerts;
 };
 
@@ -334,23 +206,7 @@ export const getWarningAlerts = (data, entity = 'TYM') => {
     return data
         .filter(kpi => kpi.semaphore === 'yellow' && kpi.hasData)
         .map(kpi => {
-            const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
-            const entityBrands = allMetaBrands.filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
-
-            let progressDetail = "";
-            if (entityBrands.length > 0) {
-                const pending = entityBrands.filter(b => !kpi.brandValues?.[`${entity}-${b}`]?.hasData);
-                const loaded = entityBrands.filter(b => kpi.brandValues?.[`${entity}-${b}`]?.hasData);
-                if (entityBrands.length > 1 || (entityBrands.length === 1 && entityBrands[0] !== entity)) {
-                    progressDetail = ` | Cargado: (${loaded.length > 0 ? loaded.join(', ') : 'Ninguna'}) - Pendiente: (${pending.join(', ')})`;
-                }
-            }
-
-            let metaDisplay = kpi.meta;
-            if (kpi.meta && typeof kpi.meta === 'object') {
-                metaDisplay = kpi.targetMeta || Object.values(kpi.meta)[0];
-            }
-
+            let metaDisplay = kpi.targetMeta || (typeof kpi.meta === 'number' ? kpi.meta : 0);
             return {
                 id: kpi.id,
                 kpiName: kpi.name,
@@ -359,7 +215,7 @@ export const getWarningAlerts = (data, entity = 'TYM') => {
                 meta: metaDisplay,
                 unit: kpi.unit,
                 severity: 'medium',
-                message: `${entity}${progressDetail} - ${kpi.name} requiere atención (Meta: ${metaDisplay}${kpi.unit === '%' ? '%' : ''})`
+                message: `${entity} - ${kpi.name} requiere atención (Meta: ${metaDisplay}${kpi.unit === '%' ? '%' : ''})`
             };
         });
 };

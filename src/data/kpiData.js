@@ -24,7 +24,6 @@ export const kpiDefinitions = [
         meta: {
             ALPINA: 50,
             UNILEVER: 80,
-            POLAR: 75,
             ZENU: 80
         },
         unit: 'pedidos',
@@ -43,7 +42,6 @@ export const kpiDefinitions = [
         meta: {
             ALPINA: 65,
             UNILEVER: 80,
-            POLAR: 75,
             ZENU: 80
         },
         unit: 'pedidos',
@@ -62,7 +60,6 @@ export const kpiDefinitions = [
         meta: {
             ALPINA: 3.4,
             UNILEVER: 3.4,
-            POLAR: 3.4,
             ZENU: 3.4
         },
         unit: '%',
@@ -81,7 +78,6 @@ export const kpiDefinitions = [
         meta: {
             ALPINA: 4.5,
             UNILEVER: 4.2,
-            POLAR: 6,
             ZENU: 3.4
         },
         unit: '%',
@@ -100,7 +96,6 @@ export const kpiDefinitions = [
         meta: {
             ALPINA: 1.5,
             UNILEVER: 1,
-            POLAR: 2,
             ZENU: 1
         },
         unit: 'horas',
@@ -172,7 +167,9 @@ export const kpiDefinitions = [
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
-        meta: 100,
+        meta: {
+            FLEISCHMANN: 100
+        },
         unit: '%',
         frecuencia: 'DIARIO',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -438,7 +435,6 @@ export const kpiDefinitions = [
             ALPINA: 10,
             FAMILIA: 10,
             UNILEVER: 10,
-            POLAR: 10,
             ZENU: 10
         },
         unit: '%',
@@ -457,7 +453,6 @@ export const kpiDefinitions = [
             ALPINA: 90,
             FAMILIA: 90,
             UNILEVER: 90,
-            POLAR: 90,
             ZENU: 90
         },
         unit: '%',
@@ -476,7 +471,6 @@ export const kpiDefinitions = [
             ALPINA: 8,
             FAMILIA: 8,
             UNILEVER: 8,
-            POLAR: 8,
             ZENU: 8
         },
         unit: '%',
@@ -495,7 +489,6 @@ export const kpiDefinitions = [
             ALPINA: 2,
             FAMILIA: 2,
             UNILEVER: 2,
-            POLAR: 2,
             ZENU: 2
         },
         unit: '%',
@@ -530,7 +523,6 @@ export const kpiDefinitions = [
             ALPINA: 10,
             FAMILIA: 20,
             UNILEVER: 20,
-            POLAR: 20,
             ZENU: 15
         },
         unit: '%',
@@ -702,7 +694,6 @@ export const kpiDefinitions = [
             FAMILIA: 10,
             UNILEVER: 8,
             FLEISCHMANN: 10,
-            POLAR: 10,
             ZENU: 11
         },
         unit: '%',
@@ -739,7 +730,6 @@ export const kpiDefinitions = [
             FAMILIA: 0.5,
             UNILEVER: 0.5,
             FLEISCHMANN: 0.5,
-            POLAR: 0.5,
             ZENU: 0.5
         },
         unit: '%',
@@ -761,7 +751,6 @@ export const kpiDefinitions = [
             FAMILIA: 50000000,
             UNILEVER: 55000000,
             FLEISCHMANN: 45000000,
-            POLAR: 50000000,
             ZENU: 48000000
         },
         unit: '$',
@@ -783,7 +772,6 @@ export const kpiDefinitions = [
             FAMILIA: 12,
             UNILEVER: 10,
             FLEISCHMANN: 8,
-            POLAR: 10,
             ZENU: 12
         },
         unit: '%',
@@ -820,7 +808,6 @@ export const kpiDefinitions = [
             FAMILIA: 3.5,
             UNILEVER: 3.5,
             FLEISCHMANN: 3.5,
-            POLAR: 3.5,
             ZENU: 3.5
         },
         unit: '%',

@@ -38,20 +38,22 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     );
 
     // Split into EXACTLY two lists as requested
-    // List 1: "Indicadores por Alimentar" (Mine + Pending)
+    // List 1: "Indicadores por Alimentar" (Mine + Pending Brands)
     const pendingKPIs = myAccessKPIs.filter(k => {
         if (k.responsable !== currentUser.cargo) return false;
 
-        // Determinar marcas comerciales de la entidad actual
-        const entity = currentUser.company;
-        const allMetaBrands = typeof k.meta === 'object' ? Object.keys(k.meta) : [];
-        const commercialBrands = allMetaBrands.filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT' && BRAND_TO_ENTITY[b] === entity);
+        // Si no tiene desgloses por marca, solo chequear hasData
+        if (!k.meta || typeof k.meta !== 'object') return !k.hasData;
 
-        if (commercialBrands.length === 0) return !k.hasData;
+        // Si tiene marcas, ver si alguna de la entidad del usuario (excluyendo Polar) falta
+        const entityBrands = Object.keys(k.meta).filter(b =>
+            BRAND_TO_ENTITY[b] === currentUser.company && b !== 'POLAR'
+        );
 
-        // Es pendiente si alguna marca comercial de su entidad falta
-        return commercialBrands.some(brand => {
-            const dataKey = `${entity}-${brand}`;
+        if (entityBrands.length === 0) return !k.hasData;
+
+        return entityBrands.some(brand => {
+            const dataKey = `${currentUser.company}-${brand}`;
             const brandData = k.brandValues?.[dataKey];
             return !brandData || brandData.hasData === false;
         });
@@ -61,14 +63,37 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const areaKPIs = myAccessKPIs.filter(k => {
         const isMine = k.responsable === currentUser.cargo;
         if (!isMine) return true; // Monitoring
-
-        // Mine must be fully fed for all entity brands to move here
         return !pendingKPIs.find(pk => pk.id === k.id);
     });
 
-    // Global stats
-    const totalMyKPIs = myAccessKPIs.filter(k => k.responsable === currentUser.cargo).length;
-    const completedMyKPIs = myAccessKPIs.filter(k => k.responsable === currentUser.cargo && k.hasData).length;
+    // Global stats - Contar marcas individuales para mayor precisión
+    const getMyStats = () => {
+        let total = 0;
+        let done = 0;
+        myAccessKPIs.filter(k => k.responsable === currentUser.cargo).forEach(k => {
+            if (!k.meta || typeof k.meta !== 'object') {
+                total++;
+                if (k.hasData) done++;
+            } else {
+                const entityBrands = Object.keys(k.meta).filter(b =>
+                    BRAND_TO_ENTITY[b] === currentUser.company && b !== 'POLAR'
+                );
+                if (entityBrands.length === 0) {
+                    total++;
+                    if (k.hasData) done++;
+                } else {
+                    entityBrands.forEach(brand => {
+                        total++;
+                        const dataKey = `${currentUser.company}-${brand}`;
+                        if (k.brandValues?.[dataKey]?.hasData) done++;
+                    });
+                }
+            }
+        });
+        return { total, done };
+    };
+
+    const { total: totalMyKPIs, done: completedMyKPIs } = getMyStats();
     const progressPercent = totalMyKPIs > 0 ? Math.round((completedMyKPIs / totalMyKPIs) * 100) : 0;
 
     const areaIcons = {
@@ -101,21 +126,28 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
                 {(() => {
-                    const entity = currentUser.company;
-                    const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
-                    const commercialBrands = allMetaBrands.filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT' && BRAND_TO_ENTITY[b] === entity);
-                    const pendingCount = commercialBrands.filter(brand => {
-                        const dataKey = `${entity}-${brand}`;
-                        const brandData = kpi.brandValues?.[dataKey];
-                        return !brandData || brandData.hasData === false;
-                    }).length;
+                    const isMine = kpi.responsable === currentUser.cargo;
+                    let isReady = kpi.hasData;
+                    let pendingBrandsList = [];
 
-                    const isPartial = kpi.hasData && pendingCount > 0;
-                    const isFullyLoaded = kpi.hasData && pendingCount === 0;
+                    if (isMine && kpi.meta && typeof kpi.meta === 'object') {
+                        const entityBrands = Object.keys(kpi.meta).filter(b =>
+                            BRAND_TO_ENTITY[b] === currentUser.company && b !== 'POLAR'
+                        );
+                        if (entityBrands.length > 0) {
+                            pendingBrandsList = entityBrands.filter(brand => {
+                                const dataKey = `${currentUser.company}-${brand}`;
+                                return !kpi.brandValues?.[dataKey]?.hasData;
+                            });
+                            isReady = pendingBrandsList.length === 0;
+                        }
+                    }
 
-                    let bg = '#fff7ed'; let color = '#ea580c'; let text = 'POR CARGAR';
-                    if (isFullyLoaded) { bg = '#ecfdf5'; color = '#059669'; text = 'LISTO'; }
-                    else if (isPartial) { bg = '#fef3c7'; color = '#d97706'; text = 'CARGA PARCIAL'; }
+                    const bg = isReady ? '#ecfdf5' : '#fff7ed';
+                    const color = isReady ? '#059669' : '#ea580c';
+                    const text = isReady ? 'LISTO' : (pendingBrandsList.length > 0
+                        ? `FALTA CARGAR: ${pendingBrandsList.join(', ')}`
+                        : 'FALTA CARGAR');
 
                     return (
                         <div style={{
@@ -127,11 +159,11 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                             color: color,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.4rem',
-                            boxShadow: isPartial ? '0 0 10px rgba(217, 119, 6, 0.2)' : 'none'
+                            flexWrap: 'wrap',
+                            gap: '0.4rem'
                         }}>
-                            {isFullyLoaded ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                            {text}
+                            {isReady ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                            <span style={{ whiteSpace: 'normal' }}>{text}</span>
                         </div>
                     );
                 })()}
@@ -185,41 +217,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 {kpi.name}
             </h3>
 
-            {/* Pending Brands Notice */}
-            {(() => {
-                const entity = currentUser.company;
-                const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
-                const commercialBrands = allMetaBrands.filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT' && BRAND_TO_ENTITY[b] === entity);
 
-                const pending = commercialBrands.filter(brand => {
-                    const dataKey = `${entity}-${brand}`;
-                    const brandData = kpi.brandValues?.[dataKey];
-                    return !brandData || brandData.hasData === false;
-                });
-
-                if (pending.length > 0) {
-                    return (
-                        <div style={{
-                            fontSize: '0.75rem',
-                            color: '#e11d48',
-                            fontWeight: 900,
-                            marginBottom: '1.25rem',
-                            padding: '0.6rem 1rem',
-                            background: '#fff1f2',
-                            borderRadius: '12px',
-                            border: '1px solid #fee2e2',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            boxShadow: '0 4px 6px -1px rgba(225, 29, 72, 0.1)'
-                        }}>
-                            <AlertCircle size={14} />
-                            <span>FALTA CARGAR: {pending.join(', ')}</span>
-                        </div>
-                    );
-                }
-                return null;
-            })()}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f8fafc', padding: '1rem', borderRadius: '16px' }}>
                 <div>

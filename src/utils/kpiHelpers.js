@@ -55,7 +55,7 @@ export const filterKPIsByEntity = (kpiData, entity) => {
         return {
             ...kpi,
             targetMeta,
-            hasData: false
+            hasData: kpi.hasData || false
         };
     });
 };

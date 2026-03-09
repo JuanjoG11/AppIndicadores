@@ -18,10 +18,12 @@ const MetricSummary = ({ kpiData, horizontal }) => {
         color: area.color
     })).sort((a, b) => b.score - a.score);
 
-    // Mock history for sparklines
-    const mockHistory = (baseValue, variance) => {
+    // Stable history based on real data or current value
+    const getStabilizedHistory = (baseValue, kpiId) => {
+        // If we want to show a trend, we should use actual history if available
+        // For now, if no history, we show a stable line to avoid "demo" feeling of random jumps
         return Array.from({ length: 6 }, (_, i) => ({
-            value: baseValue + (Math.random() * variance * 2 - variance)
+            value: baseValue
         }));
     };
 
@@ -31,21 +33,21 @@ const MetricSummary = ({ kpiData, horizontal }) => {
             value: overallScore ? `${overallScore}%` : '0%',
             color: 'var(--brand)',
             icon: <Activity size={18} />,
-            history: mockHistory(overallScore || 0, 5)
+            history: getStabilizedHistory(overallScore || 0, 'total')
         },
         {
             title: 'KPIs en Verde',
             value: kpiData.filter(k => k.semaphore === 'green').length,
             color: 'var(--success)',
             icon: <ShieldCheck size={18} />,
-            history: mockHistory(kpiData.filter(k => k.semaphore === 'green').length, 2)
+            history: getStabilizedHistory(kpiData.filter(k => k.semaphore === 'green').length, 'green')
         },
         {
             title: 'KPIs en Rojo',
             value: kpiData.filter(k => k.semaphore === 'red').length,
             color: 'var(--danger)',
             icon: <AlertTriangle size={18} />,
-            history: mockHistory(kpiData.filter(k => k.semaphore === 'red').length, 1)
+            history: getStabilizedHistory(kpiData.filter(k => k.semaphore === 'red').length, 'red')
         }
     ];
 
