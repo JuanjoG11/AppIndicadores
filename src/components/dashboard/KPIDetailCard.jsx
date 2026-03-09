@@ -200,6 +200,32 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                         <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>CUMPLIMIENTO</span>
                     </div>
                 )}
+                {/* DETALLE DE CÁLCULO (Input values) */}
+                {kpi.additionalData && Object.keys(kpi.additionalData).length > 2 && (
+                    <div style={{
+                        marginTop: '1.25rem',
+                        padding: '0.75rem',
+                        background: '#f8fafc',
+                        borderRadius: '12px',
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '0.75rem'
+                    }}>
+                        {Object.entries(kpi.additionalData)
+                            .filter(([key]) => !['brand', 'company', 'updatedAt', 'type', 'newMeta'].includes(key))
+                            .map(([key, val]) => (
+                                <div key={key}>
+                                    <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>
+                                        {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#334155' }}>
+                                        {typeof val === 'number' ? (val > 1000 ? `$${val.toLocaleString()}` : val) : val}
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </div>
+                )}
             </div>
 
             {/* Sparkline */}

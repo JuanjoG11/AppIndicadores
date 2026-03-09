@@ -21,41 +21,78 @@ export const filterKPIsByEntity = (kpiData, entity) => {
     if (!kpiData) return [];
 
     return kpiData.filter(kpi => {
-        // If meta is an object, it MUST contain at least one brand from this entity or the entity name itself
         if (kpi.meta && typeof kpi.meta === 'object') {
             const hasEntityBrand = Object.keys(kpi.meta).some(b => BRAND_TO_ENTITY[b] === entity || b === entity);
             if (!hasEntityBrand) return false;
         }
         return true;
     }).map(kpi => {
-        // 1. Resolve Meta (Target)
+        // 1. Resolver Meta (Target)
         let targetMeta = kpi.meta;
+        let entityBrands = [];
         if (kpi.meta && typeof kpi.meta === 'object') {
-            // Find the first brand in the meta object that belongs to this entity
-            const brandKey = Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+            entityBrands = Object.keys(kpi.meta).filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+            const brandKey = entityBrands[0];
             targetMeta = brandKey ? kpi.meta[brandKey] : Object.values(kpi.meta)[0] || 0;
         }
 
-        // 2. Resolve Current Data from brandValues if available
-        const entityKeys = kpi.brandValues ? Object.keys(kpi.brandValues).filter(key => key.startsWith(`${entity}-`)) : [];
+        // 2. Resolver Datos Agregados para la Entidad
+        const brandValues = kpi.brandValues || {};
+        const entityKeys = Object.keys(brandValues).filter(key => key.startsWith(`${entity}-`));
 
         if (entityKeys.length > 0) {
-            const globalKey = `${entity}-GLOBAL`;
-            const mainKey = entityKeys.includes(globalKey) ? globalKey : entityKeys[0];
-            const { meta: brandMeta, ...brandData } = kpi.brandValues[mainKey];
+            let totalValue = 0;
+            let totalCompliance = 0;
+            let filledCount = 0;
+
+            // Requisito: Si tiene marcas definidas en meta, deben estar todas en brandValues para decir hasData: true
+            let allFilled = true;
+            if (entityBrands.length > 0) {
+                allFilled = entityBrands.every(brand => {
+                    const key = `${entity}-${brand}`;
+                    return brandValues[key] && brandValues[key].hasData;
+                });
+            } else {
+                allFilled = brandValues[`${entity}-${entity}`]?.hasData || brandValues[`${entity}-GLOBAL`]?.hasData || false;
+            }
+
+            entityKeys.forEach(key => {
+                const data = brandValues[key];
+                if (data.hasData) {
+                    totalValue += (data.value || 0);
+                    totalCompliance += (data.compliance || 0);
+                    filledCount++;
+                }
+            });
+
+            const avgValue = filledCount > 0 ? totalValue / filledCount : 0;
+            const avgCompliance = filledCount > 0 ? totalCompliance / filledCount : 0;
+
+            let semaphore = 'gray';
+            if (filledCount > 0) {
+                if (avgCompliance >= 95) semaphore = 'green';
+                else if (avgCompliance >= 85) semaphore = 'yellow';
+                else semaphore = 'red';
+            }
 
             return {
                 ...kpi,
-                ...brandData,
+                currentValue: parseFloat(avgValue.toFixed(2)),
+                compliance: Math.round(avgCompliance),
+                semaphore: semaphore,
                 targetMeta,
-                hasData: brandData.hasData !== undefined ? brandData.hasData : true
+                hasData: allFilled,
+                additionalData: brandValues[entityKeys[entityKeys.length - 1]].additionalData
             };
         }
 
         return {
             ...kpi,
             targetMeta,
-            hasData: kpi.hasData || false
+            hasData: kpi.hasData || false,
+            currentValue: 0,
+            compliance: 0,
+            semaphore: 'gray'
         };
     });
 };

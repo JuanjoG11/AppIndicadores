@@ -4,7 +4,7 @@
 
 export const calculateKPIValue = (kpiId, d) => {
   if (!d) return 0;
-  
+
   let newValue = 0;
 
   try {
@@ -116,7 +116,7 @@ export const calculateKPIValue = (kpiId, d) => {
       case 'segundos-unidad-separada':
         newValue = d.segundosUtilizados / d.unidadesSeparadas;
         break;
-      case 'pesos-separados-homme':
+      case 'pesos-separados-hombre':
         newValue = d.valorVenta / d.auxiliaresSeparacion;
         break;
       case 'pedidos-separar-total':
@@ -255,6 +255,6 @@ export const isInverseKPI = (kpiId) => {
     'mermas',
     'diferencia-inventarios'
   ];
-  
+
   return inverseKPIs.includes(kpiId) || kpiId.includes('vencida');
 };

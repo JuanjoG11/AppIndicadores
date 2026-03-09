@@ -155,7 +155,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                         onClick={() => {
                             const companyFull = activeCompany === 'TYM' ? 'Tiendas y Marcas' : 'TAT Distribuciones';
                             import('../utils/ExportService').then(m => {
-                                m.exportToPDF(areaKPIs, activeCompany, companyFull, area.name);
+                                m.exportToPDF(filteredKPIs, activeCompany, companyFull, area.name, selectedBrand);
                             });
                         }}
                         style={{

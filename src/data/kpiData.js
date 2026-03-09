@@ -197,7 +197,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'horas-extras-venta-picking',
-        name: '# De Horas Extras Picking / Venta',
+        name: '# De horas extras trabajada en el periodo / Venta',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
@@ -263,8 +263,8 @@ export const kpiDefinitions = [
         fuente: 'SYT / MAN GO'
     },
     {
-        id: 'averias-deposito',
-        name: '% De averias / la venta',
+        id: 'averias-venta',
+        name: 'Averias / Venta',
         area: 'logistica',
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
