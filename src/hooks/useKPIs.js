@@ -83,11 +83,23 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             let semaphore = kpi.semaphore;
             let compliance = kpi.compliance;
 
-            if (typeof targetMeta === 'number' && targetMeta !== 0) {
+            if (typeof targetMeta === 'number') {
                 const isInverse = isInverseKPI(kpiId);
-                compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
-                compliance = Math.round(compliance);
-                if (newValue === 0 && isInverse) compliance = 100;
+
+                if (targetMeta === 0) {
+                    // Si la meta es 0 (ej: 0 errores), y se cumple (newValue 0), es 100%
+                    if (isInverse) {
+                        compliance = newValue === 0 ? 100 : 0;
+                    } else {
+                        // Meta 0 en indicador normal es raro, pero si newValue > 0 es bueno(?)
+                        compliance = newValue >= 0 ? 100 : 0;
+                    }
+                } else {
+                    compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
+                    if (newValue === 0 && isInverse) compliance = 100;
+                }
+
+                compliance = Math.round(compliance || 0);
 
                 if (compliance >= 95) semaphore = 'green';
                 else if (compliance >= 85) semaphore = 'yellow';

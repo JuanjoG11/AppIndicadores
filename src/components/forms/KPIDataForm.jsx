@@ -379,7 +379,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
 
     const handleChange = (fieldName, value) => {
         setFormData(prev => {
-            const newState = { ...prev, [fieldName]: fieldName === 'brand' ? value : (parseFloat(value) || 0) };
+            const isNumberField = fieldName !== 'brand' && fieldName !== 'company';
+            let parsedValue = value;
+            if (isNumberField) {
+                parsedValue = value === '' ? '' : (parseFloat(value) || 0);
+            }
+            const newState = { ...prev, [fieldName]: parsedValue };
 
             // Auto-sync company if brand changes
             if (fieldName === 'brand') {
@@ -432,7 +437,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                 {isMetaMode ? `Ajustar Meta: ${kpi.name}` : kpi.name}
                             </h2>
                             <div style={{ fontSize: '0.75rem', opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                                {kpi.area.replace(/-/g, ' ')} • {typeof currentMeta === 'number' ? `Actual: ${currentMeta} ${kpi.unit}` : currentMeta}
+                                {(kpi.subArea || kpi.area).replace(/-/g, ' ')} • {typeof currentMeta === 'number' ? `Actual: ${currentMeta} ${kpi.unit}` : currentMeta}
                             </div>
                         </div>
                     </div>
@@ -586,7 +591,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                     type="number"
                                     step="any"
                                     required
-                                    value={formData.newMeta || ''}
+                                    value={formData.newMeta ?? ''}
                                     onChange={(e) => handleChange('newMeta', e.target.value)}
                                     placeholder={`Meta actual: ${(kpi.meta && typeof kpi.meta === 'object'
                                         ? (kpi.meta[formData.brand || 'global'] || kpi.meta[formData.brand || 'Global'] || Object.values(kpi.meta)[0])
@@ -616,7 +621,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                                 type={field.type}
                                                 step="any"
                                                 required
-                                                value={formData[field.name] || ''}
+                                                value={formData[field.name] ?? ''}
                                                 onChange={(e) => handleChange(field.name, e.target.value)}
                                                 style={{
                                                     width: '100%', padding: '1.1rem 1.25rem',

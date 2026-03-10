@@ -140,11 +140,7 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la productividad en le piking de productos',
         meta: {
-            ALPINA: 218000000,
-            ZENU: 218000000,
-            FLEISCHMANN: 218000000,
-            UNILEVER: 218000000,
-            FAMILIA: 218000000
+            ALPINA: 218000000
         },
         unit: '$',
         frecuencia: 'MENSUAL',
