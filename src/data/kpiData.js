@@ -30,9 +30,7 @@ export const kpiDefinitions = [
         meta: {
             ALPINA: 50,
             ZENU: 80,
-            FLEISCHMANN: 50,
-            UNILEVER: 80,
-            FAMILIA: 80
+            UNILEVER: 80
         },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
@@ -50,9 +48,7 @@ export const kpiDefinitions = [
         meta: {
             ALPINA: 65,
             ZENU: 80,
-            FLEISCHMANN: 65,
-            UNILEVER: 80,
-            FAMILIA: 80
+            UNILEVER: 80
         },
         unit: 'pedidos',
         frecuencia: 'SEMANAL',
@@ -128,11 +124,7 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la productividad en el picking de productos',
         meta: {
-            ALPINA: 8,
-            ZENU: 8,
-            FLEISCHMANN: 8,
-            UNILEVER: 8,
-            FAMILIA: 8
+            ALPINA: 8
         },
         unit: 'segundos',
         frecuencia: 'DIARIO',
