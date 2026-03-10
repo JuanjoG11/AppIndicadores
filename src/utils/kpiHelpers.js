@@ -34,7 +34,7 @@ export const filterKPIsByEntity = (kpiData, entity) => {
             entityBrands = Object.keys(kpi.meta).filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
             if (entityBrands.length > 0) {
                 const totalMeta = entityBrands.reduce((sum, b) => sum + (kpi.meta[b] || 0), 0);
-                targetMeta = totalMeta / entityBrands.length;
+                targetMeta = parseFloat((totalMeta / entityBrands.length).toFixed(2));
             } else {
                 targetMeta = Object.values(kpi.meta)[0] || 0;
             }
@@ -50,7 +50,7 @@ export const filterKPIsByEntity = (kpiData, entity) => {
             let filledCount = 0;
 
             // Requisito: Si tiene marcas definidas en meta, deben estar todas en brandValues para decir hasData: true
-            let allFilled = true;
+            let allFilled = false;
             if (entityBrands.length > 0) {
                 allFilled = entityBrands.every(brand => {
                     const key = `${entity}-${brand}`;
@@ -82,13 +82,18 @@ export const filterKPIsByEntity = (kpiData, entity) => {
             // Si hay múltiples marcas, la marca en additionalData debe reflejar el consolidado
             const baseAdditionalData = brandValues[entityKeys[entityKeys.length - 1]].additionalData || {};
 
+            const anyFilled = entityBrands.length > 0
+                ? entityBrands.some(brand => brandValues[`${entity}-${brand}`]?.hasData)
+                : entityKeys.some(key => brandValues[key].hasData);
+
             return {
                 ...kpi,
                 currentValue: parseFloat(avgValue.toFixed(2)),
                 compliance: Math.round(avgCompliance),
                 semaphore: semaphore,
                 targetMeta,
-                hasData: allFilled,
+                hasData: anyFilled,
+                isComplete: allFilled,
                 additionalData: {
                     ...baseAdditionalData,
                     brand: entityBrands.length === 1 ? entityBrands[0] : (entity === 'TYM' ? 'Tiendas y Marcas' : 'TAT Distribuciones')

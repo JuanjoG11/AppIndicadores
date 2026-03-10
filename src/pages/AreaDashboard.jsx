@@ -4,6 +4,7 @@ import { getAreaById } from '../data/areas';
 import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity } from '../utils/kpiHelpers';
+import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline } from '../utils/formatters';
 import {
     ResponsiveContainer,
     RadarChart,
@@ -107,6 +108,21 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const redCount = filteredKPIs.filter(kpi => kpi.semaphore !== 'green' && kpi.hasData).length;
     const pendingCount = filteredKPIs.filter(kpi => !kpi.hasData).length;
 
+    // Alertas logic
+    const kpiAlerts = filteredKPIs.map(kpi => {
+        const deadline = getKPIDeadline(kpi.frecuencia);
+        return {
+            ...kpi,
+            deadline,
+            isUrgent: checkIsUrgent(deadline),
+            isExpired: checkIsExpired(deadline) && !kpi.hasData,
+            isPending: !kpi.hasData
+        };
+    }).filter(k => k.isExpired || k.isUrgent || (k.isPending && canModify));
+
+    const criticalAlerts = kpiAlerts.filter(k => k.isExpired);
+    const warningAlerts = kpiAlerts.filter(k => k.isUrgent);
+
     const radarData = filteredKPIs.map(kpi => ({
         subject: kpi.name.length > 20 ? kpi.name.substring(0, 17) + '...' : kpi.name,
         fullValue: kpi.name,
@@ -124,7 +140,9 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
 
     const handleSaveKPI = (kpiId, data) => {
         if (onUpdateKPI) onUpdateKPI(kpiId, data);
-        setEditingKPI(null);
+        if (data.type !== 'META_UPDATE') {
+            setEditingKPI(null);
+        }
     };
 
     const totalComplianceSum = kpisWithData.reduce((sum, kpi) => sum + (kpi.compliance || 0), 0);
@@ -361,6 +379,73 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
             )}
 
             {/* Bottom Grid Row */}
+            {/* Alertas Section */}
+            {kpiAlerts.length > 0 && canModify && (
+                <div style={{
+                    marginBottom: '2.5rem',
+                    background: criticalAlerts.length > 0 ? '#fff1f2' : '#fffbeb',
+                    border: `1px solid ${criticalAlerts.length > 0 ? '#fda4af' : '#fde68a'}`,
+                    borderRadius: '24px',
+                    padding: '1.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                            width: '40px', height: '40px',
+                            background: criticalAlerts.length > 0 ? '#ef4444' : '#f59e0b',
+                            borderRadius: '12px', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', color: 'white'
+                        }}>
+                            <AlertCircle size={24} />
+                        </div>
+                        <div>
+                            <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, color: '#1e293b' }}>
+                                Panel de Alertas de Carga
+                            </h4>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
+                                {criticalAlerts.length > 0
+                                    ? `Tienes ${criticalAlerts.length} indicadores con plazo vencido.`
+                                    : `Tienes indicadores pendientes o cerca del plazo límite.`}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                        {kpiAlerts.slice(0, 4).map(k => (
+                            <div key={k.id} style={{
+                                background: 'white', padding: '1rem', borderRadius: '16px',
+                                border: `1px solid ${k.isExpired ? '#fda4af' : '#fde68a'}`,
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                            }}>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.25rem' }}>{k.name}</div>
+                                    <div style={{
+                                        fontSize: '0.65rem', fontWeight: 700,
+                                        color: k.isExpired ? '#ef4444' : '#f59e0b',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {k.isExpired ? 'Vencido: ' : 'Plazo: '} {formatDeadline(k.deadline)}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleStartEdit(k)}
+                                    style={{
+                                        background: k.isExpired ? '#ef4444' : '#f59e0b',
+                                        color: 'white', border: 'none',
+                                        padding: '0.4rem 0.8rem', borderRadius: '10px',
+                                        fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer'
+                                    }}
+                                >
+                                    Cargar
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
                 <div style={{ width: '24px', height: '4px', background: 'var(--brand)', borderRadius: '2px' }}></div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.02em' }}>

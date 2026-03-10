@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatKPIValue } from '../../utils/formatters';
+import { formatKPIValue, formatDateTime, formatDeadline, getKPIDeadline, checkIsUrgent, checkIsExpired } from '../../utils/formatters';
 import { ResponsiveContainer, Area, AreaChart, Tooltip } from 'recharts';
 import {
     Edit2,
@@ -42,47 +42,6 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
 
     const isManager = currentUser?.role === 'Gerente';
 
-    if (!kpi.hasData) {
-        return (
-            <div className="card animate-fade-in" style={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                textAlign: 'center',
-                minHeight: '220px',
-                background: 'white',
-                border: '1px dashed #e2e8f0',
-                borderRadius: '24px',
-                padding: '2rem'
-            }}>
-                <div style={{ color: '#94a3b8', marginBottom: '1rem' }}>
-                    <Package size={32} strokeWidth={1.5} />
-                </div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem', color: '#1e293b' }}>{kpi.name}</h4>
-
-                {canEdit && (
-                    <button
-                        className="btn-primary"
-                        style={{
-                            fontSize: '0.8rem',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '12px',
-                            background: 'var(--brand)',
-                            color: 'white',
-                            border: 'none',
-                            fontWeight: 700,
-                            cursor: 'pointer'
-                        }}
-                        onClick={() => onEdit && onEdit(kpi)}
-                    >
-                        Completar Datos
-                    </button>
-                )}
-            </div>
-        );
-    }
 
     return (
         <div className="card premium-shadow animate-slide-up" style={{
@@ -128,7 +87,8 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {(() => {
-                        const statusColor = kpi.hasData ? { bg: '#ecfdf5', text: '#059669', label: 'LISTO' } : { bg: '#fff7ed', text: '#ea580c', label: 'VACÍO' };
+                        const isComplete = kpi.isComplete || kpi.hasData;
+                        const statusColor = isComplete ? { bg: '#ecfdf5', text: '#059669', label: 'LISTO' } : { bg: '#fff7ed', text: '#ea580c', label: 'PENDIENTE' };
 
                         return (
                             <div style={{
@@ -192,7 +152,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                     </span>
                 </div>
 
-                {displayCompliance !== undefined && (
+                {(displayCompliance != null) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem' }}>
                         <div style={{
                             display: 'flex', alignItems: 'center',
@@ -272,21 +232,52 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                 paddingTop: '1rem',
                 borderTop: '1px solid #f8fafc',
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                flexDirection: 'column',
+                gap: '0.75rem'
             }}>
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>
-                    {isBrandFocus ? `META ${selectedBrand}:` : `META CONSOLIDADA ${activeCompany || 'TYM'}:`} <span style={{ color: '#334155' }}>{displayTarget} {kpi.unit}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>
+                        {isBrandFocus ? `META ${selectedBrand}:` : `META CONSOLIDADA ${activeCompany || 'TYM'}:`} <span style={{ color: '#334155' }}>{displayTarget} {kpi.unit}</span>
+                    </div>
+                    <div style={{
+                        fontSize: '0.6rem',
+                        padding: '0.2rem 0.5rem',
+                        background: '#f8fafc',
+                        borderRadius: '6px',
+                        color: '#94a3b8',
+                        fontWeight: 800
+                    }}>
+                        MARZO 2026
+                    </div>
                 </div>
+
+                {/* Deadlines and Updates (Special for Manager) */}
                 <div style={{
-                    fontSize: '0.6rem',
-                    padding: '0.2rem 0.5rem',
-                    background: '#f8fafc',
-                    borderRadius: '6px',
-                    color: '#94a3b8',
-                    fontWeight: 800
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.5rem',
+                    background: isManager ? 'var(--brand-bg)' : (checkIsExpired(getKPIDeadline(kpi.frecuencia)) && !kpi.hasData ? '#fff1f2' : (checkIsUrgent(getKPIDeadline(kpi.frecuencia)) ? '#fffbeb' : '#f8fafc')),
+                    padding: '0.75rem',
+                    borderRadius: '14px',
+                    border: isManager ? '1px solid var(--brand)' : (checkIsExpired(getKPIDeadline(kpi.frecuencia)) && !kpi.hasData ? '1px solid #fda4af' : (checkIsUrgent(getKPIDeadline(kpi.frecuencia)) ? '1px solid #fde68a' : '1px solid #e2e8f0')),
+                    opacity: 0.9
                 }}>
-                    FEBRERO 2026
+                    <div>
+                        <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                            <Clock size={10} style={{ verticalAlign: 'middle', marginRight: '2px' }} /> FECHA LÍMITE
+                        </div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: (checkIsExpired(getKPIDeadline(kpi.frecuencia)) && !kpi.hasData) ? '#ef4444' : '#1e293b' }}>
+                            {formatDeadline(getKPIDeadline(kpi.frecuencia))}
+                        </div>
+                    </div>
+                    <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '0.5rem' }}>
+                        <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                            {isManager ? '★ ÚLTIMA ACT.' : 'ÚLTIMA ACTUALIZACIÓN'}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: isManager ? 'var(--brand)' : '#334155' }}>
+                            {formatDateTime(isBrandFocus ? kpi.brandValues?.[`${entity}-${selectedBrand}`]?.additionalData?.updatedAt : kpi.additionalData?.updatedAt)}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

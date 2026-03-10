@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, BRAND_TO_ENTITY } from '../utils/kpiHelpers';
+import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime } from '../utils/formatters';
+import { Clock, Calendar } from 'lucide-react';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const [editingKPI, setEditingKPI] = useState(null);
@@ -66,6 +68,10 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         return !pendingKPIs.find(pk => pk.id === k.id);
     });
 
+    // Urgency logic for pending
+    const criticalCount = pendingKPIs.filter(k => checkIsExpired(getKPIDeadline(k.frecuencia))).length;
+    const urgentCount = pendingKPIs.filter(k => checkIsUrgent(getKPIDeadline(k.frecuencia))).length;
+
     // Global stats - Contar marcas individuales para mayor precisión
     const getMyStats = () => {
         let total = 0;
@@ -110,131 +116,198 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
     const handleSaveKPI = (kpiId, data) => {
         if (onUpdateKPI) onUpdateKPI(kpiId, data);
-        setEditingKPI(null);
+        if (data.type !== 'META_UPDATE') {
+            setEditingKPI(null);
+        }
     };
 
     // Helper to render KPI cards
-    const renderKPICard = (kpi, idx, isMonitoring = false) => (
-        <div key={kpi.id} className="card premium-shadow fade-in" style={{
-            padding: '1.75rem',
-            borderRadius: '24px',
-            background: 'white',
-            border: kpi.hasData ? '1px solid #e2e8f0' : '2px dashed #cbd5e1',
-            opacity: isMonitoring && !kpi.hasData ? 0.7 : 1,
-            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            animationDelay: `${idx * 0.05}s`
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
-                {(() => {
-                    const isMine = kpi.responsable === currentUser.cargo;
-                    let isReady = kpi.hasData;
-                    let pendingBrandsList = [];
+    const renderKPICard = (kpi, idx, isMonitoring = false) => {
+        const isMine = kpi.responsable === currentUser.cargo;
+        let isReady = kpi.hasData;
+        let pendingBrandsList = [];
 
-                    if (isMine && kpi.meta && typeof kpi.meta === 'object') {
-                        const entityBrands = Object.keys(kpi.meta).filter(b =>
-                            BRAND_TO_ENTITY[b] === currentUser.company && b !== 'POLAR'
-                        );
-                        if (entityBrands.length > 0) {
-                            pendingBrandsList = entityBrands.filter(brand => {
-                                const dataKey = `${currentUser.company}-${brand}`;
-                                return !kpi.brandValues?.[dataKey]?.hasData;
-                            });
-                            isReady = pendingBrandsList.length === 0;
-                        }
-                    }
+        if (isMine && kpi.meta && typeof kpi.meta === 'object') {
+            const entityBrands = Object.keys(kpi.meta).filter(b =>
+                BRAND_TO_ENTITY[b] === currentUser.company && b !== 'POLAR'
+            );
+            if (entityBrands.length > 0) {
+                pendingBrandsList = entityBrands.filter(brand => {
+                    const dataKey = `${currentUser.company}-${brand}`;
+                    return !kpi.brandValues?.[dataKey]?.hasData;
+                });
+                isReady = pendingBrandsList.length === 0;
+            }
+        }
 
-                    const bg = isReady ? '#ecfdf5' : '#fff7ed';
-                    const color = isReady ? '#059669' : '#ea580c';
-                    const text = isReady ? 'LISTO' : (pendingBrandsList.length > 0
-                        ? `FALTA CARGAR: ${pendingBrandsList.join(', ')}`
-                        : 'FALTA CARGAR');
+        const deadline = getKPIDeadline(kpi.frecuencia);
+        const isUrgent = checkIsUrgent(deadline);
+        const isExpired = checkIsExpired(deadline) && !isReady;
 
-                    return (
+        return (
+            <div key={kpi.id} className="card premium-shadow fade-in" style={{
+                padding: '1.75rem',
+                borderRadius: '24px',
+                background: 'white',
+                border: isReady ? '1px solid #e2e8f0' : '2px dashed #cbd5e1',
+                opacity: isMonitoring && !kpi.hasData ? 0.7 : 1,
+                transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                animationDelay: `${idx * 0.05}s`
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                         <div style={{
                             padding: '0.4rem 0.8rem',
                             borderRadius: '10px',
                             fontSize: '0.65rem',
                             fontWeight: 800,
-                            background: bg,
-                            color: color,
+                            background: isReady ? '#ecfdf5' : '#fff7ed',
+                            color: isReady ? '#059669' : '#ea580c',
                             display: 'flex',
                             alignItems: 'center',
-                            flexWrap: 'wrap',
                             gap: '0.4rem'
                         }}>
                             {isReady ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                            <span style={{ whiteSpace: 'normal' }}>{text}</span>
+                            <span style={{ whiteSpace: 'normal' }}>
+                                {isReady ? 'LISTO' : (pendingBrandsList.length > 0
+                                    ? `FALTA CARGAR: ${pendingBrandsList.join(', ')}`
+                                    : 'FALTA CARGAR')}
+                            </span>
                         </div>
-                    );
-                })()}
-
-                {kpi.responsable === currentUser.cargo ? (
-                    // ... (rest of the action buttons)
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                            onClick={() => handleStartEdit(kpi, 'data')}
-                            style={{
-                                background: kpi.hasData ? 'var(--bg-app)' : 'var(--brand)',
-                                color: kpi.hasData ? 'var(--text-main)' : 'white',
-                                border: 'none',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '10px',
-                                fontSize: '0.75rem',
-                                fontWeight: 800,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            {kpi.hasData ? 'Editar' : 'Cargar'}
-                        </button>
+                        <div style={{
+                            fontSize: '0.65rem',
+                            fontWeight: 800,
+                            color: 'var(--brand)',
+                            background: 'var(--brand-bg)',
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem'
+                        }}>
+                            <Calendar size={12} /> {kpi.frecuencia}
+                        </div>
                     </div>
-                ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {currentUser.role === 'Gerente' && (
+
+                    {isMine ? (
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button
-                                onClick={() => handleStartEdit(kpi, 'meta')}
+                                onClick={() => handleStartEdit(kpi, 'data')}
                                 style={{
-                                    background: 'white',
-                                    color: 'var(--brand)',
-                                    border: '1px solid #e2e8f0',
-                                    padding: '0.4rem',
-                                    borderRadius: '8px',
+                                    background: isReady ? 'var(--bg-app)' : 'var(--brand)',
+                                    color: isReady ? 'var(--text-main)' : 'white',
+                                    border: 'none',
+                                    padding: '0.4rem 0.8rem',
+                                    borderRadius: '10px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 800,
                                     cursor: 'pointer'
                                 }}
-                                title="Gestionar Metas"
                             >
-                                <Settings size={14} />
+                                {isReady ? 'Editar' : 'Cargar'}
                             </button>
-                        )}
+                        </div>
+                    ) : (
                         <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', background: '#f8fafc', padding: '0.4rem 0.8rem', borderRadius: '10px' }}>
                             Lectura
                         </div>
+                    )}
+                </div>
+
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', marginBottom: '1.25rem', lineHeight: 1.3 }}>
+                    {kpi.name}
+                </h3>
+
+                {/* Deadline Reminder - MORE VISIBLE */}
+                {!isReady && isMine && (
+                    <div style={{
+                        marginBottom: '1.5rem',
+                        padding: '1rem',
+                        background: isExpired ? '#fff1f2' : (isUrgent ? '#fffbeb' : '#f8fafc'),
+                        borderRadius: '16px',
+                        border: `1px solid ${isExpired ? '#fda4af' : (isUrgent ? '#fde68a' : '#e2e8f0')}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.4rem',
+                        boxShadow: isUrgent || isExpired ? '0 4px 12px rgba(0,0,0,0.05)' : 'none'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Clock size={16} color={isExpired ? '#ef4444' : (isUrgent ? '#f59e0b' : '#64748b')} />
+                            <span style={{ fontSize: '0.7rem', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase' }}>
+                                {isExpired ? '¡PLAZO VENCIDO!' : 'PLAZO DE CARGA'}
+                            </span>
+                        </div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 900, color: isExpired ? '#ef4444' : (isUrgent ? '#f59e0b' : '#1e293b') }}>
+                            {formatDeadline(deadline)}
+                        </div>
                     </div>
                 )}
-            </div>
-
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', marginBottom: '1.5rem', lineHeight: 1.3 }}>
-                {kpi.name}
-            </h3>
 
 
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f8fafc', padding: '1rem', borderRadius: '16px' }}>
-                <div>
-                    <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#475569' }}>
-                        {kpi.meta && typeof kpi.meta === 'object' ? `${kpi.targetMeta} ${kpi.unit}` : `${kpi.meta} ${kpi.unit}`}
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f8fafc', padding: '1rem', borderRadius: '16px', marginBottom: '1.25rem' }}>
+                    <div>
+                        <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 800, color: '#475569' }}>
+                            {kpi.meta && typeof kpi.meta === 'object' ? `${kpi.targetMeta} ${kpi.unit}` : `${kpi.meta} ${kpi.unit}`}
+                        </div>
+                    </div>
+                    {kpi.hasData && (
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
+                            <div style={{
+                                fontSize: '0.9rem',
+                                fontWeight: 900,
+                                color: (kpi.semaphore === 'green' ? '#059669' : (kpi.semaphore === 'red' ? '#ef4444' : '#f59e0b'))
+                            }}>
+                                {kpi.compliance}%
+                            </div>
+                        </div>
+                    )}
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                        <div style={{
+                            fontSize: '1rem',
+                            fontWeight: 800,
+                            color: kpi.hasData
+                                ? (kpi.semaphore === 'green' ? '#059669' : (kpi.semaphore === 'red' ? '#ef4444' : (kpi.semaphore === 'yellow' ? '#f59e0b' : 'var(--brand)')))
+                                : '#cbd5e1'
+                        }}>
+                            {kpi.hasData ? `${kpi.currentValue} ${kpi.unit}` : '--'}
+                        </div>
                     </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: kpi.hasData ? 'var(--brand)' : '#cbd5e1' }}>
-                        {kpi.hasData ? `${kpi.currentValue} ${kpi.unit}` : '--'}
+
+                {/* Footer Box - Always Visible */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.5rem',
+                    background: '#f8fafc',
+                    padding: '0.75rem',
+                    borderRadius: '14px',
+                    border: '1px solid #e2e8f0'
+                }}>
+                    <div>
+                        <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                            <Clock size={10} style={{ verticalAlign: 'baseline', marginRight: '2px' }} /> Límite
+                        </div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: isExpired ? '#ef4444' : '#1e293b' }}>
+                            {formatDeadline(deadline)}
+                        </div>
+                    </div>
+                    <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '0.5rem' }}>
+                        <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                            Act.
+                        </div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#334155' }}>
+                            {formatDateTime(kpi.additionalData?.updatedAt)}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-app)' }}>
@@ -289,6 +362,50 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 </div>
             </div>
 
+            {/* Alertas de Plazo para el Analista */}
+            <div style={{
+                marginBottom: '3rem',
+                background: criticalCount > 0 ? '#fff1f2' : (urgentCount > 0 ? '#fffbeb' : '#f0f9ff'),
+                border: `1px solid ${criticalCount > 0 ? '#fda4af' : (urgentCount > 0 ? '#fde68a' : '#bae6fd')}`,
+                borderRadius: '24px',
+                padding: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1.25rem',
+                animation: (criticalCount > 0 || urgentCount > 0) ? 'pulse-subtle 3s infinite' : 'none'
+            }}>
+                <div style={{
+                    width: '56px', height: '56px',
+                    background: criticalCount > 0 ? '#ef4444' : (urgentCount > 0 ? '#f59e0b' : '#3b82f6'),
+                    borderRadius: '16px', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', color: 'white'
+                }}>
+                    {criticalCount > 0 ? <AlertCircle size={32} /> : (urgentCount > 0 ? <Clock size={32} /> : <Calendar size={32} />)}
+                </div>
+                <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#1e293b' }}>
+                        Estado de Carga - {currentUser.name}
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b', fontWeight: 600 }}>
+                        {criticalCount > 0
+                            ? `¡URGENTE! Tienes ${criticalCount} indicadores con el PLAZO VENCIDO.`
+                            : (urgentCount > 0
+                                ? `ATENCIÓN: Tienes ${urgentCount} indicadores que vencen en las próximas 24 horas.`
+                                : pendingKPIs.length > 0
+                                    ? `Tienes ${pendingKPIs.length} indicadores pendientes. El próximo vencimiento es para los de frecuencia DIARIA (hoy) o SEMANAL (viernes).`
+                                    : '¡Excelente trabajo! Has completado todas tus cargas para este periodo.'
+                            )
+                        }
+                    </p>
+                </div>
+                {pendingKPIs.length > 0 && (
+                    <div style={{ textAlign: 'right', padding: '0 1rem' }}>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Faltantes</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1e293b' }}>{pendingKPIs.length}</div>
+                    </div>
+                )}
+            </div>
+
             {/* Dashboard Sections */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5rem' }}>
 
@@ -300,7 +417,19 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                         </div>
                         <div>
                             <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#1e293b', marginBottom: '0.25rem' }}>Indicadores por Alimentar</h2>
-                            <p style={{ fontSize: '0.95rem', color: '#64748b' }}>Tienes {pendingKPIs.length} indicadores pendientes de gestión.</p>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0 }}>Tienes {pendingKPIs.length} indicadores pendientes.</p>
+                                {criticalCount > 0 && (
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ef4444', background: '#fff1f2', padding: '0.1rem 0.5rem', borderRadius: '6px' }}>
+                                        {criticalCount} VENCIDOS
+                                    </span>
+                                )}
+                                {urgentCount > 0 && (
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#f59e0b', background: '#fffbeb', padding: '0.1rem 0.5rem', borderRadius: '6px' }}>
+                                        {urgentCount} URGENTES
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
 

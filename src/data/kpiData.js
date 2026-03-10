@@ -115,7 +115,7 @@ export const kpiDefinitions = [
             FAMILIA: 1
         },
         unit: 'horas',
-        frecuencia: 'MENSUAL',
+        frecuencia: 'QUINCENAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'TOTAL HORAS EXTRAS / AUXILIARES',
         sustentacion: 'SEMANAL',
@@ -255,7 +255,7 @@ export const kpiDefinitions = [
             FAMILIA: 0.05
         },
         unit: '%',
-        frecuencia: 'MENSUAL',
+        frecuencia: 'SEMANAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'HORAS EXTRAS / VENTA TOTAL',
         sustentacion: 'SEMANAL',
@@ -379,7 +379,7 @@ export const kpiDefinitions = [
         },
         brands: ['TYM', 'TAT'],
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'Días perdidos / Días laborados',
         sustentacion: 'SEMANAL',
@@ -387,10 +387,16 @@ export const kpiDefinitions = [
     },
     {
         id: 'calificacion-auditoria',
-        name: 'Cumplimiento de Actividades',
+        name: 'Cumplimiento de Auditoría (SST/SGC)',
         area: 'talento-humano',
         objetivo: 'Ejecutar el Sistema de Gestión',
-        meta: 90,
+        meta: {
+            ALPINA: 90,
+            ZENU: 90,
+            FLEISCHMANN: 90,
+            UNILEVER: 90,
+            FAMILIA: 90
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -440,7 +446,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'actividades-cultura',
-        name: 'Cumplimiento de Actividades',
+        name: 'Actividades de Cultura Organizacional',
         area: 'talento-humano',
         objetivo: 'Fortalecer la cultura organizacional por medio de actividades',
         meta: {
@@ -548,7 +554,7 @@ export const kpiDefinitions = [
             FAMILIA: 10
         },
         unit: '%',
-        frecuencia: 'QUINCENAL',
+        frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
         formula: 'TOTAL CARTERA VENCIDA / TOTAL VENTA',
         sustentacion: 'QUINCENAL',
@@ -567,7 +573,7 @@ export const kpiDefinitions = [
             FAMILIA: 90
         },
         unit: '%',
-        frecuencia: 'QUINCENAL',
+        frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
         formula: 'TOTAL CARTERA 11-30 / TOTAL CARTERA',
         sustentacion: 'QUINCENAL',
@@ -586,7 +592,7 @@ export const kpiDefinitions = [
             FAMILIA: 8
         },
         unit: '%',
-        frecuencia: 'QUINCENAL',
+        frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
         formula: 'TOTAL CARTERA 31-45 / TOTAL CARTERA',
         sustentacion: 'QUINCENAL',
@@ -605,7 +611,7 @@ export const kpiDefinitions = [
             FAMILIA: 2
         },
         unit: '%',
-        frecuencia: 'QUINCENAL',
+        frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
         formula: 'TOTAL MAYOR A 45 / TOTAL CARTERA',
         sustentacion: 'QUINCENAL',
@@ -744,7 +750,7 @@ export const kpiDefinitions = [
             TAT: 94
         },
         unit: '%',
-        frecuencia: 'BIMENSUAL',
+        frecuencia: 'BIMESTRAL',
         responsable: 'CONTADOR',
         formula: 'ACTIVOS CONCILIADOS / ACTIVOS REGISTRADOS',
         sustentacion: 'BIMENSUAL',

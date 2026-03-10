@@ -71,7 +71,7 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
 
     const handleSaveMeta = (kpiId, data) => {
         onUpdateKPI(kpiId, data);
-        setEditingKPI(null);
+        // No cerramos editingKPI para permitir edición masiva de marcas
         setSaveStatus('Meta actualizada y sincronizada');
         setTimeout(() => setSaveStatus(''), 3000);
     };

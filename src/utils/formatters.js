@@ -87,3 +87,79 @@ export const getBadgeClass = (status) => {
             return 'badge-primary';
     }
 };
+export const formatDateTime = (dateStr) => {
+    if (!dateStr) return 'Nunca';
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('es-CO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    }).format(date);
+};
+
+export const getKPIDeadline = (frequency) => {
+    const today = new Date();
+    const now = new Date();
+
+    switch (frequency) {
+        case 'DIARIO':
+            const EOD = new Date(today.setHours(23, 59, 0, 0));
+            return EOD;
+        case 'SEMANAL':
+            // Próximo viernes a las 17:00
+            const nextFriday = new Date();
+            nextFriday.setDate(today.getDate() + (5 + 7 - today.getDay()) % 7);
+            nextFriday.setHours(17, 0, 0, 0);
+            return nextFriday;
+        case 'QUINCENAL':
+            // Día 15 o último día del mes
+            const mid = new Date(today.getFullYear(), today.getMonth(), 15, 23, 59);
+            if (now > mid) {
+                return new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59);
+            }
+            return mid;
+        case 'MENSUAL':
+            // Último día del mes corriente
+            return new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59);
+        case 'BIMESTRAL':
+            // Cada dos meses (pares)
+            const month = today.getMonth();
+            const nextBim = month % 2 === 0 ? month + 2 : month + 1;
+            return new Date(today.getFullYear(), nextBim, 0, 23, 59);
+        default:
+            return null;
+    }
+};
+
+export const checkIsUrgent = (deadline) => {
+    if (!deadline) return false;
+    const now = new Date();
+    const diff = deadline - now;
+    const hours = diff / (1000 * 60 * 60);
+    return hours > 0 && hours < 24; // Less than 24 hours remaining
+};
+
+export const checkIsExpired = (deadline) => {
+    if (!deadline) return false;
+    const now = new Date();
+    return now > deadline;
+};
+
+export const formatDeadline = (date) => {
+    if (!date) return 'Sin fecha límite';
+    const today = new Date();
+    const isToday = date.toDateString() === today.toDateString();
+
+    const options = { day: '2-digit', month: '2-digit' };
+    if (isToday) return `HOY ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+    return new Intl.DateTimeFormat('es-CO', {
+        day: '2-digit',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(date);
+};

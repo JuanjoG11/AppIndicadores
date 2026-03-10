@@ -57,6 +57,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
     });
 
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
 
     // Mapeo de iconos por área para el diseño
@@ -303,10 +304,6 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                 { name: 'programadas', label: 'Programadas', type: 'number', placeholder: 'Eje: 2' },
                 { name: 'efectuadas', label: 'Efectuadas', type: 'number', placeholder: 'Eje: 2' }
             ],
-            'valor-cartera-venta': [
-                { name: 'totalVenta', label: 'Total Venta ($)', type: 'number', placeholder: 'Eje: 3600000000' },
-                { name: 'ventaCredito', label: 'Venta Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' }
-            ],
             // Contabilidad Specific
             'dias-cierre': [
                 { name: 'totalDiasCierre', label: 'Total Días al Cierre', type: 'number', placeholder: 'Eje: 12' },
@@ -367,7 +364,17 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
         const dataToSave = isMetaMode
             ? { ...formData, type: 'META_UPDATE' }
             : formData;
+
         onSave(kpi.id, dataToSave);
+
+        if (isMetaMode) {
+            setSuccessMessage(`¡Meta actualizada para ${formData.brand}! Puedes seguir con las otras.`);
+            setSaveSuccess(true);
+            setTimeout(() => {
+                setSaveSuccess(false);
+                setSuccessMessage('');
+            }, 3000);
+        }
     };
 
     const handleChange = (fieldName, value) => {
@@ -456,7 +463,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                             animation: 'bounceIn 0.5s ease-out'
                         }}>
                             <CheckCircle2 size={24} />
-                            ¡MARCA GUARDADA CON ÉXITO! CARGANDO SIGUIENTE...
+                            {successMessage || '¡DATOS GUARDADOS CON ÉXITO!'}
                         </div>
                     )}
                     <form onSubmit={handleSubmit}>

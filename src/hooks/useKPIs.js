@@ -28,7 +28,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             const updatedAdditionalData = {
                 ...kpi.additionalData,
-                ...newData
+                ...newData,
+                updatedAt: newData.updatedAt || new Date().toISOString()
             };
 
             const d = updatedAdditionalData;
@@ -85,7 +86,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             if (typeof targetMeta === 'number' && targetMeta !== 0) {
                 const isInverse = isInverseKPI(kpiId);
                 compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
-                compliance = Math.min(Math.round(compliance), 100);
+                compliance = Math.round(compliance);
                 if (newValue === 0 && isInverse) compliance = 100;
 
                 if (compliance >= 95) semaphore = 'green';
@@ -117,16 +118,18 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
                 if (entityBrands.length === 0) return d.type === 'META_UPDATE' ? kpi.hasData : true;
 
-                // Verificamos si todas las marcas necesarias de ESTA empresa están en brandValues y tienen hasData true
+                // Requisito veridico: todas las marcas de esta empresa deben tener datos
                 return entityBrands.every(brand => {
                     const key = `${currentCompany}-${brand}`;
-                    // Si el update actual es para esta marca, consideramos este dato como nuevo.
                     if (brand === currentBrand && currentCompany === d.company) return d.type !== 'META_UPDATE';
                     return kpi.brandValues?.[key]?.hasData === true;
                 });
             };
 
-            const kpiHasData = checkAllBrandsFilled();
+            const isComplete = checkAllBrandsFilled();
+            const hasAnyData = !kpi.meta || typeof kpi.meta !== 'object'
+                ? (d.type === 'META_UPDATE' ? kpi.hasData : true)
+                : Object.keys(brandValues).filter(k => k.startsWith(`${currentCompany}-`)).some(k => brandValues[k].hasData);
 
             if (shouldPersist) {
                 persistUpdate(kpiId, updatedAdditionalData, newValue, currentUser);
@@ -141,7 +144,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 targetMeta,
                 compliance,
                 semaphore,
-                hasData: kpiHasData,
+                hasData: hasAnyData,
+                isComplete: isComplete,
                 additionalData: updatedAdditionalData,
                 brandValues: { ...brandValues },
                 history: kpi.history.map(h =>
