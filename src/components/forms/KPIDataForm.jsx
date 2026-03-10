@@ -527,7 +527,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                             )}
                                             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                                                 {/* Filter brands based on selected entity if not 'Global' */}
-                                                {(isMetaMode ? ['ALPINA', 'ZENU', 'FLEISCHMANN', 'UNILEVER', 'FAMILIA'] : commercialBrands)
+                                                {commercialBrands
                                                     .filter(brand => {
                                                         if (isMetaMode && (formData.brand === 'TYM' || formData.brand === 'TAT')) {
                                                             return BRAND_TO_ENTITY[brand] === formData.brand;

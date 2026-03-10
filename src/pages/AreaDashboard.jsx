@@ -68,22 +68,22 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const brandAreas = ['logistica', 'comercial', 'cartera'];
     const isBrandSpecificArea = brandAreas.includes(areaId);
 
-    const brandsForEntity = Object.entries(BRAND_TO_ENTITY)
-        .filter(([_, entity]) => entity === activeCompany)
-        .map(([name]) => name);
+    const brandsForEntity = [...new Set(areaKPIs.flatMap(kpi =>
+        (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : []
+    ))].filter(brand =>
+        brand !== 'Global' && brand !== 'TYM' && brand !== 'TAT' && BRAND_TO_ENTITY[brand] === activeCompany
+    );
 
     const [selectedBrand, setSelectedBrand] = useState('all');
 
     // Reset or set default brand when area or company changes
     React.useEffect(() => {
-        if (isBrandSpecificArea) {
-            const firstBrand = Object.entries(BRAND_TO_ENTITY)
-                .find(([_, entity]) => entity === activeCompany)?.[0];
-            setSelectedBrand(firstBrand || 'all');
+        if (isBrandSpecificArea && brandsForEntity.length > 0) {
+            setSelectedBrand(brandsForEntity[0]);
         } else {
             setSelectedBrand('all');
         }
-    }, [areaId, activeCompany, isBrandSpecificArea]);
+    }, [areaId, activeCompany, isBrandSpecificArea, brandsForEntity.join(',')]);
 
     const showBrandFilter = isBrandSpecificArea;
 

@@ -65,7 +65,6 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 3.4,
-            ZENU: 3.4,
             FLEISCHMANN: 3.4,
             UNILEVER: 3.4,
             FAMILIA: 3.4
@@ -151,16 +150,12 @@ export const kpiDefinitions = [
     },
     {
         id: 'pedidos-separar-total',
-        name: 'Avance en Separación de Pedidos',
+        name: 'Eficiencia en Separación de Pedidos',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
         meta: {
-            ALPINA: 100,
-            ZENU: 100,
-            FLEISCHMANN: 100,
-            UNILEVER: 100,
-            FAMILIA: 100
+            ALPINA: 100
         },
         unit: '%',
         frecuencia: 'DIARIO',
@@ -174,7 +169,7 @@ export const kpiDefinitions = [
         name: 'Impacto de Notas por Error',
         area: 'logistica',
         subArea: 'Logística de Picking',
-        objetivo: 'Garantizar la eficiencia del turno de separacion',
+        objetivo: 'Garantizar el % mas bajo de notas por error de venta',
         meta: {
             ALPINA: 1,
             ZENU: 1,
@@ -196,8 +191,6 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
         meta: {
-            ALPINA: 100,
-            ZENU: 100,
             FLEISCHMANN: 100,
             UNILEVER: 100,
             FAMILIA: 100
@@ -217,7 +210,6 @@ export const kpiDefinitions = [
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
-            ZENU: 1,
             FLEISCHMANN: 1,
             UNILEVER: 1,
             FAMILIA: 1
@@ -236,13 +228,9 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
-            ALPINA: 0.05,
-            ZENU: 0.05,
-            FLEISCHMANN: 0.05,
-            UNILEVER: 0.05,
-            FAMILIA: 0.05
+            ALPINA: 1
         },
-        unit: '%',
+        unit: 'valor',
         frecuencia: 'SEMANAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'HORAS EXTRAS / VENTA TOTAL',
@@ -258,11 +246,7 @@ export const kpiDefinitions = [
         subArea: 'Logística de Depósito',
         objetivo: 'Reducir la perdida de embalajes',
         meta: {
-            ALPINA: 0,
-            ZENU: 0,
-            FLEISCHMANN: 0,
-            UNILEVER: 0,
-            FAMILIA: 0
+            ALPINA: 0
         },
         unit: 'cantidad',
         frecuencia: 'SEMANAL',
@@ -273,14 +257,12 @@ export const kpiDefinitions = [
     },
     {
         id: 'nomina-compra-deposito',
-        name: 'Participación de Nómina en Compras',
+        name: 'Participación de Nómina en Venta',
         area: 'logistica',
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             ALPINA: 0.4,
-            ZENU: 0.4,
-            FLEISCHMANN: 0.4,
             UNILEVER: 0.4,
             FAMILIA: 0.4
         },
@@ -298,13 +280,9 @@ export const kpiDefinitions = [
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
-            ALPINA: 0.05,
-            ZENU: 0.05,
-            FLEISCHMANN: 0.05,
-            UNILEVER: 0.05,
-            FAMILIA: 0.05
+            ALPINA: 1
         },
-        unit: '%',
+        unit: 'valor',
         frecuencia: 'QUINCENAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'HORAS EXTRAS / VENTA TOTAL',

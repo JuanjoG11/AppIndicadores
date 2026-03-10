@@ -1,29 +1,36 @@
-import { useState, useEffect, useCallback } from 'react';
-import { mockKPIData, getMonthKey } from '../data/mockData';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { kpiDefinitions } from '../data/kpiData';
+import { mockKPIData as initialMockData } from '../data/mockData';
 import { supabase } from '../lib/supabase';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 import { calculateKPIValue, isInverseKPI } from '../utils/kpiCalculations';
 
 /**
- * useKPIs - Custom hook para el estado y sincronización de KPIs
- * Centraliza toda la lógica de datos que antes vivía en App.jsx
+ * useKPIs - Hook central de datos sincronizado con el código y Supabase
  */
 export const useKPIs = (currentUser, activeCompany, onToast) => {
-    const [kpiData, setKpiData] = useState(mockKPIData);
+    // 1. Estado inicial
+    const [kpiData, setKpiData] = useState(initialMockData);
     const [isLoading, setIsLoading] = useState(true);
     const [lastSyncTime, setLastSyncTime] = useState(null);
 
+    // Ref para ignorar persistencia automática en procesos internos
+    const suppressPersist = useRef(false);
+
+    const MONTH_NAMES = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
     /**
-     * Aplica una actualización de KPI al estado local.
-     * @param {string} kpiId - El ID del KPI a actualizar
-     * @param {object} newData - Los datos nuevos del KPI
-     * @param {boolean} shouldPersist - Si debe persistirse en Supabase
+     * Aplica actualizaciones locales al estado.
      */
     const applyKPIUpdate = useCallback((kpiId, newData, shouldPersist = true) => {
-        setKpiData(prevData => prevData.map(oldKpi => {
-            if (oldKpi.id !== kpiId) return oldKpi;
+        setKpiData(prevData => {
+            const index = prevData.findIndex(k => k.id === kpiId);
+            if (index === -1) return prevData;
 
-            // Uso de structuredClone para mayor rendimiento que JSON.parse/stringify
+            const oldKpi = prevData[index];
             const kpi = structuredClone(oldKpi);
 
             const updatedAdditionalData = {
@@ -42,65 +49,50 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const brandValues = kpi.brandValues || {};
 
             try {
-                if (d.type === 'META_UPDATE') {
-                    newValue = kpi.currentValue;
-                } else {
-                    newValue = calculateKPIValue(kpiId, d);
-                }
+                if (d.type === 'META_UPDATE') newValue = kpi.currentValue;
+                else newValue = calculateKPIValue(kpiId, d);
             } catch (e) {
-                console.error("Error calculating KPI:", e);
+                console.error("Calculation Error:", e);
             }
 
+            // Gestionar actualización de meta
             if (d.type === 'META_UPDATE') {
                 const scope = d.brand;
                 if (!scope || scope === 'Global' || scope === 'global') {
                     kpi.meta = d.newMeta;
                 } else {
-                    const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
-                    kpi.meta = { ...currentMeta, [scope]: d.newMeta };
+                    // Solo permitimos actualizar metas de marcas que existen en la definición original
+                    const staticDef = kpiDefinitions.find(s => s.id === kpiId);
+                    const originalHasBrand = staticDef && staticDef.meta && typeof staticDef.meta === 'object' && staticDef.meta.hasOwnProperty(scope);
+
+                    if (originalHasBrand || scope === currentCompany) {
+                        const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
+                        kpi.meta = { ...currentMeta, [scope]: d.newMeta };
+                    }
                 }
             }
 
+            // Resolver targetMeta basándose en la meta actual (que puede venir de DB o Código)
             if (kpi.meta && typeof kpi.meta === 'object') {
-                const entity = d.company || activeCompany || 'TYM';
-                const brand = d.brand;
-                if (brand && kpi.meta[brand]) {
-                    targetMeta = kpi.meta[brand];
-                } else if (kpi.meta[entity]) {
-                    targetMeta = kpi.meta[entity];
-                } else if (kpi.meta.global) {
-                    targetMeta = kpi.meta.global;
-                } else {
-                    const brandKey = Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === entity);
-                    targetMeta = brandKey ? kpi.meta[brandKey] : (Object.values(kpi.meta)[0] || 0);
-                }
-            } else {
-                targetMeta = kpi.meta;
-            }
+                targetMeta = kpi.meta[currentCompany] || kpi.meta.global ||
+                    kpi.meta[Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === currentCompany)] || 0;
+            } else targetMeta = kpi.meta;
 
-            newValue = parseFloat((newValue || kpi.currentValue || 0).toFixed(2));
+            newValue = parseFloat((newValue || 0).toFixed(2));
 
-            let semaphore = kpi.semaphore;
-            let compliance = kpi.compliance;
-
+            // Cálculo de Semáforo y Cumplimiento
+            let semaphore = 'gray';
+            let compliance = 0;
             if (typeof targetMeta === 'number') {
                 const isInverse = isInverseKPI(kpiId);
-
                 if (targetMeta === 0) {
-                    // Si la meta es 0 (ej: 0 errores), y se cumple (newValue 0), es 100%
-                    if (isInverse) {
-                        compliance = newValue === 0 ? 100 : 0;
-                    } else {
-                        // Meta 0 en indicador normal es raro, pero si newValue > 0 es bueno(?)
-                        compliance = newValue >= 0 ? 100 : 0;
-                    }
+                    compliance = (isInverse ? (newValue === 0 ? 100 : 0) : 100);
                 } else {
                     compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
-                    if (newValue === 0 && isInverse) compliance = 100;
                 }
+                if (newValue === 0 && isInverse && targetMeta !== 0) compliance = 100;
 
-                compliance = Math.round(compliance || 0);
-
+                compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
                 if (compliance >= 95) semaphore = 'green';
                 else if (compliance >= 85) semaphore = 'yellow';
                 else semaphore = 'red';
@@ -118,127 +110,116 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 hasData: d.type === 'META_UPDATE' ? (brandValues[dataKey]?.hasData) : true
             };
 
-            // ── Lógica de hasData mejorada (basada en marcas de la entidad) ──
-            const checkAllBrandsFilled = () => {
-                if (!kpi.meta || typeof kpi.meta !== 'object') {
-                    return d.type === 'META_UPDATE' ? kpi.hasData : true;
-                }
-
-                const entityBrands = Object.keys(kpi.meta).filter(b =>
-                    BRAND_TO_ENTITY[b] === currentCompany && b !== 'POLAR'
-                );
-
-                if (entityBrands.length === 0) return d.type === 'META_UPDATE' ? kpi.hasData : true;
-
-                // Requisito veridico: todas las marcas de esta empresa deben tener datos
-                return entityBrands.every(brand => {
-                    const key = `${currentCompany}-${brand}`;
-                    if (brand === currentBrand && currentCompany === d.company) return d.type !== 'META_UPDATE';
-                    return kpi.brandValues?.[key]?.hasData === true;
-                });
-            };
-
-            const isComplete = checkAllBrandsFilled();
             const hasAnyData = !kpi.meta || typeof kpi.meta !== 'object'
                 ? (d.type === 'META_UPDATE' ? kpi.hasData : true)
                 : Object.keys(brandValues).filter(k => k.startsWith(`${currentCompany}-`)).some(k => brandValues[k].hasData);
 
-            if (shouldPersist) {
+            if (shouldPersist && !suppressPersist.current) {
                 persistUpdate(kpiId, updatedAdditionalData, newValue, currentUser);
             }
 
-            const targetMonth = getMonthKey(d.updatedAt || null);
+            const targetMonth = MONTH_NAMES[new Date(d.updatedAt || new Date()).getMonth()];
             const targetCompany = d.company || 'TYM';
 
-            return {
+            const newKpi = {
                 ...kpi,
                 currentValue: newValue,
                 targetMeta,
                 compliance,
                 semaphore,
                 hasData: hasAnyData,
-                isComplete: isComplete,
                 additionalData: updatedAdditionalData,
                 brandValues: { ...brandValues },
-                history: kpi.history.map(h =>
-                    h.month === targetMonth
-                        ? { ...h, [targetCompany]: newValue }
-                        : h
-                )
+                history: kpi.history.map(h => h.month === targetMonth ? { ...h, [targetCompany]: newValue } : h)
             };
-        }));
-    }, [activeCompany, currentUser]);
 
-    /**
-     * Persiste una actualización en Supabase
-     */
+            const newDataList = [...prevData];
+            newDataList[index] = newKpi;
+            return newDataList;
+        });
+    }, [activeCompany, currentUser, isInverseKPI, calculateKPIValue]);
+
     const persistUpdate = async (kpiId, additionalData, value, user) => {
         try {
-            const { error } = await supabase.from('kpi_updates').insert({
+            await supabase.from('kpi_updates').insert({
                 kpi_id: kpiId,
                 additional_data: additionalData,
                 value: value,
                 cargo: user?.cargo || 'Sistema'
             });
-            if (error) throw error;
             setLastSyncTime(new Date());
-        } catch (err) {
-            console.error("Error persistiendo en Supabase:", err);
-            if (onToast) onToast('error', '⚠️ Error al sincronizar con el servidor');
-        }
+        } catch (err) { }
     };
 
-    /**
-     * Carga inicial de datos desde Supabase y suscripción en tiempo real
-     */
+    // ── 1. INICIALIZACIÓN Y SINC EN TIEMPO REAL CON EL CÓDIGO (HMR) ──
+    useEffect(() => {
+        setKpiData(prevData => {
+            return kpiDefinitions.map(def => {
+                const live = prevData.find(k => k.id === def.id);
+
+                // Si no hay datos previos, usamos la definición estática procesada por mockData
+                if (!live) {
+                    return initialMockData.find(m => m.id === def.id) || def;
+                }
+
+                // Si hay datos previos, actualizamos los metadatos estáticos desde el código
+                // pero filtramos la meta para que SOLO existan las marcas que están en el código.
+                let filteredMeta = def.meta;
+                if (live.meta && typeof live.meta === 'object' && def.meta && typeof def.meta === 'object') {
+                    // Mantener valores de la DB solo para las marcas que todavía existen en el código
+                    filteredMeta = {};
+                    Object.keys(def.meta).forEach(brandKey => {
+                        filteredMeta[brandKey] = live.meta.hasOwnProperty(brandKey) ? live.meta[brandKey] : def.meta[brandKey];
+                    });
+                }
+
+                return {
+                    ...live,
+                    name: def.name,
+                    area: def.area,
+                    subArea: def.subArea,
+                    objetivo: def.objetivo,
+                    unit: def.unit,
+                    frecuencia: def.frecuencia,
+                    formula: def.formula,
+                    responsable: def.responsable,
+                    fuente: def.fuente,
+                    meta: filteredMeta // Sincroniza estructura y valores del código
+                };
+            });
+        });
+    }, [kpiDefinitions]);
+
+    // ── 2. CARGA DE DATOS DE SUPABASE ──
     useEffect(() => {
         const fetchInitialData = async () => {
             setIsLoading(true);
             try {
-                const { data, error } = await supabase
-                    .from('kpi_updates')
-                    .select('*')
-                    .order('updated_at', { ascending: true });
-
-                if (data && !error) {
-                    data.forEach(update => {
-                        applyKPIUpdate(update.kpi_id, { ...update.additional_data, updatedAt: update.updated_at }, false);
+                const { data } = await supabase.from('kpi_updates').select('*').order('updated_at', { ascending: true });
+                if (data) {
+                    suppressPersist.current = true;
+                    data.forEach(upd => {
+                        applyKPIUpdate(upd.kpi_id, { ...upd.additional_data, updatedAt: upd.updated_at }, false);
                     });
+                    suppressPersist.current = false;
                     setLastSyncTime(new Date());
                 }
-            } catch (err) {
-                console.error("Error cargando datos iniciales:", err);
             } finally {
                 setIsLoading(false);
+                suppressPersist.current = false;
             }
         };
 
-        fetchInitialData();
+        if (kpiData.length > 0) fetchInitialData();
 
-        // Suscripción en tiempo real
-        const channel = supabase
-            .channel('schema-db-changes')
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'kpi_updates' },
-                (payload) => {
-                    applyKPIUpdate(payload.new.kpi_id, payload.new.additional_data, false);
-                    if (onToast) {
-                        onToast('info', `📊 KPI actualizado en tiempo real`);
-                    }
-                }
-            )
-            .subscribe();
+        const channel = supabase.channel('realtime-kpi-sync')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'kpi_updates' }, (p) => {
+                applyKPIUpdate(p.new.kpi_id, p.new.additional_data, false);
+                if (onToast) onToast('info', `📊 KPI actualizado`);
+            }).subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
+        return () => { supabase.removeChannel(channel); };
+    }, [applyKPIUpdate, onToast, kpiData.length === 0]);
 
-    return {
-        kpiData,
-        isLoading,
-        lastSyncTime,
-        applyKPIUpdate,
-    };
+    return { kpiData, isLoading, lastSyncTime, applyKPIUpdate };
 };
