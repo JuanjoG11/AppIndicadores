@@ -69,6 +69,29 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         if (!isMine) return true; // Monitoring
         return !pendingKPIs.find(pk => pk.id === k.id);
     });
+    // Priority mapping for sorting SubAreas in Logistica
+    const subAreaPriority = {
+        'Logística de Depósito': 1,
+        'Logística de Picking': 2,
+        'Logística de Entrega': 3
+    };
+
+    // Helper to group KPIs by SubArea
+    const groupKPIsBySubArea = (kpis) => {
+        const groups = {};
+        kpis.forEach(kpi => {
+            const groupName = kpi.subArea || 'General';
+            if (!groups[groupName]) groups[groupName] = [];
+            groups[groupName].push(kpi);
+        });
+        return groups;
+    };
+
+    const pendingGroups = groupKPIsBySubArea(pendingKPIs);
+    const areaGroups = groupKPIsBySubArea(areaKPIs);
+
+    const sortedSubAreas = Object.keys(subAreaPriority).sort((a, b) => subAreaPriority[a] - subAreaPriority[b]);
+
 
     // Urgency logic for pending
     const criticalCount = pendingKPIs.filter(k => checkIsExpired(getKPIDeadline(k.frecuencia))).length;
@@ -103,18 +126,6 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
     const { total: totalMyKPIs, done: completedMyKPIs } = getMyStats();
     const progressPercent = totalMyKPIs > 0 ? Math.round((completedMyKPIs / totalMyKPIs) * 100) : 0;
-
-    const areaIcons = {
-        'logistica-entrega': <Truck size={20} />,
-        'logistica-picking': <Box size={20} />,
-        'comercial': <TrendingUp size={20} />,
-        'cartera': <DollarSign size={20} />,
-        'administrativo': <Activity size={20} />,
-        'talento-humano': <Users size={20} />,
-        'logistica-deposito': <Box size={20} />,
-        'caja': <DollarSign size={20} />,
-        'contabilidad': <Activity size={20} />
-    };
 
     const handleSaveKPI = (kpiId, data) => {
         if (onUpdateKPI) onUpdateKPI(kpiId, data);
@@ -436,8 +447,41 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                     </div>
 
                     {pendingKPIs.length > 0 ? (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                            {pendingKPIs.map((kpi, idx) => renderKPICard(kpi, idx))}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+                            {sortedSubAreas.map(subArea => {
+                                const kpis = pendingGroups[subArea];
+                                if (!kpis || kpis.length === 0) return null;
+                                return (
+                                    <div key={`pending-${subArea}`}>
+                                        <h3 style={{
+                                            fontSize: '1rem',
+                                            fontWeight: 900,
+                                            color: '#64748b',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.1em',
+                                            marginBottom: '1.5rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.75rem'
+                                        }}>
+                                            <div style={{ width: '12px', height: '4px', background: 'var(--brand)', borderRadius: '2px' }}></div>
+                                            {subArea}
+                                        </h3>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+                                            {kpis.map((kpi, idx) => renderKPICard(kpi, idx))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {/* Render others if any */}
+                            {Object.keys(pendingGroups).filter(sa => !sortedSubAreas.includes(sa)).map(subArea => (
+                                <div key={`pending-${subArea}`}>
+                                    {subArea !== 'General' && <h3 style={{ fontSize: '1rem', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', marginBottom: '1.5rem' }}>{subArea}</h3>}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+                                        {pendingGroups[subArea].map((kpi, idx) => renderKPICard(kpi, idx))}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <div style={{ padding: '3rem', textAlign: 'center', background: '#f8fafc', borderRadius: '32px', border: '1px dashed #e2e8f0' }}>
@@ -460,8 +504,41 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                        {areaKPIs.map((kpi, idx) => renderKPICard(kpi, idx, kpi.responsable !== currentUser.cargo))}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+                        {sortedSubAreas.map(subArea => {
+                            const kpis = areaGroups[subArea];
+                            if (!kpis || kpis.length === 0) return null;
+                            return (
+                                <div key={`area-${subArea}`}>
+                                    <h3 style={{
+                                        fontSize: '1rem',
+                                        fontWeight: 900,
+                                        color: '#64748b',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.1em',
+                                        marginBottom: '1.5rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.75rem'
+                                    }}>
+                                        <div style={{ width: '12px', height: '4px', background: '#94a3b8', borderRadius: '2px' }}></div>
+                                        {subArea}
+                                    </h3>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+                                        {kpis.map((kpi, idx) => renderKPICard(kpi, idx, kpi.responsable !== currentUser.cargo))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {/* Render others if any */}
+                        {Object.keys(areaGroups).filter(sa => !sortedSubAreas.includes(sa)).map(subArea => (
+                            <div key={`area-${subArea}`}>
+                                {subArea !== 'General' && <h3 style={{ fontSize: '1rem', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', marginBottom: '1.5rem' }}>{subArea}</h3>}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+                                    {areaGroups[subArea].map((kpi, idx) => renderKPICard(kpi, idx, kpi.responsable !== currentUser.cargo))}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </section>
             </div>

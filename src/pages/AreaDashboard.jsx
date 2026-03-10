@@ -36,7 +36,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
-    const [activeSubArea, setActiveSubArea] = useState(areaId === 'logistica' ? 'Logística de Entrega' : 'all');
+    const [activeSubArea, setActiveSubArea] = useState('all');
     const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
 
@@ -66,7 +66,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const areaKPIs = companyKPIs.filter(kpi => kpi.area === areaId);
 
     // 2. Sub-areas filter logic for Logistics
-    const subAreas = areaId === 'logistica' ? ['Logística de Entrega', 'Logística de Picking', 'Logística de Depósito'] : [];
+    const subAreas = areaId === 'logistica' ? ['Todas', 'Logística de Entrega', 'Logística de Picking', 'Logística de Depósito'] : [];
+
 
     // 3. Brand filter logic for specific areas
     const brandAreas = ['logistica', 'comercial', 'cartera'];
@@ -92,9 +93,10 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const showBrandFilter = isBrandSpecificArea;
 
     // 4. Filtered KPIs for the CURRENT view (Area or Sub-Area + Brand)
-    let filteredKPIs = areaId === 'logistica' && activeSubArea !== 'all'
+    let filteredKPIs = areaId === 'logistica' && activeSubArea !== 'all' && activeSubArea !== 'Todas'
         ? areaKPIs.filter(kpi => kpi.subArea === activeSubArea)
         : areaKPIs;
+
 
     // Apply brand filter ONLY if we are in a brand-specific area and a brand is selected
     if (isBrandSpecificArea && selectedBrand !== 'all') {
@@ -326,7 +328,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     {subAreas.map(sub => (
                         <button
                             key={sub}
-                            onClick={() => setActiveSubArea(sub)}
+                            onClick={() => setActiveSubArea(sub === 'Todas' ? 'all' : sub)}
                             style={{
                                 padding: '0.6rem 1.25rem',
                                 borderRadius: '12px',
@@ -335,11 +337,11 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                                 fontWeight: 800,
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',
-                                background: activeSubArea === sub ? 'var(--brand)' : 'transparent',
-                                color: activeSubArea === sub ? 'white' : '#64748b'
+                                background: (activeSubArea === sub || (sub === 'Todas' && activeSubArea === 'all')) ? 'var(--brand)' : 'transparent',
+                                color: (activeSubArea === sub || (sub === 'Todas' && activeSubArea === 'all')) ? 'white' : '#64748b'
                             }}
                         >
-                            {sub.split('Logística de ')[1]}
+                            {sub === 'Todas' ? 'Todas' : sub.split('Logística de ')[1]}
                         </button>
                     ))}
                 </div>
@@ -458,17 +460,57 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
-                {filteredKPIs.map(kpi => (
-                    <KPIDetailCard
-                        key={kpi.id}
-                        kpi={kpi}
-                        canEdit={canModify}
-                        onEdit={handleStartEdit}
-                        currentUser={currentUser}
-                        activeCompany={activeCompany}
-                        selectedBrand={selectedBrand}
-                    />
-                ))}
+                {areaId === 'logistica' && (activeSubArea === 'all' || activeSubArea === 'Todas') ? (
+                    ['Logística de Depósito', 'Logística de Picking', 'Logística de Entrega'].map(sub => {
+                        const kpis = filteredKPIs.filter(k => k.subArea === sub);
+                        if (kpis.length === 0) return null;
+                        return (
+                            <React.Fragment key={sub}>
+                                <div style={{
+                                    gridColumn: '1 / -1',
+                                    marginTop: '2rem',
+                                    marginBottom: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.75rem'
+                                }}>
+                                    <div style={{ width: '12px', height: '4px', background: 'var(--brand)', borderRadius: '2px' }}></div>
+                                    <h4 style={{
+                                        margin: 0,
+                                        fontSize: '0.9rem',
+                                        fontWeight: 900,
+                                        color: '#64748b',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.1em'
+                                    }}>{sub}</h4>
+                                </div>
+                                {kpis.map(kpi => (
+                                    <KPIDetailCard
+                                        key={kpi.id}
+                                        kpi={kpi}
+                                        canEdit={canModify}
+                                        onEdit={handleStartEdit}
+                                        currentUser={currentUser}
+                                        activeCompany={activeCompany}
+                                        selectedBrand={selectedBrand}
+                                    />
+                                ))}
+                            </React.Fragment>
+                        );
+                    })
+                ) : (
+                    filteredKPIs.map(kpi => (
+                        <KPIDetailCard
+                            key={kpi.id}
+                            kpi={kpi}
+                            canEdit={canModify}
+                            onEdit={handleStartEdit}
+                            currentUser={currentUser}
+                            activeCompany={activeCompany}
+                            selectedBrand={selectedBrand}
+                        />
+                    ))
+                )}
             </div>
 
             {/* Form Modal */}

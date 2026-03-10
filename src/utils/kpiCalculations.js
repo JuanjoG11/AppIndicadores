@@ -176,9 +176,6 @@ export const calculateKPIValue = (kpiId, d) => {
         break;
 
       // CAJA
-      case 'arqueos-realizados':
-        newValue = (d.arqueosRealizados / d.arqueosProgramados) * 100;
-        break;
       case 'planillas-cerradas':
         newValue = (d.planillasCerradas / d.planillasGeneradas) * 100;
         break;
@@ -214,15 +211,6 @@ export const calculateKPIValue = (kpiId, d) => {
       case 'optimizacion-tributaria':
         newValue = ((d.impuestosRecuperados + d.impuestosOptimizados) / (d.totalImpuestos || 1)) * 100;
         break;
-
-      case 'arqueos-realizados':
-        newValue = (d.arqueosRealizados / (d.arqueosProgramados || 1)) * 100;
-        break;
-
-      case 'indice-arqueo-caja':
-        newValue = d.currentValue || 0;
-        break;
-
       default:
         newValue = d.currentValue || 0;
     }
