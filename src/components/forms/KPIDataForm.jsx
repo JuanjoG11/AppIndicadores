@@ -361,9 +361,17 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const cleanedData = { ...formData };
+        // Ensure numbers are really numbers before saving
+        Object.keys(cleanedData).forEach(key => {
+            if (['newMeta', 'currentValue'].includes(key) && cleanedData[key] !== '') {
+                cleanedData[key] = parseFloat(cleanedData[key]);
+            }
+        });
+
         const dataToSave = isMetaMode
-            ? { ...formData, type: 'META_UPDATE' }
-            : formData;
+            ? { ...cleanedData, type: 'META_UPDATE' }
+            : cleanedData;
 
         onSave(kpi.id, dataToSave);
 
@@ -379,15 +387,21 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
 
     const handleChange = (fieldName, value) => {
         setFormData(prev => {
-            const isNumberField = fieldName !== 'brand' && fieldName !== 'company';
+            const isNumberField = ['currentValue', 'newMeta', 'ventas', 'pedidos', 'auxiliares', 'vehiculos', 'nomina', 'fletes', 'errores', 'planillas', 'notas'].includes(fieldName);
             let parsedValue = value;
+
             if (isNumberField) {
-                parsedValue = value === '' ? '' : (parseFloat(value) || 0);
+                // Remove non-numeric chars except .
+                const cleanValue = value.replace(/[^0-9.]/g, '');
+                parsedValue = cleanValue === '' ? '' : cleanValue;
             }
+
             const newState = { ...prev, [fieldName]: parsedValue };
 
-            // Auto-sync company if brand changes
-            if (fieldName === 'brand') {
+            // Reset newMeta when brand changes to force a fresh entry for the new brand
+            if (fieldName === 'brand' && isMetaMode) {
+                newState.newMeta = ''; // Reset to empty or current meta for clarity
+
                 if (value === 'TYM' || value === 'TAT') {
                     newState.company = value;
                 } else if (BRAND_TO_ENTITY[value]) {
@@ -588,21 +602,19 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                     Nueva Meta para {formData.brand || 'Global'} ({kpi.unit})
                                 </label>
                                 <input
-                                    type="number"
-                                    step="any"
+                                    type="text"
+                                    inputMode="decimal"
                                     required
                                     value={formData.newMeta ?? ''}
                                     onChange={(e) => handleChange('newMeta', e.target.value)}
-                                    placeholder={`Meta actual: ${(kpi.meta && typeof kpi.meta === 'object'
-                                        ? (kpi.meta[formData.brand || 'global'] || kpi.meta[formData.brand || 'Global'] || Object.values(kpi.meta)[0])
-                                        : kpi.meta)
-                                        }`}
+                                    placeholder={`Eje: ${currentMeta}`}
                                     style={{
                                         width: '100%', padding: '1.1rem 1.25rem',
                                         border: '2px solid var(--brand)', borderRadius: '18px',
                                         fontSize: '1.5rem', fontWeight: 800, color: '#1e293b',
                                         background: 'white', outline: 'none'
                                     }}
+                                    autoComplete="off"
                                 />
                                 <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <ShieldIcon size={14} />
@@ -618,11 +630,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                         </label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type={field.type}
-                                                step="any"
+                                                type={field.type === 'number' ? 'text' : field.type}
+                                                inputMode={field.type === 'number' ? 'decimal' : undefined}
                                                 required
                                                 value={formData[field.name] ?? ''}
                                                 onChange={(e) => handleChange(field.name, e.target.value)}
+                                                autoComplete="off"
                                                 style={{
                                                     width: '100%', padding: '1.1rem 1.25rem',
                                                     border: '2px solid #e2e8f0', borderRadius: '18px',

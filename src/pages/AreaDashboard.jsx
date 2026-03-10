@@ -37,10 +37,14 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const navigate = useNavigate();
     const area = getAreaById(areaId);
     const [activeSubArea, setActiveSubArea] = useState(areaId === 'logistica' ? 'Logística de Entrega' : 'all');
-    const [editingKPI, setEditingKPI] = useState(null);
+    const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
+
+    // Devolvemos el KPI actual del prop basado en el ID para que siempre esté fresco
+    const editingKPI = editingKPIId ? kpiData.find(k => k.id === editingKPIId) : null;
+
     const handleStartEdit = (kpi, mode = 'data') => {
-        setEditingKPI(kpi);
+        setEditingKPIId(kpi.id);
         setEditMode(mode);
     };
 
@@ -141,7 +145,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const handleSaveKPI = (kpiId, data) => {
         if (onUpdateKPI) onUpdateKPI(kpiId, data);
         if (data.type !== 'META_UPDATE') {
-            setEditingKPI(null);
+            setEditingKPIId(null);
         }
     };
 
@@ -470,10 +474,11 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
             {/* Form Modal */}
             {editingKPI && (
                 <KPIDataForm
+                    key={`${editingKPI.id}-${editMode}`}
                     kpi={editingKPI}
                     currentUser={currentUser}
                     onSave={handleSaveKPI}
-                    onCancel={() => setEditingKPI(null)}
+                    onCancel={() => setEditingKPIId(null)}
                     mode={editMode}
                 />
             )}

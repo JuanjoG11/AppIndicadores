@@ -58,6 +58,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             // Gestionar actualización de meta
             if (d.type === 'META_UPDATE') {
                 const scope = d.brand;
+                console.log(`🎯 Aplicando META_UPDATE: ${kpiId} -> ${scope} = ${d.newMeta}`);
+
                 if (!scope || scope === 'Global' || scope === 'global') {
                     kpi.meta = d.newMeta;
                 } else {
@@ -65,7 +67,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     const staticDef = kpiDefinitions.find(s => s.id === kpiId);
                     const originalHasBrand = staticDef && staticDef.meta && typeof staticDef.meta === 'object' && staticDef.meta.hasOwnProperty(scope);
 
-                    if (originalHasBrand || scope === currentCompany) {
+                    if (originalHasBrand || scope === currentCompany || BRAND_TO_ENTITY[scope]) {
                         const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
                         kpi.meta = { ...currentMeta, [scope]: d.newMeta };
                     }
@@ -141,14 +143,19 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
     const persistUpdate = async (kpiId, additionalData, value, user) => {
         try {
-            await supabase.from('kpi_updates').insert({
+            console.log("💾 Persistiendo en Supabase:", kpiId, additionalData);
+            const { error } = await supabase.from('kpi_updates').insert({
                 kpi_id: kpiId,
                 additional_data: additionalData,
                 value: value,
                 cargo: user?.cargo || 'Sistema'
             });
+            if (error) throw error;
             setLastSyncTime(new Date());
-        } catch (err) { }
+        } catch (err) {
+            console.error("❌ Error persistiendo en Supabase:", err);
+            if (onToast) onToast('error', 'Error al guardar en la nube');
+        }
     };
 
     // ── 1. INICIALIZACIÓN Y SINC EN TIEMPO REAL CON EL CÓDIGO (HMR) ──
