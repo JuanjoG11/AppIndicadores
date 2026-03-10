@@ -451,21 +451,37 @@ export const kpiDefinitions = [
     {
         id: 'arqueos-realizados',
         name: 'Cumplimiento de Arqueos',
-        area: 'caja',
+        area: 'contabilidad',
         objetivo: 'Garantizar el control permanente del efectivo',
         meta: {
-            ALPINA: 8,
-            ZENU: 8,
-            FLEISCHMANN: 8,
-            UNILEVER: 8,
-            FAMILIA: 8
+            TYM: 8,
+            TAT: 8
         },
+        brands: ['TYM', 'TAT'],
         unit: 'arqueos',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
-        formula: 'ARQUEOS REALIZADOS / ARQUEOS PROGRAMADOS',
+        formula: 'ARQUEOS REALIZADOS / ARQUEOS PROGRAMADOS (Incluye reporte de Sobras/Faltantes)',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
+    },
+    {
+        id: 'indice-arqueo-caja',
+        name: 'Índice de Arqueo en Caja',
+        area: 'contabilidad',
+        objetivo: 'Seguimiento de diferencias en arqueos de caja (Sobra - Faltante)',
+        meta: {
+            TYM: 0,
+            TAT: 0
+        },
+        brands: ['TYM', 'TAT'],
+        unit: 'arqueos',
+        frecuencia: 'SEMANAL',
+        responsable: 'CONTADOR',
+        formula: 'Número de arqueos con diferencia (Sobra - Faltante)',
+        sustentacion: 'SEMANAL',
+        fuente: 'CONTABILIDAD',
+        visibleEnAreas: ['caja', 'contabilidad']
     },
     {
         id: 'planillas-cerradas',
@@ -488,7 +504,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'vales-descuadres',
-        name: 'Participación de Vales en Caja',
+        name: 'Participación de Vales en Cuadres',
         area: 'caja',
         objetivo: 'Reducir el valor de vales generados en caja por descuadres',
         meta: {
@@ -514,7 +530,6 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
             ALPINA: 10,
-            ZENU: 10,
             FLEISCHMANN: 10,
             UNILEVER: 10,
             FAMILIA: 10
@@ -527,62 +542,25 @@ export const kpiDefinitions = [
         fuente: 'CONTABILIDAD'
     },
     {
-        id: 'cartera-11-30',
-        name: 'Cartera 11 a 30 Días',
+        id: 'cartera-mayor-30',
+        name: 'Cartera Mayor a 30 Días',
         area: 'cartera',
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
-            ALPINA: 90,
-            ZENU: 90,
-            FLEISCHMANN: 90,
-            UNILEVER: 90,
-            FAMILIA: 90
+            ALPINA: 5,
+            ZENU: 5,
+            FLEISCHMANN: 5,
+            UNILEVER: 5,
+            FAMILIA: 5
         },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
-        formula: 'TOTAL CARTERA 11-30 / TOTAL CARTERA',
+        formula: 'TOTAL MAYOR A 30 / TOTAL CARTERA',
         sustentacion: 'QUINCENAL',
         fuente: 'CONTABILIDAD'
     },
-    {
-        id: 'cartera-31-45',
-        name: 'Cartera 31 a 45 Días',
-        area: 'cartera',
-        objetivo: 'Mejorar la rotación de cartera con los clientes',
-        meta: {
-            ALPINA: 8,
-            ZENU: 8,
-            FLEISCHMANN: 8,
-            UNILEVER: 8,
-            FAMILIA: 8
-        },
-        unit: '%',
-        frecuencia: 'SEMANAL',
-        responsable: 'CONTADOR',
-        formula: 'TOTAL CARTERA 31-45 / TOTAL CARTERA',
-        sustentacion: 'QUINCENAL',
-        fuente: 'CONTABILIDAD'
-    },
-    {
-        id: 'cartera-mayor-45',
-        name: 'Cartera Mayor a 45 Días',
-        area: 'cartera',
-        objetivo: 'Mejorar la rotación de cartera con los clientes',
-        meta: {
-            ALPINA: 2,
-            ZENU: 2,
-            FLEISCHMANN: 2,
-            UNILEVER: 2,
-            FAMILIA: 2
-        },
-        unit: '%',
-        frecuencia: 'SEMANAL',
-        responsable: 'CONTADOR',
-        formula: 'TOTAL MAYOR A 45 / TOTAL CARTERA',
-        sustentacion: 'QUINCENAL',
-        fuente: 'CONTABILIDAD'
-    },
+
     {
         id: 'recircularizaciones',
         name: 'Cumplimiento de Recircularizaciones',

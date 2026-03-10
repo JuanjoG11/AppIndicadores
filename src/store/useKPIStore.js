@@ -190,6 +190,7 @@ const useKPIStore = create((set, get) => ({
             return;
         }
 
+        // Apply primary update
         get().applyKPIUpdate(id, data, true);
     },
 

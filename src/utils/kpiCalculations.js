@@ -67,6 +67,14 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (d.diasInventario / d.metaInventario) * 100;
         break;
 
+      // CAJA / ARQUEOS
+      case 'arqueos-realizados':
+        newValue = (d.arqueosRealizados / d.arqueosProgramados) * 100;
+        break;
+      case 'indice-arqueo-caja':
+        newValue = parseFloat(d.currentValue || 0);
+        break;
+
       // CARTERA / CONTABILIDAD
       case 'cartera-vencida-total':
         newValue = (d.carteraVencida / d.totalCartera) * 100;
@@ -83,8 +91,8 @@ export const calculateKPIValue = (kpiId, d) => {
       case 'cartera-31-45':
         newValue = (d.totalCartera3145 / d.totalCartera) * 100;
         break;
-      case 'cartera-mayor-45':
-        newValue = (d.totalMayor45 / d.totalCartera) * 100;
+      case 'cartera-mayor-30':
+        newValue = (d.totalMayor30 / d.totalCartera) * 100;
         break;
       case 'valor-cartera-venta':
         newValue = (d.carteraTotal || d.ventaCredito) / d.ventaTotal * 100;
@@ -207,6 +215,14 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = ((d.impuestosRecuperados + d.impuestosOptimizados) / (d.totalImpuestos || 1)) * 100;
         break;
 
+      case 'arqueos-realizados':
+        newValue = (d.arqueosRealizados / (d.arqueosProgramados || 1)) * 100;
+        break;
+
+      case 'indice-arqueo-caja':
+        newValue = d.currentValue || 0;
+        break;
+
       default:
         newValue = d.currentValue || 0;
     }
@@ -253,7 +269,8 @@ export const isInverseKPI = (kpiId) => {
     'quiebres-inventario',
     'obsolescencia',
     'mermas',
-    'diferencia-inventarios'
+    'diferencia-inventarios',
+    'indice-arqueo-caja'
   ];
 
   return inverseKPIs.includes(kpiId) || kpiId.includes('vencida');

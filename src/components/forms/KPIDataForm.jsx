@@ -273,7 +273,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
             // Caja Specific
             'arqueos-realizados': [
                 { name: 'arqueosProgramados', label: 'Arqueos Programados', type: 'number', placeholder: 'Eje: 8' },
-                { name: 'arqueosRealizados', label: 'Arqueos Realizados', type: 'number', placeholder: 'Eje: 8' }
+                { name: 'arqueosRealizados', label: 'Arqueos Realizados', type: 'number', placeholder: 'Eje: 8' },
+                { name: 'valorSobra', label: 'Sobra Detectada ($)', type: 'number', placeholder: 'Eje: 5000' },
+                { name: 'valorFaltante', label: 'Faltante Detectado ($)', type: 'number', placeholder: 'Eje: 2000' }
+            ],
+            'indice-arqueo-caja': [
+                { name: 'currentValue', label: 'N° de Arqueos con Diferencia', type: 'number', placeholder: 'Eje: 2' }
             ],
             'planillas-cerradas': [
                 { name: 'planillasGeneradas', label: 'Planillas Generadas', type: 'number', placeholder: 'Eje: 40' },
@@ -288,17 +293,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                 { name: 'totalVenta', label: 'Total Venta ($)', type: 'number', placeholder: 'Eje: 1500000000' },
                 { name: 'totalCarteraVencida', label: 'Total Cartera Vencida ($)', type: 'number', placeholder: 'Eje: 140000000' }
             ],
-            'cartera-11-30': [
+            'cartera-mayor-30': [
                 { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number', placeholder: 'Eje: 140000000' },
-                { name: 'totalCartera1130', label: 'Total Cartera 11-30 días ($)', type: 'number', placeholder: 'Eje: 87000000' }
-            ],
-            'cartera-31-45': [
-                { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number', placeholder: 'Eje: 140000000' },
-                { name: 'totalCartera3145', label: 'Total Cartera 31-45 días ($)', type: 'number', placeholder: 'Eje: 10000000' }
-            ],
-            'cartera-mayor-45': [
-                { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number', placeholder: 'Eje: 140000000' },
-                { name: 'totalMayor45', label: 'Total Mayor a 45 días ($)', type: 'number', placeholder: 'Eje: 5000000' }
+                { name: 'totalMayor30', label: 'Total Mayor a 30 días ($)', type: 'number', placeholder: 'Eje: 7000000' }
             ],
             'recircularizaciones': [
                 { name: 'programadas', label: 'Programadas', type: 'number', placeholder: 'Eje: 2' },
@@ -341,6 +338,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                 { name: 'impuestosRecuperados', label: 'Impuestos Recuperados ($)', type: 'number', placeholder: 'Eje: 50000000' },
                 { name: 'impuestosOptimizados', label: 'Impuestos Optimizados ($)', type: 'number', placeholder: 'Eje: 70000000' },
                 { name: 'totalImpuestos', label: 'Total de Impuestos ($)', type: 'number', placeholder: 'Eje: 150000000' }
+            ],
+            'arqueos-realizados': [
+                { name: 'arqueosProgramados', label: 'Arqueos Programados', type: 'number', placeholder: 'Eje: 8' },
+                { name: 'arqueosRealizados', label: 'Arqueos Realizados', type: 'number', placeholder: 'Eje: 8' },
+                { name: 'valorSobra', label: 'Sobra Detectada ($)', type: 'number', placeholder: 'Eje: 5000' },
+                { name: 'valorFaltante', label: 'Faltante Detectado ($)', type: 'number', placeholder: 'Eje: 2000' }
             ]
         };
 
@@ -371,7 +374,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
 
         const dataToSave = isMetaMode
             ? { ...cleanedData, type: 'META_UPDATE' }
-            : cleanedData;
+            : { ...cleanedData, type: 'DATA_UPDATE' };
 
         onSave(kpi.id, dataToSave);
 
@@ -487,22 +490,22 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                     )}
                     <form onSubmit={handleSubmit}>
                         {/* BRAND / ENTITY SELECTION - PREMIUM CHIPS */}
-                        {(isMetaMode || (!isMetaMode && hasCommercialBrands)) && (
+                        {(isMetaMode || (!isMetaMode && (hasCommercialBrands || kpi.meta?.TYM || kpi.meta?.TAT))) && (
                             <div style={{ marginBottom: '2rem' }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1.25rem', color: '#1e293b' }}>
                                     <Box size={16} color="var(--brand)" />
-                                    {isMetaMode ? 'SELECCIONAR NIVEL DE META' : 'MARCA / PROVEEDOR'}
+                                    {isMetaMode ? 'SELECCIONAR NIVEL DE META' : 'MARCA / NIVEL CARGA'}
                                 </label>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                    {/* Nivel Empresa / Razón Social - SOLAMENTE PARA MODO META COMO GERENTE */}
-                                    {isMetaMode && (
+                                    {/* Nivel Empresa / Razón Social - MOSTRAR SI NO HAY MARCAS O EN MODO META */}
+                                    {(isMetaMode || (!hasCommercialBrands && (kpi.meta?.TYM || kpi.meta?.TAT))) && (
                                         <div>
                                             <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-                                                Nivel Empresa (Razón Social)
+                                                {isMetaMode ? 'Nivel Empresa (Razón Social)' : 'Carga a Nivel Global'}
                                             </div>
                                             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                                {['Global', 'TYM', 'TAT'].map(scope => {
+                                                {(isMetaMode ? ['Global', 'TYM', 'TAT'] : [userEntity]).map(scope => {
                                                     const isActive = scope === 'Global' ? (!formData.brand || formData.brand === 'Global') : formData.brand === scope;
                                                     return (
                                                         <button
@@ -512,15 +515,16 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                                                                 handleChange('brand', scope);
                                                             }}
                                                             style={{
-                                                                padding: '0.6rem 1rem',
+                                                                padding: '0.6rem 1.5rem',
                                                                 borderRadius: '12px',
-                                                                fontSize: '0.8rem',
-                                                                fontWeight: 700,
+                                                                fontSize: '0.9rem',
+                                                                fontWeight: 800,
                                                                 cursor: 'pointer',
                                                                 transition: 'all 0.2s',
                                                                 border: isActive ? '2px solid var(--brand)' : '1px solid #e2e8f0',
                                                                 background: isActive ? 'var(--brand-bg)' : 'white',
                                                                 color: isActive ? 'var(--brand)' : '#64748b',
+                                                                minWidth: '100px'
                                                             }}
                                                         >
                                                             {scope}

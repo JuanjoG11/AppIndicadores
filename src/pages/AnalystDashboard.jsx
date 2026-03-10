@@ -34,9 +34,11 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
     // Filter helper: check user permissions for authorized areas
     const myAccessKPIs = companyKPIsRaw.filter(kpi =>
-        currentUser.authorizedAreas?.includes('all') ||
-        currentUser.authorizedAreas?.includes(kpi.area) ||
-        kpi.responsable === currentUser.cargo
+        (currentUser.authorizedAreas?.includes('all') ||
+            currentUser.authorizedAreas?.includes(kpi.area) ||
+            kpi.visibleEnAreas?.some(a => currentUser.authorizedAreas?.includes(a)) ||
+            kpi.responsable === currentUser.cargo) &&
+        kpi.isAutoFeed !== true
     );
 
     // Split into EXACTLY two lists as requested
@@ -49,7 +51,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
         // Si tiene marcas, ver si alguna de la entidad del usuario (excluyendo Polar) falta
         const entityBrands = Object.keys(k.meta).filter(b =>
-            BRAND_TO_ENTITY[b] === currentUser.company && b !== 'POLAR'
+            (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR'
         );
 
         if (entityBrands.length === 0) return !k.hasData;
@@ -82,7 +84,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 if (k.hasData) done++;
             } else {
                 const entityBrands = Object.keys(k.meta).filter(b =>
-                    BRAND_TO_ENTITY[b] === currentUser.company && b !== 'POLAR'
+                    (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR'
                 );
                 if (entityBrands.length === 0) {
                     total++;
@@ -129,7 +131,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
         if (isMine && kpi.meta && typeof kpi.meta === 'object') {
             const entityBrands = Object.keys(kpi.meta).filter(b =>
-                BRAND_TO_ENTITY[b] === currentUser.company && b !== 'POLAR'
+                (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR'
             );
             if (entityBrands.length > 0) {
                 pendingBrandsList = entityBrands.filter(brand => {

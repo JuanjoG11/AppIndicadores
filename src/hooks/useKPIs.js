@@ -60,14 +60,15 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 const scope = d.brand;
                 console.log(`🎯 Aplicando META_UPDATE: ${kpiId} -> ${scope} = ${d.newMeta}`);
 
-                if (!scope || scope === 'Global' || scope === 'global') {
-                    kpi.meta = d.newMeta;
+                if (!scope || scope === 'Global' || scope === 'global' || scope === currentCompany) {
+                    const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
+                    kpi.meta = { ...currentMeta, [currentCompany]: d.newMeta };
                 } else {
-                    // Solo permitimos actualizar metas de marcas que existen en la definición original
+                    // Solo permitimos actualizar metas de marcas que existen en la definición original del código
                     const staticDef = kpiDefinitions.find(s => s.id === kpiId);
                     const originalHasBrand = staticDef && staticDef.meta && typeof staticDef.meta === 'object' && staticDef.meta.hasOwnProperty(scope);
 
-                    if (originalHasBrand || scope === currentCompany || BRAND_TO_ENTITY[scope]) {
+                    if (originalHasBrand) {
                         const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
                         kpi.meta = { ...currentMeta, [scope]: d.newMeta };
                     }
@@ -191,6 +192,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     formula: def.formula,
                     responsable: def.responsable,
                     fuente: def.fuente,
+                    brands: def.brands,
+                    isAutoFeed: def.isAutoFeed,
+                    visibleEnAreas: def.visibleEnAreas,
                     meta: filteredMeta // Sincroniza estructura y valores del código
                 };
             });
