@@ -339,13 +339,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                 { name: 'impuestosOptimizados', label: 'Impuestos Optimizados ($)', type: 'number', placeholder: 'Eje: 70000000' },
                 { name: 'totalImpuestos', label: 'Total de Impuestos ($)', type: 'number', placeholder: 'Eje: 150000000' }
             ],
-            'arqueos-realizados': [
-                { name: 'arqueosProgramados', label: 'Arqueos Programados', type: 'number', placeholder: 'Eje: 8' },
-                { name: 'arqueosRealizados', label: 'Arqueos Realizados', type: 'number', placeholder: 'Eje: 8' },
-                { name: 'valorSobra', label: 'Sobra Detectada ($)', type: 'number', placeholder: 'Eje: 5000' },
-                { name: 'valorFaltante', label: 'Faltante Detectado ($)', type: 'number', placeholder: 'Eje: 2000' }
-            ]
         };
+
 
         return fieldMappings[kpi.id] || [{ name: 'currentValue', label: 'Valor Real', type: 'number' }];
     };

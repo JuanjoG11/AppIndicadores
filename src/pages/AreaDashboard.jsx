@@ -28,7 +28,9 @@ import {
     AlertCircle,
     Package,
     Filter,
-    ChevronRight
+    ChevronRight,
+    Maximize2,
+    X as XIcon
 } from 'lucide-react';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 
@@ -39,6 +41,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const [activeSubArea, setActiveSubArea] = useState('all');
     const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
+    const [isChartExpanded, setIsChartExpanded] = useState(false);
 
     // Devolvemos el KPI actual del prop basado en el ID para que siempre esté fresco
     const editingKPI = editingKPIId ? kpiData.find(k => k.id === editingKPIId) : null;
@@ -139,7 +142,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         .filter(kpi => kpi.compliance !== undefined)
         .slice(0, 10)
         .map(kpi => ({
-            name: kpi.name.length > 15 ? kpi.name.substring(0, 15) + '...' : kpi.name,
+            name: kpi.name,
             cumplimiento: kpi.compliance,
             color: kpi.semaphore === 'green' ? '#059669' : '#ef4444'
         }));
@@ -283,16 +286,32 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                 </div>
 
                 <div className="card premium-shadow" style={{ padding: '2rem', borderRadius: '32px', background: 'white', border: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                        <div style={{ color: 'var(--brand)' }}><TrendingUp size={20} /></div>
-                        <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 900, color: '#1e293b', textTransform: 'uppercase' }}>Análisis de Cumplimiento</h4>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ color: 'var(--brand)' }}><TrendingUp size={20} /></div>
+                            <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 900, color: '#1e293b', textTransform: 'uppercase' }}>Análisis de Cumplimiento</h4>
+                        </div>
+                        <button
+                            onClick={() => setIsChartExpanded(true)}
+                            title="Expandir Gráfico"
+                            style={{
+                                background: 'none', border: 'none', color: '#64748b',
+                                cursor: 'pointer', padding: '4px', borderRadius: '8px',
+                                transition: 'all 0.2s', display: 'flex', alignItems: 'center'
+                            }}
+                            onMouseOver={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = 'var(--brand)'; }}
+                            onMouseOut={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#64748b'; }}
+                        >
+                            <Maximize2 size={18} />
+                        </button>
                     </div>
                     <ResponsiveContainer width="100%" height={220} minWidth={0} debounce={50}>
                         <BarChart data={complianceData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis
                                 dataKey="name"
-                                tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }}
+                                tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
+                                tickFormatter={(name) => name.length > 12 ? name.substring(0, 10) + '...' : name}
                                 axisLine={false}
                                 tickLine={false}
                                 interval={0}
@@ -542,7 +561,95 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     Toda la información visualizada se actualiza en tiempo real desde la consola de alimentación.
                 </div>
             </div>
+
+            {/* Expanded Chart Modal */}
+            {isChartExpanded && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.9)',
+                    zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '2rem', backdropFilter: 'blur(8px)'
+                }}>
+                    <div className="card scale-in" style={{
+                        width: '100%', maxWidth: '1200px', height: '80vh',
+                        background: 'white', borderRadius: '32px', padding: '2.5rem',
+                        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+                            <div>
+                                <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Análisis de Cumplimiento Completo</h3>
+                                <p style={{ color: '#64748b', fontSize: '0.95rem', margin: '0.25rem 0 0' }}>Mostrando todos los indicadores cargados de {area.name}</p>
+                            </div>
+                            <button
+                                onClick={() => setIsChartExpanded(false)}
+                                style={{
+                                    background: '#f1f5f9', border: 'none', color: '#64748b',
+                                    padding: '0.75rem', borderRadius: '16px', cursor: 'pointer',
+                                    transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                    fontWeight: 800, fontSize: '0.85rem'
+                                }}
+                                onMouseOver={e => e.currentTarget.style.background = '#e2e8f0'}
+                                onMouseOut={e => e.currentTarget.style.background = '#f1f5f9'}
+                            >
+                                <XIcon size={20} /> CERRAR
+                            </button>
+                        </div>
+
+                        <div style={{ flex: 1, minHeight: 0 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={kpisWithData.map(k => ({
+                                        name: k.name,
+                                        cumplimiento: k.compliance,
+                                        color: k.semaphore === 'green' ? '#059669' : '#ef4444'
+                                    }))}
+                                    margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis
+                                        dataKey="name"
+                                        angle={-45}
+                                        textAnchor="end"
+                                        interval={0}
+                                        tick={{ fontSize: 11, fill: '#64748b', fontWeight: 700 }}
+                                        height={100}
+                                        axisLine={false}
+                                        tickLine={false}
+                                    />
+                                    <YAxis
+                                        domain={[0, 100]}
+                                        tick={{ fontSize: 12, fill: '#94a3b8', fontWeight: 600 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tickFormatter={(val) => `${val}%`}
+                                    />
+                                    <Tooltip
+                                        cursor={{ fill: '#f8fafc' }}
+                                        contentStyle={{
+                                            borderRadius: '16px',
+                                            border: 'none',
+                                            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+                                            padding: '1rem',
+                                            fontWeight: 700
+                                        }}
+                                        formatter={(val) => [`${val}%`, 'Cumplimiento']}
+                                    />
+                                    <Bar dataKey="cumplimiento" radius={[10, 10, 10, 10]} barSize={40}>
+                                        {kpisWithData.map((entry, index) => (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={entry.semaphore === 'green' ? '#059669' : '#ef4444'}
+                                            />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
+
     );
 };
 
