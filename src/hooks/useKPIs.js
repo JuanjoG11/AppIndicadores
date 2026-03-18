@@ -33,8 +33,17 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const oldKpi = prevData[index];
             const kpi = structuredClone(oldKpi);
 
+            const currentBrand = newData.brand || 'Global';
+            const currentCompany = newData.company || BRAND_TO_ENTITY[currentBrand] || activeCompany || 'TYM';
+            const dataKey = `${currentCompany}-${currentBrand.toUpperCase()}`;
+            const brandValues = kpi.brandValues || {};
+
+            // Usar datos previos de la marca específica si existen, sino los globales si coinciden en marca
+            const existingBrandData = brandValues[dataKey]?.additionalData || 
+                                    (kpi.additionalData?.brand === currentBrand ? kpi.additionalData : {});
+
             const updatedAdditionalData = {
-                ...kpi.additionalData,
+                ...existingBrandData,
                 ...newData,
                 updatedAt: newData.updatedAt || new Date().toISOString()
             };
@@ -42,11 +51,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const d = updatedAdditionalData;
             let newValue = kpi.currentValue;
             let targetMeta = kpi.targetMeta;
-
-            const currentBrand = d.brand || 'GLOBAL';
-            const currentCompany = d.company || BRAND_TO_ENTITY[currentBrand] || activeCompany || 'TYM';
-            const dataKey = `${currentCompany}-${currentBrand}`;
-            const brandValues = kpi.brandValues || {};
 
             try {
                 if (d.type === 'META_UPDATE') newValue = kpi.currentValue;

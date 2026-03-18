@@ -114,7 +114,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                     </div>
                     {canEdit && (
                         <button
-                            onClick={() => onEdit && onEdit(kpi, 'data')}
+                            onClick={() => onEdit && onEdit(kpi, 'data', selectedBrand)}
                             style={{
                                 background: 'transparent', border: 'none',
                                 color: '#94a3b8', cursor: 'pointer',

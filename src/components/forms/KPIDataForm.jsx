@@ -17,7 +17,7 @@ import {
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
 
-const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
+const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initialBrand }) => {
     const isMetaMode = mode === 'meta';
     const hasMultipleMetas = kpi.meta && typeof kpi.meta === 'object';
     const userEntity = currentUser?.company || 'TYM';
@@ -38,22 +38,40 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
 
     // 2. Determinar cuáles faltan por cargar
     const isBrandPending = (brandName) => {
-        const dataKey = `${userEntity}-${brandName}`;
+        const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
         const brandData = kpi.brandValues?.[dataKey];
         return !brandData || brandData.hasData === false;
     };
 
     // 3. Seleccionar por defecto
+    // Usamos initialBrand si viene de props y es válido para la vista actual
+    const validatedInitialBrand = (initialBrand && initialBrand !== 'all' && (isMetaMode || (hasMultipleMetas ? commercialBrands.includes(initialBrand) : true)))
+        ? initialBrand
+        : null;
+
     // Si no hay marcas comerciales y no es gerente, la marca asignada automáticamente es la propia entidad.
-    const defaultBrand = (!isMetaMode && !hasCommercialBrands)
+    const defaultBrand = validatedInitialBrand || ((!isMetaMode && !hasCommercialBrands)
         ? userEntity
-        : (commercialBrands.find(isBrandPending) || commercialBrands[0] || userEntity);
+        : (commercialBrands.find(isBrandPending) || commercialBrands[0] || userEntity));
+
+    // Obtener datos iniciales específicos de la marca si existen
+    const getInitialBrandData = (brandName) => {
+        const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
+        // Si no hay brandValues, intentamos con additionalData global si la marca coincide
+        if (kpi.brandValues?.[dataKey]?.additionalData) {
+            return kpi.brandValues[dataKey].additionalData;
+        }
+        if (kpi.additionalData?.brand === brandName) {
+            return kpi.additionalData;
+        }
+        return {};
+    };
 
     // Inicializar con datos previos si existen
     const [formData, setFormData] = useState({
-        brand: kpi.additionalData?.brand || defaultBrand,
+        brand: defaultBrand,
         company: userEntity, // Auto-assign company
-        ...kpi.additionalData
+        ...getInitialBrandData(defaultBrand)
     });
 
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -394,20 +412,29 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data' }) => {
                 parsedValue = cleanValue === '' ? '' : cleanValue;
             }
 
-            const newState = { ...prev, [fieldName]: parsedValue };
-
-            // Reset newMeta when brand changes to force a fresh entry for the new brand
-            if (fieldName === 'brand' && isMetaMode) {
-                newState.newMeta = ''; // Reset to empty or current meta for clarity
-
-                if (value === 'TYM' || value === 'TAT') {
-                    newState.company = value;
-                } else if (BRAND_TO_ENTITY[value]) {
-                    newState.company = BRAND_TO_ENTITY[value];
+            if (fieldName === 'brand') {
+                const brandData = getInitialBrandData(value);
+                const newCompany = (value === 'TYM' || value === 'TAT') ? value : (BRAND_TO_ENTITY[value] || userEntity);
+                
+                // Si es modo meta, reseteamos el input de nueva meta pero cargamos los otros metadatos
+                if (isMetaMode) {
+                    return {
+                        ...brandData,
+                        brand: value,
+                        company: newCompany,
+                        newMeta: ''
+                    };
                 }
+
+                // Si es modo data, cargamos todos los valores previos de esa marca
+                return {
+                    ...brandData,
+                    brand: value,
+                    company: newCompany
+                };
             }
 
-            return newState;
+            return { ...prev, [fieldName]: parsedValue };
         });
     };
 

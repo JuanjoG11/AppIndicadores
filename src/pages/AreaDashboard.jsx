@@ -46,9 +46,13 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     // Devolvemos el KPI actual del prop basado en el ID para que siempre esté fresco
     const editingKPI = editingKPIId ? kpiData.find(k => k.id === editingKPIId) : null;
 
-    const handleStartEdit = (kpi, mode = 'data') => {
+    const [initialBrand, setInitialBrand] = useState(null);
+
+    const handleStartEdit = (kpi, mode = 'data', brand = null) => {
         setEditingKPIId(kpi.id);
         setEditMode(mode);
+        // Usar la marca seleccionada en el dashboard por defecto
+        setInitialBrand(brand || selectedBrand);
     };
 
     // Restricted access: Manager (Gerente) cannot edit
@@ -541,6 +545,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     onSave={handleSaveKPI}
                     onCancel={() => setEditingKPIId(null)}
                     mode={editMode}
+                    initialBrand={initialBrand}
                 />
             )}
 
