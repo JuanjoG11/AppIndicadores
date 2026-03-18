@@ -112,7 +112,7 @@ export const kpiDefinitions = [
         unit: 'horas',
         frecuencia: 'QUINCENAL',
         responsable: 'GESTIÓN HUMANA',
-        formula: 'TOTAL HORAS EXTRAS / AUXILIARES',
+        formula: '(TOTAL HORAS EXTRAS / AUXILIARES) / 25 DÍAS',
         sustentacion: 'SEMANAL',
         fuente: 'MAN GO'
     },

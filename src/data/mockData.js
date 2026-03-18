@@ -55,7 +55,7 @@ export const generateMockData = () => {
             } else if (kpi.id === 'gasto-fletes-venta') {
                 currentValue = (realData.valorFletes / realData.ventaTotal) * 100;
             } else if (kpi.id === 'horas-extras-auxiliares') {
-                currentValue = (realData.totalHorasExtras / realData.auxiliares) / 12;
+                currentValue = (realData.totalHorasExtras / realData.auxiliares) / 25;
             } else {
                 currentValue = realData.currentValue;
             }

@@ -26,7 +26,7 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (d.valorFletes / d.ventaTotal) * 100;
         break;
       case 'horas-extras-auxiliares':
-        newValue = d.totalHorasExtras / d.auxiliares;
+        newValue = (d.totalHorasExtras / d.auxiliares) / 25;
         break;
 
       // COMERCIAL
