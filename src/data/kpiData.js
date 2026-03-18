@@ -412,11 +412,7 @@ export const kpiDefinitions = [
         area: 'talento-humano',
         objetivo: 'Fortalecer la cultura organizacional por medio de actividades',
         meta: {
-            ALPINA: 100,
-            ZENU: 100,
-            FLEISCHMANN: 100,
-            UNILEVER: 100,
-            FAMILIA: 100
+            TYM: 100
         },
         unit: '%',
         frecuencia: 'MENSUAL',
@@ -431,11 +427,7 @@ export const kpiDefinitions = [
         area: 'talento-humano',
         objetivo: 'Reducir el tiempo de respuesta en contrataciones',
         meta: {
-            ALPINA: 8,
-            ZENU: 8,
-            FLEISCHMANN: 8,
-            UNILEVER: 8,
-            FAMILIA: 8
+            TYM: 8
         },
         unit: 'días',
         frecuencia: 'QUINCENAL',
