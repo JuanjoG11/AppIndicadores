@@ -109,12 +109,13 @@ export const generateMockData = () => {
         const brandValues = {};
         const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
 
-        // Marcas para TYM y TAT
+        // Marcas para TYM y TAT + Scopes globales
         const tymBrands = ['ALPINA', 'ZENU', 'FLEISCHMANN'];
         const tatBrands = ['UNILEVER', 'FAMILIA'];
+        const globalScopes = ['Global', 'TYM', 'TAT'];
 
         // Poblar datos por marca de forma proporcional al consolidado
-        const brandsToPopulate = [...tymBrands, ...tatBrands].filter(b => allMetaBrands.includes(b));
+        const brandsToPopulate = [...tymBrands, ...tatBrands, ...globalScopes].filter(b => allMetaBrands.includes(b));
 
         brandsToPopulate.forEach(brand => {
             const entityOfBrand = BRAND_TO_ENTITY[brand];

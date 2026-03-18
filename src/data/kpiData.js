@@ -353,15 +353,11 @@ export const kpiDefinitions = [
     },
     {
         id: 'calificacion-auditoria',
-        name: 'Cumplimiento de Auditoría (SST/SGC)',
+        name: 'Cumplimiento SST',
         area: 'talento-humano',
-        objetivo: 'Ejecutar el Sistema de Gestión',
+        objetivo: 'Ejecutar el Sistema de Gestión SST',
         meta: {
-            ALPINA: 90,
-            ZENU: 90,
-            FLEISCHMANN: 90,
-            UNILEVER: 90,
-            FAMILIA: 90
+            TYM: 90
         },
         unit: '%',
         frecuencia: 'MENSUAL',

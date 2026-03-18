@@ -6,7 +6,9 @@ export const BRAND_TO_ENTITY = {
     'ZENU': 'TYM',
     'FLEISCHMANN': 'TYM',
     'UNILEVER': 'TAT',
-    'FAMILIA': 'TAT'
+    'FAMILIA': 'TAT',
+    'TYM': 'TYM',
+    'TAT': 'TAT'
 };
 
 export const getBrandEntity = (brand) => BRAND_TO_ENTITY[brand?.toUpperCase()] || null;
