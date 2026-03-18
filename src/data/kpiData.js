@@ -59,7 +59,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'gasto-nomina-venta',
-        name: 'Participación de Nómina en Ventas',
+        name: 'Participación de Nómina en Ventas (Entrega)',
         area: 'logistica',
         subArea: 'Logística de Entrega',
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
@@ -204,7 +204,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'nomina-venta-picking',
-        name: 'Participación de Nómina en Ventas',
+        name: 'Participación de Nómina en Ventas (Picking)',
         area: 'logistica',
         subArea: 'Logística de Picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
@@ -257,7 +257,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'nomina-compra-deposito',
-        name: 'Participación de Nómina en Venta',
+        name: 'Participación de Nómina en Ventas (Depósito)',
         area: 'logistica',
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
