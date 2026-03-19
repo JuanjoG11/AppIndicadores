@@ -335,11 +335,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             ],
             'rotacion-cxc': [
                 { name: 'ventasCredito', label: 'Ventas a Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' },
-                { name: 'cuentasPorCobrar', label: 'Cuentas por Cobrar ($)', type: 'number', placeholder: 'Eje: 140000000' }
+                { name: 'cxcInicial', label: 'CxC Inicial ($)', type: 'number', placeholder: 'Eje: 100000000' },
+                { name: 'cxcFinal', label: 'CxC Final ($)', type: 'number', placeholder: 'Eje: 120000000' }
             ],
             'rotacion-cxp': [
                 { name: 'comprasCredito', label: 'Compras a Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' },
-                { name: 'cuentasPorPagar', label: 'Cuentas por Pagar ($)', type: 'number', placeholder: 'Eje: 200000000' }
+                { name: 'cxpInicial', label: 'CxP Inicial ($)', type: 'number', placeholder: 'Eje: 80000000' },
+                { name: 'cxpFinal', label: 'CxP Final ($)', type: 'number', placeholder: 'Eje: 90000000' }
             ],
             'conciliaciones-bancarias': [
                 { name: 'conciliacionesRequeridas', label: 'Conciliaciones Requeridas', type: 'number', placeholder: 'Eje: 2' },
@@ -354,7 +356,6 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'ingreso', label: 'Ingreso Total ($)', type: 'number', placeholder: 'Eje: 3600000000' }
             ],
             'optimizacion-tributaria': [
-                { name: 'impuestosRecuperados', label: 'Impuestos Recuperados ($)', type: 'number', placeholder: 'Eje: 50000000' },
                 { name: 'impuestosOptimizados', label: 'Impuestos Optimizados ($)', type: 'number', placeholder: 'Eje: 70000000' },
                 { name: 'totalImpuestos', label: 'Total de Impuestos ($)', type: 'number', placeholder: 'Eje: 150000000' }
             ],
@@ -374,7 +375,14 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         ? (kpi.meta[formData.brand] || kpi.meta[formData.brand?.toLowerCase()] || Object.values(kpi.meta)[0])
         : kpi.meta;
     const isInverse = isInverseKPI(kpi.id);
-    const isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
+    let isMeetingMeta = false;
+    if (currentMeta === 0 && liveResult === 0) {
+        isMeetingMeta = isInverse ? true : false;
+    } else if (currentMeta === 0 && liveResult > 0) {
+        isMeetingMeta = isInverse ? false : true;
+    } else {
+        isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -526,7 +534,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                     )}
                     <form onSubmit={handleSubmit}>
                         {/* BRAND / ENTITY SELECTION - PREMIUM CHIPS */}
-                        {(isMetaMode || (!isMetaMode && (hasCommercialBrands || kpi.meta?.TYM || kpi.meta?.TAT))) && (
+                        {(isMetaMode || (!isMetaMode && (hasCommercialBrands || kpi.meta?.TYM !== undefined || kpi.meta?.TAT !== undefined))) && (
                             <div style={{ marginBottom: '2rem' }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1.25rem', color: '#1e293b' }}>
                                     <Box size={16} color="var(--brand)" />
@@ -776,8 +784,30 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                             <div style={{ fontSize: '0.85rem', fontWeight: 800, opacity: 0.9, letterSpacing: '0.05em' }}>CÁLCULO AUTOMÁTICO</div>
                                             <div style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1, display: 'flex', alignItems: 'baseline' }}>
                                                 {kpi.unit === '$' && <span style={{ fontSize: '1.5rem', opacity: 0.8, marginRight: '4px' }}>$</span>}
-                                                {kpi.unit === '$' ? formatNumber(liveResult, 0) : (kpi.unit === '%' ? formatNumber(liveResult, 2) : formatNumber(liveResult, 0))}
-                                                {kpi.unit !== '$' && <span style={{ fontSize: '1.5rem', opacity: 0.8, marginLeft: '8px' }}>{kpi.unit}</span>}
+                                                {(() => {
+                                                    if (kpi.id === 'rotacion-cxc' || kpi.id === 'rotacion-cxp') {
+                                                        const rotationVal = liveResult;
+                                                        const daysResult = rotationVal === 0 ? 0 : 360 / rotationVal;
+                                                        return (
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'baseline' }}>
+                                                                    {formatNumber(rotationVal, 2)}
+                                                                    <span style={{ fontSize: '1.5rem', opacity: 0.8, marginLeft: '8px' }}>veces</span>
+                                                                </div>
+                                                                <div style={{ fontSize: '1.25rem', opacity: 0.7, fontWeight: 700, marginTop: '5px' }}>
+                                                                    ({formatNumber(daysResult, 0)} días)
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return (
+                                                        <>
+                                                            {kpi.unit === '$' && <span style={{ fontSize: '1.5rem', opacity: 0.8, marginRight: '4px' }}>$</span>}
+                                                            {kpi.unit === '$' ? formatNumber(liveResult, 0) : (kpi.unit === '%' ? formatNumber(liveResult, 2) : formatNumber(liveResult, 0))}
+                                                            {kpi.unit !== '$' && <span style={{ fontSize: '1.5rem', opacity: 0.8, marginLeft: '8px' }}>{kpi.unit}</span>}
+                                                        </>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                         <div style={{

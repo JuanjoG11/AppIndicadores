@@ -631,13 +631,13 @@ export const kpiDefinitions = [
         area: 'contabilidad',
         objetivo: 'Mejorar la rotación en las cuentas por cobrar a clientes',
         meta: {
-            TYM: 0,
-            TAT: 0
+            TYM: 1.5,
+            TAT: 1.5
         },
         unit: 'veces',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
-        formula: 'VENTAS CREDITO / CUENTAS POR COBRAR',
+        formula: '360 / (VENTAS CREDITO / ((CXC INICIAL + CXC FINAL) / 2))',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
     },
@@ -647,13 +647,13 @@ export const kpiDefinitions = [
         area: 'contabilidad',
         objetivo: 'Garantizar la rotación en las cuentas por pagar a proveedores',
         meta: {
-            TYM: 0,
-            TAT: 0
+            TYM: 1.5,
+            TAT: 1.5
         },
         unit: 'veces',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
-        formula: 'COMPRAS CREDITO / CUENTAS POR PAGAR',
+        formula: '360 / (COMPRAS CREDITO / ((CXP INICIAL + CXP FINAL) / 2))',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
     },
@@ -708,13 +708,13 @@ export const kpiDefinitions = [
         area: 'contabilidad',
         objetivo: 'Optimizar la carga tributaria buscando mejores flujos y rentabilidad',
         meta: {
-            TYM: 90,
-            TAT: 90
+            TYM: 0,
+            TAT: 0
         },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
-        formula: '(IMPUESTOS RECUPERADOS + IMPUESTOS OPTIMIZADOS) / TOTAL IMPUESTOS',
+        formula: 'IMPUESTOS OPTIMIZADOS / TOTAL IMPUESTOS',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
     },

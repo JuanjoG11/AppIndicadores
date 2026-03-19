@@ -194,13 +194,25 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                     </div>
                 ) : (
                     <>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-                            <span style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.04em' }}>
-                                {formatKPIValue(displayValue, kpi.unit).replace(kpi.unit, '').trim()}
-                            </span>
-                            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#64748b' }}>
-                                {kpi.unit}
-                            </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                                <span style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.04em' }}>
+                                    {(() => {
+                                        if (kpi.id === 'rotacion-cxc' || kpi.id === 'rotacion-cxp') {
+                                            return formatNumber(displayValue, 2);
+                                        }
+                                        return formatKPIValue(displayValue, kpi.unit).replace(kpi.unit, '').trim();
+                                    })()}
+                                </span>
+                                <span style={{ fontSize: '1rem', fontWeight: 700, color: '#64748b' }}>
+                                    {(kpi.id === 'rotacion-cxc' || kpi.id === 'rotacion-cxp') ? 'veces (rotación)' : kpi.unit}
+                                </span>
+                            </div>
+                            {(kpi.id === 'rotacion-cxc' || kpi.id === 'rotacion-cxp') && (
+                                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#64748b' }}>
+                                    {formatNumber(displayValue === 0 ? 0 : 360 / displayValue, 0)} días
+                                </div>
+                            )}
                         </div>
 
                         {(displayCompliance != null) && (

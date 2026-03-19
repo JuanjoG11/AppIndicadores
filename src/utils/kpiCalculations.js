@@ -194,12 +194,20 @@ export const calculateKPIValue = (kpiId, d) => {
       case 'ajustes-revisoria':
         newValue = parseFloat(d.ajustesRevisor || 0);
         break;
-      case 'rotacion-cxc':
-        newValue = d.ventasCredito / (d.cuentasPorCobrar || 1);
+      case 'rotacion-cxc': {
+        const ini = parseFloat(d.cxcInicial || 0);
+        const fin = parseFloat(d.cxcFinal || 0);
+        const avg = (ini + fin) / 2;
+        newValue = parseFloat(d.ventasCredito || 0) / (avg || 1);
         break;
-      case 'rotacion-cxp':
-        newValue = d.comprasCredito / (d.cuentasPorPagar || 1);
+      }
+      case 'rotacion-cxp': {
+        const ini = parseFloat(d.cxpInicial || 0);
+        const fin = parseFloat(d.cxpFinal || 0);
+        const avg = (ini + fin) / 2;
+        newValue = parseFloat(d.comprasCredito || 0) / (avg || 1);
         break;
+      }
       case 'conciliaciones-bancarias':
         newValue = (d.conciliacionesRealizadas / d.conciliacionesRequeridas) * 100;
         break;
@@ -210,7 +218,7 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (d.multasSanciones / d.ingreso) * 100;
         break;
       case 'optimizacion-tributaria':
-        newValue = ((d.impuestosRecuperados + d.impuestosOptimizados) / (d.totalImpuestos || 1)) * 100;
+        newValue = (d.impuestosOptimizados / (d.totalImpuestos || 1)) * 100;
         break;
       default:
         newValue = d.currentValue || 0;
@@ -261,7 +269,9 @@ export const isInverseKPI = (kpiId) => {
     'diferencia-inventarios',
     'indice-arqueo-caja',
     'cartera-mayor-30',
-    'valor-cartera-venta'
+    'valor-cartera-venta',
+    'rotacion-cxc',
+    'rotacion-cxp'
   ];
 
   return inverseKPIs.includes(kpiId) || kpiId.includes('vencida') || kpiId.includes('ajustes');

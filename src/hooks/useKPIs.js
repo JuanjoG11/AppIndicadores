@@ -106,10 +106,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 else if (compliance >= 85) semaphore = 'yellow';
                 else semaphore = 'red';
             } else if (targetMeta === 0 && newValue === 0) {
-                compliance = 100;
-                semaphore = 'green';
+                compliance = isInverseKPI(kpiId) ? 100 : 0;
+                semaphore = compliance >= 95 ? 'green' : 'red';
             } else if (targetMeta === 0 && newValue > 0) {
-                compliance = isInverseKPI(kpiId) ? 0 : 100; // Si no hay meta y hay valor, depende de la lógica
+                compliance = isInverseKPI(kpiId) ? 0 : 100;
                 semaphore = compliance >= 95 ? 'green' : 'red';
             }
 
