@@ -48,6 +48,13 @@ export const areas = [
     description: 'Control de inventarios y precios',
     responsible: 'Información/Inventario',
     color: '#8b5cf6'
+  },
+  {
+    id: 'facturacion',
+    name: 'Facturación',
+    description: 'Control de procesos de facturación y notas',
+    responsible: 'Facturación',
+    color: '#0d9488'
   }
 ];
 

@@ -218,7 +218,16 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (d.multasSanciones / d.ingreso) * 100;
         break;
       case 'optimizacion-tributaria':
-        newValue = (d.impuestosOptimizados / (d.totalImpuestos || 1)) * 100;
+        newValue = (parseFloat(d.impuestosOptimizados || 0) / (parseFloat(d.totalImpuestos || 0) || 1)) * 100;
+        break;
+      case 'pedidos-facturados':
+        newValue = (parseFloat(d.pedidos || 0) / (parseFloat(d.facturas || 0) || 1)) * 100;
+        break;
+      case 'impresion-facturas':
+        newValue = (parseFloat(d.facturasImpresas || 0) / (parseFloat(d.facturasGeneradas || 0) || 1)) * 100;
+        break;
+      case 'error-facturacion':
+        newValue = (parseFloat(d.errores || 0) / (parseFloat(d.facturas || 0) || 1)) * 100;
         break;
       default:
         newValue = d.currentValue || 0;
@@ -271,7 +280,8 @@ export const isInverseKPI = (kpiId) => {
     'cartera-mayor-30',
     'valor-cartera-venta',
     'rotacion-cxc',
-    'rotacion-cxp'
+    'rotacion-cxp',
+    'error-facturacion'
   ];
 
   return inverseKPIs.includes(kpiId) || kpiId.includes('vencida') || kpiId.includes('ajustes');

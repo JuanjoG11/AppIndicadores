@@ -1111,6 +1111,66 @@ export const kpiDefinitions = [
         frecuenciaSustentacion: 'SEMANAL',
         fuente: 'ANALISTA DE INFORMACIÓN'
     },
+    {
+        id: 'pedidos-facturados',
+        name: 'Pedidos Facturados',
+        area: 'facturacion',
+        objetivo: 'Garantizar que cada pedido tenga su factura correspondiente',
+        meta: {
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100,
+            TAT: 100
+        },
+        unit: '%',
+        frecuencia: 'DIARIO',
+        responsable: 'FACTURACION',
+        formula: 'PEDIDOS / FACTURAS',
+        sustentacion: 'SEMANAL',
+        fuente: 'SISTEMA FACTURACIÓN'
+    },
+    {
+        id: 'impresion-facturas',
+        name: 'Impresión de Facturas',
+        area: 'facturacion',
+        objetivo: 'Garantizar que todas las facturas generadas sean impresas',
+        meta: {
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100,
+            TAT: 100
+        },
+        unit: '%',
+        frecuencia: 'DIARIO',
+        responsable: 'FACTURACION',
+        formula: 'FACTURAS IMPRESAS / FACTURAS GENERADAS',
+        sustentacion: 'SEMANAL',
+        fuente: 'REGISTRO DE IMPRESIÓN'
+    },
+    {
+        id: 'error-facturacion',
+        name: 'Error sobre la Facturación',
+        area: 'facturacion',
+        objetivo: 'Minimizar errores en el proceso de facturación',
+        meta: {
+            ALPINA: 0.5,
+            ZENU: 0.5,
+            FLEISCHMANN: 0.5,
+            UNILEVER: 0.5,
+            FAMILIA: 0.5,
+            TAT: 0.5
+        },
+        unit: '%',
+        frecuencia: 'SEMANAL',
+        responsable: 'FACTURACION',
+        formula: 'ERRORES / FACTURAS',
+        sustentacion: 'SEMANAL',
+        fuente: 'REPORTE DE CALIDAD'
+    }
 ];
 
 export const getKPIsByArea = (areaId) =>

@@ -29,6 +29,7 @@ const Login = ({ onLogin }) => {
         { id: 'CAJA', name: 'Caja', desc: 'Arqueos de caja y planillas', icon: <Banknote size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['caja'], color: '#6366f1' },
         { id: 'CARTERA', name: 'Cartera', desc: 'Rotación de cartera y circulaciones', icon: <Wallet size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['cartera'], color: '#f43f5e' },
         { id: 'COMERCIAL', name: 'Comercial', desc: 'Ventas, margen y devoluciones comercial', icon: <Target size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['comercial'], color: '#ec4899' },
+        { id: 'FACTURACION', name: 'Facturación', desc: 'Control de facturación, notas y procesos', icon: <ClipboardList size={24} />, companies: ['TYM', 'TAT'], allowedAreas: ['facturacion'], color: '#06b6d4' },
     ];
 
     const navigate = useNavigate();

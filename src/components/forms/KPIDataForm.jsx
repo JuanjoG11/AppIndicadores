@@ -359,6 +359,18 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'impuestosOptimizados', label: 'Impuestos Optimizados ($)', type: 'number', placeholder: 'Eje: 70000000' },
                 { name: 'totalImpuestos', label: 'Total de Impuestos ($)', type: 'number', placeholder: 'Eje: 150000000' }
             ],
+            'pedidos-facturados': [
+                { name: 'pedidos', label: 'Número de Pedidos', type: 'number', placeholder: 'Eje: 1500' },
+                { name: 'facturas', label: 'Número de Facturas', type: 'number', placeholder: 'Eje: 1500' }
+            ],
+            'impresion-facturas': [
+                { name: 'facturasImpresas', label: 'Facturas Impresas', type: 'number', placeholder: 'Eje: 800' },
+                { name: 'facturasGeneradas', label: 'Facturas Generadas', type: 'number', placeholder: 'Eje: 800' }
+            ],
+            'error-facturacion': [
+                { name: 'errores', label: 'Errores en Facturación', type: 'number', placeholder: 'Eje: 5' },
+                { name: 'facturas', label: 'Total Facturas', type: 'number', placeholder: 'Eje: 1500' }
+            ],
         };
 
 
