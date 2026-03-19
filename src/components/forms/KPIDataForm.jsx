@@ -394,6 +394,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         if (isMetaMode) {
             setSuccessMessage(`¡Meta actualizada para ${formData.brand}! Puedes seguir con las otras.`);
             setSaveSuccess(true);
+            setFormData(prev => ({ ...prev, newMeta: '' }));
             setTimeout(() => {
                 setSaveSuccess(false);
                 setSuccessMessage('');

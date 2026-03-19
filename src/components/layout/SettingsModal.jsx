@@ -20,7 +20,7 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
     const [activeTab, setActiveTab] = useState('general');
     const [localKPIs, setLocalKPIs] = useState([...kpiData]);
     const [saveStatus, setSaveStatus] = useState('');
-    const [editingKPI, setEditingKPI] = useState(null);
+    const [editingKPIId, setEditingKPIId] = useState(null);
 
     // Agrupar KPIs por área
     const kpisByArea = kpiData.reduce((acc, kpi) => {
@@ -251,7 +251,7 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
                                                 {kpis.map(k => (
                                                     <button
                                                         key={k.id}
-                                                        onClick={() => setEditingKPI(k)}
+                                                        onClick={() => setEditingKPIId(k.id)}
                                                         style={{
                                                             display: 'flex',
                                                             justifyContent: 'space-between',
@@ -410,15 +410,15 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
                 </div>
             </div>
 
-            {editingKPI && (
+            {editingKPIId && (
                 <div
                     onClick={e => e.stopPropagation()}
                     style={{ position: 'fixed', inset: 0, zIndex: 1100 }}>
                     <KPIDataForm
-                        kpi={editingKPI}
+                        kpi={kpiData.find(k => k.id === editingKPIId)}
                         currentUser={currentUser}
                         onSave={handleSaveMeta}
-                        onCancel={() => setEditingKPI(null)}
+                        onCancel={() => setEditingKPIId(null)}
                         mode="meta"
                     />
                 </div>
