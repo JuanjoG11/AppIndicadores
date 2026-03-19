@@ -1,5 +1,6 @@
 import { kpiDefinitions } from './kpiData';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
+import { isInverseKPI } from '../utils/kpiCalculations';
 
 // Datos REALES de los KPIs (Inicia vacío para producción)
 const realKPIValues = {};
@@ -75,12 +76,7 @@ export const generateMockData = () => {
         let compliance = null;
 
         if (hasData && currentValue !== null && typeof targetMeta === 'number') {
-            const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('perdidos') ||
-                kpi.id.includes('averias') || kpi.id.includes('ajustes') ||
-                kpi.id.includes('quiebres') || kpi.id.includes('mermas') ||
-                kpi.id.includes('gasto') || kpi.id.includes('nomina') ||
-                kpi.id.includes('fletes') || kpi.id.includes('horas-extras') ||
-                kpi.id.includes('notas-errores');
+            const isInverse = isInverseKPI(kpi.id);
 
             if (isInverse) {
                 compliance = (targetMeta / currentValue) * 100;
@@ -127,9 +123,7 @@ export const generateMockData = () => {
 
             let brandCompliance = null;
             if (brandVal !== null) {
-                const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('perdidos') ||
-                    kpi.id.includes('averias') || kpi.id.includes('fletes');
-                brandCompliance = isInverse ? (brandTarget / brandVal) * 100 : (brandVal / brandTarget) * 100;
+                brandCompliance = isInverseKPI(kpi.id) ? (brandTarget / brandVal) * 100 : (brandVal / brandTarget) * 100;
             }
 
             brandValues[dataKey] = {

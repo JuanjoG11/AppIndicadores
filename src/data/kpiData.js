@@ -766,7 +766,13 @@ export const kpiDefinitions = [
         description: '$ devolucion buen estado / total de la venta',
         area: 'comercial',
         objetivo: 'Controlar devoluciones aptas para re-venta',
-        meta: 1.8,
+        meta: {
+            ALPINA: 1.8,
+            ZENU: 1.8,
+            FLEISCHMANN: 1.8,
+            UNILEVER: 1.8,
+            FAMILIA: 1.8
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
