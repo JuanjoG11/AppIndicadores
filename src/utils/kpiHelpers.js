@@ -95,7 +95,7 @@ export const filterKPIsByEntity = (kpiData, entity) => {
             return {
                 ...kpi,
                 currentValue: parseFloat(avgValue.toFixed(2)),
-                compliance: Math.round(avgCompliance),
+                compliance: Math.min(Math.round(avgCompliance), 100),
                 semaphore: semaphore,
                 targetMeta,
                 hasData: anyFilled,

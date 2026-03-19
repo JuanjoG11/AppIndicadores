@@ -163,7 +163,8 @@ export const calculateAreaScore = (data, areaId) => {
     );
 
     // El divisor es el total de indicadores existentes para esa área
-    return Math.round(totalCompliance / allAreaKPIs.length);
+    const score = Math.round(totalCompliance / allAreaKPIs.length);
+    return Math.min(score, 100);
 };
 
 export const calculateOverallScore = (data) => {
@@ -175,7 +176,8 @@ export const calculateOverallScore = (data) => {
     );
 
     // El divisor es el total de indicadores de la entidad seleccionada
-    return Math.round(totalCompliance / data.length);
+    const score = Math.round(totalCompliance / data.length);
+    return Math.min(score, 100);
 };
 
 export const getCriticalAlerts = (data, entity = 'TYM') => {
