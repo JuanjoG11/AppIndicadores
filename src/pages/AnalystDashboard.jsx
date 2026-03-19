@@ -272,26 +272,35 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                                 const valColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : (bData.semaphore === 'yellow' ? '#f59e0b' : 'var(--brand)'))) : '#94a3b8';
                                 
                                 return (
-                                    <div key={brand} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <div style={{ width: '85px' }}>
-                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Marca</div>
-                                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1e293b' }}>{brand}</div>
+                                    <div key={brand} style={{ 
+                                        display: 'grid', 
+                                        gridTemplateColumns: '65px 1.2fr 1.2fr 60px',
+                                        gap: '0.4rem',
+                                        alignItems: 'center', 
+                                        background: '#f8fafc', 
+                                        padding: '0.75rem 0.6rem', 
+                                        borderRadius: '12px', 
+                                        border: '1px solid #e2e8f0' 
+                                    }}>
+                                        <div style={{ minWidth: 0 }}>
+                                            <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.1rem' }}>Marca</div>
+                                            <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{brand}</div>
                                         </div>
-                                        <div style={{ textAlign: 'center', flex: 1 }}>
-                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
-                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>
+                                        <div style={{ textAlign: 'center', minWidth: 0 }}>
+                                            <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.1rem' }}>Meta</div>
+                                            <div style={{ fontSize: kpi.unit === '$' ? '0.62rem' : '0.75rem', fontWeight: 700, color: '#64748b' }}>
                                                 {isInverseKPI(kpi.id) ? '≤ ' : '≥ '}{formatKPIValue(kpi.meta[brand], kpi.unit)}
                                             </div>
                                         </div>
-                                        <div style={{ textAlign: 'center', flex: 1 }}>
-                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Resultado</div>
-                                            <div style={{ fontSize: '0.9rem', fontWeight: 800, color: valColor }}>
+                                        <div style={{ textAlign: 'center', minWidth: 0 }}>
+                                            <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.1rem' }}>Resultado</div>
+                                            <div style={{ fontSize: kpi.unit === '$' ? '0.75rem' : '0.9rem', fontWeight: 800, color: valColor }}>
                                                 {hasData ? formatKPIValue(bData.currentValue, kpi.unit) : '--'}
                                             </div>
                                         </div>
-                                        <div style={{ textAlign: 'right', width: '80px' }}>
-                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Logro %</div>
-                                            <div style={{ fontSize: '0.9rem', fontWeight: 900, color: compColor }}>
+                                        <div style={{ textAlign: 'right', minWidth: 0 }}>
+                                            <div style={{ fontSize: '0.45rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.1rem' }}>Logro %</div>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 900, color: compColor }}>
                                                 {hasData ? `${bData.compliance}%` : '--'}
                                             </div>
                                         </div>
