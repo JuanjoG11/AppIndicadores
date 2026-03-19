@@ -100,7 +100,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 // Si es inverso y el resultado es 0, el cumplimiento es 100% (o más según lógica, pero 100% es seguro)
                 if (isInverse && newValue === 0) compliance = 100;
 
-                compliance = Math.max(Math.round(compliance || 0), 0);
+                compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
                 
                 if (compliance >= 95) semaphore = 'green';
                 else if (compliance >= 85) semaphore = 'yellow';

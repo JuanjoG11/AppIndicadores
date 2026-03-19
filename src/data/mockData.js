@@ -88,7 +88,7 @@ export const generateMockData = () => {
             else if (compliance >= 85) semaphore = 'yellow';
             else semaphore = 'red';
 
-            compliance = Math.min(Math.round(compliance), 100);
+            compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
         }
 
         const currentMonth = getMonthKey();
