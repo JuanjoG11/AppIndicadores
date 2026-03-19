@@ -38,6 +38,9 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (d.valorDevolucion || d.devolucionMalEstado / d.ventaTotal) * 100;
         if (d.devolucionMalEstado && d.ventaTotal) newValue = (d.devolucionMalEstado / d.ventaTotal) * 100;
         break;
+      case 'devoluciones-buen-estado':
+        newValue = (d.devolucionBuenEstado / d.ventaTotal) * 100;
+        break;
       case 'promedio-venta-vendedor':
         newValue = d.ventasTotales / d.numeroVendedores;
         break;

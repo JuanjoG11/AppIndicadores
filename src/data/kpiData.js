@@ -726,7 +726,11 @@ export const kpiDefinitions = [
         description: 'Venta realizada / esperada',
         area: 'comercial',
         objetivo: 'Cumplimiento de presupuesto de ventas',
-        meta: 100,
+        meta: {
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100
+        },
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
@@ -920,7 +924,6 @@ export const kpiDefinitions = [
         objetivo: 'Optimizar rotación de inventarios para flujo de caja',
         meta: {
             ALPINA: 7,
-            ZENU: 7,
             FLEISCHMANN: 7,
             UNILEVER: 45,
             FAMILIA: 18,
@@ -944,7 +947,6 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar el control físico de existencias',
         meta: {
             ALPINA: 16,
-            ZENU: 16,
             FLEISCHMANN: 16,
             UNILEVER: 16,
             FAMILIA: 16
@@ -965,7 +967,6 @@ export const kpiDefinitions = [
         objetivo: 'Asegurar la exactitud de los registros contables',
         meta: {
             ALPINA: 100,
-            ZENU: 100,
             FLEISCHMANN: 100,
             UNILEVER: 100,
             FAMILIA: 100

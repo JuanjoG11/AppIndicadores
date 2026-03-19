@@ -142,6 +142,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'ventaRealizada', label: 'Venta Realizada ($)', type: 'number' },
                 { name: 'presupuestoVenta', label: 'Presupuesto de Venta ($)', type: 'number' }
             ],
+            'devoluciones-buen-estado': [
+                { name: 'devolucionBuenEstado', label: 'Devolución Buen Estado ($)', type: 'number' },
+                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number' }
+            ],
             'devoluciones-mal-estado-comercial': [
                 { name: 'devolucionMalEstado', label: 'Devolución Mal Estado ($)', type: 'number' },
                 { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number' }
