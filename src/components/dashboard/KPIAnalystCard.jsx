@@ -150,30 +150,7 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
                 {kpi.name}
             </h3>
 
-            {/* Deadline Reminder */}
-            {!isReady && isMine && (
-                <div style={{
-                    marginBottom: '1.5rem',
-                    padding: '1rem',
-                    background: isExpired ? 'var(--danger-bg)' : (isUrgent ? 'var(--warning-bg)' : 'var(--bg-soft)'),
-                    borderRadius: '16px',
-                    border: `1px solid ${isExpired ? 'var(--danger)' : (isUrgent ? 'var(--warning)' : 'var(--border-soft)')}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.4rem',
-                    boxShadow: isUrgent || isExpired ? '0 4px 12px rgba(0,0,0,0.05)' : 'none'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock size={16} color={isExpired ? 'var(--danger)' : (isUrgent ? 'var(--warning)' : 'var(--text-muted)')} />
-                        <span style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-light)', textTransform: 'uppercase' }}>
-                            {isExpired ? '¡PLAZO VENCIDO!' : 'PLAZO DE CARGA'}
-                        </span>
-                    </div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 900, color: isExpired ? 'var(--danger)' : (isUrgent ? 'var(--warning)' : 'var(--text-main)') }}>
-                        {formatDeadline(deadline)}
-                    </div>
-                </div>
-            )}
+
 
             <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--bg-soft)', padding: '1rem', borderRadius: '16px', marginBottom: '1.25rem' }}>
                 <div>

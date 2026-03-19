@@ -188,10 +188,10 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (d.diasReporte / d.totalDiasCierre) * 100;
         break;
       case 'ajustes-posteriores':
-        newValue = (d.ajustesPosteriores / d.totalAjustes) * 100;
+        newValue = parseFloat(d.ajustesPosteriores || 0);
         break;
       case 'ajustes-revisoria':
-        newValue = (d.ajustesRevisor / d.totalAjustes) * 100;
+        newValue = parseFloat(d.ajustesRevisor || 0);
         break;
       case 'rotacion-cxc':
         newValue = d.ventasCredito / (d.cuentasPorCobrar || 1);
@@ -258,8 +258,9 @@ export const isInverseKPI = (kpiId) => {
     'obsolescencia',
     'mermas',
     'diferencia-inventarios',
-    'indice-arqueo-caja'
+    'indice-arqueo-caja',
+    'cartera-mayor-30'
   ];
 
-  return inverseKPIs.includes(kpiId) || kpiId.includes('vencida');
+  return inverseKPIs.includes(kpiId) || kpiId.includes('vencida') || kpiId.includes('ajustes');
 };

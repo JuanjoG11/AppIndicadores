@@ -536,7 +536,6 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
             ALPINA: 5,
-            ZENU: 5,
             FLEISCHMANN: 5,
             UNILEVER: 5,
             FAMILIA: 5
@@ -556,7 +555,6 @@ export const kpiDefinitions = [
         objetivo: 'Fortalecer el control interno con la cartera a la calle',
         meta: {
             ALPINA: 2,
-            ZENU: 2,
             FLEISCHMANN: 2,
             UNILEVER: 2,
             FAMILIA: 2
@@ -575,9 +573,9 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar los Flujos de las compañías',
         meta: {
             ALPINA: 10,
+            FLEISCHMANN: 10,
             FAMILIA: 20,
-            UNILEVER: 20,
-            ZENU: 15
+            UNILEVER: 20
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
@@ -610,7 +608,7 @@ export const kpiDefinitions = [
         unit: 'cantidad',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
-        formula: 'AJUSTES POSTERIORES / TOTAL AJUSTES',
+        formula: 'AJUSTES POSTERIORES',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
     },
@@ -623,7 +621,7 @@ export const kpiDefinitions = [
         unit: 'cantidad',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
-        formula: 'AJUSTES REVISOR FISCAL / TOTAL AJUSTES',
+        formula: 'AJUSTES REVISOR FISCAL',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
     },
@@ -825,8 +823,7 @@ export const kpiDefinitions = [
             ALPINA: 10,
             FAMILIA: 12,
             UNILEVER: 10,
-            FLEISCHMANN: 8,
-            ZENU: 12
+            FLEISCHMANN: 8
         },
         unit: '%',
         frecuencia: 'SEMANAL',

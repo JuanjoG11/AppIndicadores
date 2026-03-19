@@ -325,12 +325,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'diasReporte', label: 'Días para el Reporte', type: 'number', placeholder: 'Eje: 13' }
             ],
             'ajustes-posteriores': [
-                { name: 'totalAjustes', label: 'Total Ajustes', type: 'number', placeholder: 'Eje: 1' },
-                { name: 'ajustesPosteriores', label: 'Ajustes Posteriores', type: 'number', placeholder: 'Eje: 1' }
+                { name: 'ajustesPosteriores', label: 'Cantidad de Ajustes', type: 'number', placeholder: 'Eje: 1' }
             ],
             'ajustes-revisoria': [
-                { name: 'totalAjustes', label: 'Total Ajustes', type: 'number', placeholder: 'Eje: 1' },
-                { name: 'ajustesRevisor', label: 'Ajustes Revisor Fiscal', type: 'number', placeholder: 'Eje: 1' }
+                { name: 'ajustesRevisor', label: 'Cantidad de Ajustes', type: 'number', placeholder: 'Eje: 1' }
             ],
             'rotacion-cxc': [
                 { name: 'ventasCredito', label: 'Ventas a Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' },
@@ -379,9 +377,14 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         e.preventDefault();
         const cleanedData = { ...formData };
         // Ensure numbers are really numbers before saving
+        // And strip separators
         Object.keys(cleanedData).forEach(key => {
-            if (['newMeta', 'currentValue'].includes(key) && cleanedData[key] !== '') {
-                cleanedData[key] = parseFloat(cleanedData[key]);
+            if (typeof cleanedData[key] === 'string' && cleanedData[key] !== '') {
+                // Remove dots (thousands separators)
+                const val = cleanedData[key].replace(/\./g, '').replace(',', '.');
+                if (!isNaN(parseFloat(val))) {
+                   cleanedData[key] = parseFloat(val);
+                }
             }
         });
 
@@ -403,14 +406,16 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     const handleChange = (fieldName, value) => {
         setFormData(prev => {
-            const isNumberField = ['currentValue', 'newMeta', 'ventas', 'pedidos', 'auxiliares', 'vehiculos', 'nomina', 'fletes', 'errores', 'planillas', 'notas'].includes(fieldName);
             let parsedValue = value;
-
-            if (isNumberField) {
-                // Remove non-numeric chars except .
-                const cleanValue = value.replace(/[^0-9.]/g, '');
-                parsedValue = cleanValue === '' ? '' : cleanValue;
-            }
+            
+            // Si es campo numérico, removemos separadores antes de guardar en el estado
+            // Pero mantendremos el formateo visual
+            const isNumberField = /^[0-9.,]*$/.test(value.replace(/\s/g, ''));
+            
+            // No hacemos parsing aquí si queremos manejar el formateo visual en el value del input
+            // Guardamos el raw value (limpio)
+            const cleanValue = value.replace(/[^0-9,]/g, ''); // Quitamos puntos (miles) pero dejamos coma (decimal)
+            parsedValue = cleanValue;
 
             if (fieldName === 'brand') {
                 const brandData = getInitialBrandData(value);
@@ -631,7 +636,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                     type="text"
                                     inputMode="decimal"
                                     required
-                                    value={formData.newMeta ?? ''}
+                                    value={formData.newMeta != null && formData.newMeta !== '' ? formData.newMeta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
                                     onChange={(e) => handleChange('newMeta', e.target.value)}
                                     placeholder={`Eje: ${currentMeta}`}
                                     style={{
@@ -659,7 +664,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                                 type={field.type === 'number' ? 'text' : field.type}
                                                 inputMode={field.type === 'number' ? 'decimal' : undefined}
                                                 required
-                                                value={formData[field.name] ?? ''}
+                                                value={field.type === 'number' && formData[field.name] != null ? formData[field.name].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : (formData[field.name] ?? '')}
                                                 onChange={(e) => handleChange(field.name, e.target.value)}
                                                 autoComplete="off"
                                                 style={{
