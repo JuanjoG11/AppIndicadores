@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
+import { formatNumber, formatKPIValue } from '../../utils/formatters';
 
 const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initialBrand }) => {
     const isMetaMode = mode === 'meta';
@@ -71,6 +72,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const [formData, setFormData] = useState({
         brand: defaultBrand,
         company: userEntity, // Auto-assign company
+        newFrecuencia: kpi.frecuencia,
         ...getInitialBrandData(defaultBrand)
     });
 
@@ -429,7 +431,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                         ...brandData,
                         brand: value,
                         company: newCompany,
-                        newMeta: ''
+                        newMeta: '',
+                        newFrecuencia: kpi.frecuencia
                     };
                 }
 
@@ -439,6 +442,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                     brand: value,
                     company: newCompany
                 };
+            }
+
+            if (fieldName === 'newFrecuencia') {
+                return { ...prev, [fieldName]: value };
             }
 
             return { ...prev, [fieldName]: parsedValue };
@@ -630,29 +637,62 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                         {/* INPUT FIELDS - CLEAN & BOLD */}
                         {/* INPUT FIELDS - CLEAN & BOLD */}
                         {isMetaMode ? (
-                            <div style={{ marginBottom: '2.5rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.6rem', color: '#334155' }}>
-                                    Nueva Meta para {formData.brand || 'Global'} ({kpi.unit})
-                                </label>
-                                <input
-                                    type="text"
-                                    inputMode="decimal"
-                                    required
-                                    value={formData.newMeta != null && formData.newMeta !== '' ? formData.newMeta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
-                                    onChange={(e) => handleChange('newMeta', e.target.value)}
-                                    placeholder={`Eje: ${currentMeta}`}
-                                    style={{
-                                        width: '100%', padding: '1.1rem 1.25rem',
-                                        border: '2px solid var(--brand)', borderRadius: '18px',
-                                        fontSize: '1.5rem', fontWeight: 800, color: '#1e293b',
-                                        background: 'white', outline: 'none'
-                                    }}
-                                    autoComplete="off"
-                                />
-                                <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <ShieldIcon size={14} />
-                                    Meta actual: {currentMeta} {kpi.unit}
-                                </p>
+                            <div style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.6rem', color: '#334155' }}>
+                                        Nueva Meta para {formData.brand || 'Global'} ({kpi.unit})
+                                    </label>
+                                    <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        required
+                                        value={formData.newMeta != null && formData.newMeta !== '' ? formData.newMeta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+                                        onChange={(e) => handleChange('newMeta', e.target.value)}
+                                        placeholder={`Eje: ${currentMeta}`}
+                                        style={{
+                                            width: '100%', padding: '1.1rem 1.25rem',
+                                            border: '2px solid var(--brand)', borderRadius: '18px',
+                                            fontSize: '1.5rem', fontWeight: 800, color: '#1e293b',
+                                            background: 'white', outline: 'none'
+                                        }}
+                                        autoComplete="off"
+                                    />
+                                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <ShieldIcon size={14} />
+                                        Meta actual: {currentMeta} {kpi.unit}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.6rem', color: '#334155' }}>
+                                        Frecuencia de Actualización
+                                    </label>
+                                    <select
+                                        value={formData.newFrecuencia || kpi.frecuencia}
+                                        onChange={(e) => handleChange('newFrecuencia', e.target.value)}
+                                        style={{
+                                            width: '100%', padding: '1.1rem 1.25rem',
+                                            border: '2px solid #e2e8f0', borderRadius: '18px',
+                                            fontSize: '1.1rem', fontWeight: 800, color: '#1e293b',
+                                            background: '#f8fafc', outline: 'none', cursor: 'pointer',
+                                            WebkitAppearance: 'none',
+                                            backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231e293b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'calc(100% - 1.2rem) center',
+                                            backgroundSize: '0.8rem auto'
+                                        }}
+                                        onFocus={e => e.currentTarget.style.borderColor = 'var(--brand)'}
+                                        onBlur={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+                                    >
+                                        <option value="DIARIA">DIARIA</option>
+                                        <option value="SEMANAL">SEMANAL</option>
+                                        <option value="QUINCENAL">QUINCENAL</option>
+                                        <option value="MENSUAL">MENSUAL</option>
+                                        <option value="BIMESTRAL">BIMESTRAL</option>
+                                        <option value="TRIMESTRAL">TRIMESTRAL</option>
+                                        <option value="SEMESTRAL">SEMESTRAL</option>
+                                        <option value="ANUAL">ANUAL</option>
+                                    </select>
+                                </div>
                             </div>
                         ) : (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
@@ -734,8 +774,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                         <div>
                                             <div style={{ fontSize: '0.85rem', fontWeight: 800, opacity: 0.9, letterSpacing: '0.05em' }}>CÁLCULO AUTOMÁTICO</div>
-                                            <div style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1 }}>
-                                                {liveResult}<span style={{ fontSize: '1.5rem', opacity: 0.8, marginLeft: '8px' }}>{kpi.unit}</span>
+                                            <div style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1, display: 'flex', alignItems: 'baseline' }}>
+                                                {kpi.unit === '$' && <span style={{ fontSize: '1.5rem', opacity: 0.8, marginRight: '4px' }}>$</span>}
+                                                {kpi.unit === '$' ? formatNumber(liveResult, 0) : (kpi.unit === '%' ? formatNumber(liveResult, 2) : formatNumber(liveResult, 0))}
+                                                {kpi.unit !== '$' && <span style={{ fontSize: '1.5rem', opacity: 0.8, marginLeft: '8px' }}>{kpi.unit}</span>}
                                             </div>
                                         </div>
                                         <div style={{

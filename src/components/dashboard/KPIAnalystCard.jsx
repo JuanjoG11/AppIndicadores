@@ -9,7 +9,7 @@ import {
     TrendingDown,
     Minus
 } from 'lucide-react';
-import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime } from '../../utils/formatters';
+import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../../utils/formatters';
 import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
 
 const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false }) => {
@@ -152,52 +152,87 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
 
 
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--bg-soft)', padding: '1rem', borderRadius: '16px', marginBottom: '1.25rem' }}>
-                <div>
-                    <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-muted)' }}>
-                        {kpi.meta && typeof kpi.meta === 'object' ? `${kpi.targetMeta} ${kpi.unit}` : `${kpi.meta} ${kpi.unit}`}
-                    </div>
+            {kpi.meta && typeof kpi.meta === 'object' && Object.keys(kpi.meta).filter(b => (BRAND_TO_ENTITY[b] === currentUser?.company || b === currentUser?.company) && b !== 'POLAR').length > 0 ? (
+                /* MULTI-BRAND DISPLAY */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.25rem' }}>
+                    {Object.keys(kpi.meta)
+                        .filter(b => (BRAND_TO_ENTITY[b] === currentUser?.company || b === currentUser?.company) && b !== 'POLAR')
+                        .map(brand => {
+                            const bData = kpi.brandValues?.[`${currentUser.company}-${brand}`];
+                            const hasData = bData?.hasData;
+                            const compColor = hasData ? (bData.semaphore === 'green' ? 'var(--success)' : (bData.semaphore === 'red' ? 'var(--danger)' : 'var(--warning)')) : 'var(--border-medium)';
+                            const valColor = hasData ? (bData.semaphore === 'green' ? 'var(--success)' : (bData.semaphore === 'red' ? 'var(--danger)' : (bData.semaphore === 'yellow' ? 'var(--warning)' : 'var(--brand)'))) : 'var(--border-medium)';
+                            return (
+                                <div key={brand} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-soft)', padding: '0.75rem 1rem', borderRadius: '12px' }}>
+                                    <div style={{ width: '80px' }}>
+                                        <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Marca</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-main)' }}>{brand}</div>
+                                    </div>
+                                    <div style={{ textAlign: 'center', flex: 1 }}>
+                                        <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 900, color: compColor }}>
+                                            {hasData ? `${bData.compliance}%` : '--'}
+                                        </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right', flex: 1 }}>
+                                        <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: valColor }}>
+                                            {hasData ? formatKPIValue(bData.currentValue, kpi.unit) : '--'}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                 </div>
-                {kpi.hasData && (
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
-                        <div style={{
-                            fontSize: '0.9rem',
-                            fontWeight: 900,
-                            color: (kpi.semaphore === 'green' ? 'var(--success)' : (kpi.semaphore === 'red' ? 'var(--danger)' : 'var(--warning)'))
-                        }}>
-                            {kpi.compliance}%
+            ) : (
+                /* SINGLE BRAND DISPLAY */
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--bg-soft)', padding: '1rem', borderRadius: '16px', marginBottom: '1.25rem' }}>
+                    <div>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+                            {formatKPIValue(kpi.targetMeta || kpi.meta, kpi.unit)}
                         </div>
                     </div>
-                )}
-                <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
-                    <div style={{
-                        fontSize: '1rem',
-                        fontWeight: 800,
-                        color: kpi.hasData
-                            ? (kpi.semaphore === 'green' ? 'var(--success)' : (kpi.semaphore === 'red' ? 'var(--danger)' : (kpi.semaphore === 'yellow' ? 'var(--warning)' : 'var(--brand)')))
-                            : 'var(--border-medium)'
-                    }}>
-                        {kpi.hasData ? `${kpi.currentValue} ${kpi.unit}` : '--'}
-                    </div>
-                    {kpi.hasData && trend && (
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'flex-end', 
-                            gap: '2px',
-                            fontSize: '0.65rem',
-                            fontWeight: 700,
-                            color: trend.isUp ? 'var(--success)' : (trend.isDown ? 'var(--danger)' : 'var(--text-light)')
-                        }}>
-                            {trend.isUp ? <TrendingUp size={10} /> : (trend.isDown ? <TrendingDown size={10} /> : <Minus size={10} />)}
-                            {trend.percent}% vs mes ant.
+                    {kpi.hasData && (
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
+                            <div style={{
+                                fontSize: '0.9rem',
+                                fontWeight: 900,
+                                color: (kpi.semaphore === 'green' ? 'var(--success)' : (kpi.semaphore === 'red' ? 'var(--danger)' : 'var(--warning)'))
+                            }}>
+                                {kpi.compliance}%
+                            </div>
                         </div>
                     )}
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                        <div style={{
+                            fontSize: '1rem',
+                            fontWeight: 800,
+                            color: kpi.hasData
+                                ? (kpi.semaphore === 'green' ? 'var(--success)' : (kpi.semaphore === 'red' ? 'var(--danger)' : (kpi.semaphore === 'yellow' ? 'var(--warning)' : 'var(--brand)')))
+                                : 'var(--border-medium)'
+                        }}>
+                            {kpi.hasData ? formatKPIValue(kpi.currentValue, kpi.unit) : '--'}
+                        </div>
+                        {kpi.hasData && trend && (
+                            <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'flex-end', 
+                                gap: '2px',
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                color: trend.isUp ? 'var(--success)' : (trend.isDown ? 'var(--danger)' : 'var(--text-light)')
+                            }}>
+                                {trend.isUp ? <TrendingUp size={10} /> : (trend.isDown ? <TrendingDown size={10} /> : <Minus size={10} />)}
+                                {trend.percent}% vs mes ant.
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Footer Box */}
             <div style={{

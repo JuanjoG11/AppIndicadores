@@ -61,6 +61,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             // Gestionar actualización de meta
             if (d.type === 'META_UPDATE') {
+                if (d.newFrecuencia && d.newFrecuencia !== kpi.frecuencia) {
+                    kpi.frecuencia = d.newFrecuencia;
+                }
                 const scope = d.brand;
                 console.log(`🎯 Aplicando META_UPDATE: ${kpiId} -> ${scope} = ${d.newMeta}`);
 
@@ -192,7 +195,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     subArea: def.subArea,
                     objetivo: def.objetivo,
                     unit: def.unit,
-                    frecuencia: def.frecuencia,
+                    frecuencia: live.frecuencia || def.frecuencia,
                     formula: def.formula,
                     responsable: def.responsable,
                     fuente: def.fuente,

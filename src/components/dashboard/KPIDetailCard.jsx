@@ -143,61 +143,98 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
 
             {/* Value Section */}
             <div style={{ margin: '0.5rem 0' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-                    <span style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.04em' }}>
-                        {formatKPIValue(displayValue, kpi.unit).split(' ')[0]}
-                    </span>
-                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#64748b' }}>
-                        {kpi.unit}
-                    </span>
-                </div>
-
-                {(displayCompliance != null) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem' }}>
-                        <div style={{
-                            display: 'flex', alignItems: 'center',
-                            color: color, fontWeight: 800, fontSize: '0.85rem'
-                        }}>
-                            {isSuccess ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                            {displayCompliance.toFixed(1)}%
-                        </div>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>CUMPLIMIENTO</span>
-                    </div>
-                )}
-                {/* DETALLE DE CÁLCULO (Input values) */}
-                {(() => {
-                    const dataToRender = isBrandFocus
-                        ? kpi.brandValues?.[`${entity}-${selectedBrand}`]?.additionalData
-                        : kpi.additionalData;
-
-                    if (!dataToRender || Object.keys(dataToRender).length <= 2) return null;
-
-                    return (
-                        <div style={{
-                            marginTop: '1.25rem',
-                            padding: '0.75rem',
-                            background: '#f8fafc',
-                            borderRadius: '12px',
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: '0.75rem'
-                        }}>
-                            {Object.entries(dataToRender)
-                                .filter(([key]) => !['brand', 'company', 'updatedAt', 'type', 'newMeta'].includes(key))
-                                .map(([key, val]) => (
-                                    <div key={key}>
-                                        <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>
-                                            {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+                {!isBrandFocus && kpi.meta && typeof kpi.meta === 'object' && Object.keys(kpi.meta).filter(b => (BRAND_TO_ENTITY[b] === entity || b === entity) && b !== 'POLAR').length > 0 ? (
+                    /* MULTI-BRAND DISPLAY FOR DASHBOARDS */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.8rem' }}>
+                        {Object.keys(kpi.meta)
+                            .filter(b => (BRAND_TO_ENTITY[b] === entity || b === entity) && b !== 'POLAR')
+                            .map(brand => {
+                                const bData = kpi.brandValues?.[`${entity}-${brand}`];
+                                const hasData = bData?.hasData;
+                                const compColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : '#f59e0b')) : '#94a3b8';
+                                const valColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : (bData.semaphore === 'yellow' ? '#f59e0b' : '#334155'))) : '#94a3b8';
+                                
+                                return (
+                                    <div key={brand} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                        <div style={{ width: '80px' }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Marca</div>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#1e293b' }}>{brand}</div>
                                         </div>
-                                        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#334155' }}>
-                                            {typeof val === 'number' ? (val > 1000 ? `$${val.toLocaleString()}` : val) : val}
+                                        <div style={{ textAlign: 'center', flex: 1 }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: 900, color: compColor }}>
+                                                {hasData ? `${bData.compliance}%` : '--'}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right', flex: 1 }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: 900, color: valColor }}>
+                                                {hasData ? formatKPIValue(bData.currentValue, kpi.unit) : '--'}
+                                            </div>
                                         </div>
                                     </div>
-                                ))
-                            }
+                                );
+                            })}
+                    </div>
+                ) : (
+                    <>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                            <span style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.04em' }}>
+                                {formatKPIValue(displayValue, kpi.unit).replace(kpi.unit, '').trim()}
+                            </span>
+                            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#64748b' }}>
+                                {kpi.unit}
+                            </span>
                         </div>
-                    );
-                })()}
+
+                        {(displayCompliance != null) && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem' }}>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center',
+                                    color: color, fontWeight: 800, fontSize: '0.85rem'
+                                }}>
+                                    {isSuccess ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                                    {displayCompliance.toFixed(1)}%
+                                </div>
+                                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>CUMPLIMIENTO</span>
+                            </div>
+                        )}
+                        {/* DETALLE DE CÁLCULO (Input values) */}
+                        {(() => {
+                            const dataToRender = isBrandFocus
+                                ? kpi.brandValues?.[`${entity}-${selectedBrand}`]?.additionalData
+                                : kpi.additionalData;
+
+                            if (!dataToRender || Object.keys(dataToRender).length <= 2) return null;
+
+                            return (
+                                <div style={{
+                                    marginTop: '1.25rem',
+                                    padding: '0.75rem',
+                                    background: '#f8fafc',
+                                    borderRadius: '12px',
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: '0.75rem'
+                                }}>
+                                    {Object.entries(dataToRender)
+                                        .filter(([key]) => !['brand', 'company', 'updatedAt', 'type', 'newMeta'].includes(key))
+                                        .map(([key, val]) => (
+                                            <div key={key}>
+                                                <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>
+                                                    {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+                                                </div>
+                                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#334155' }}>
+                                                    {typeof val === 'number' ? (val > 1000 ? `$${val.toLocaleString()}` : val) : val}
+                                                </div>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            );
+                        })()}
+                    </>
+                )}
             </div>
 
             {/* Sparkline */}
@@ -247,7 +284,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                         color: '#94a3b8',
                         fontWeight: 800
                     }}>
-                        MARZO 2026
+                        {kpi.frecuencia} - MARZO 2026
                     </div>
                 </div>
 

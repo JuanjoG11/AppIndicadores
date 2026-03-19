@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, BRAND_TO_ENTITY } from '../utils/kpiHelpers';
-import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime } from '../utils/formatters';
+import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
@@ -258,38 +258,75 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
 
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f8fafc', padding: '1rem', borderRadius: '16px', marginBottom: '1.25rem' }}>
-                    <div>
-                        <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 800, color: '#475569' }}>
-                            {kpi.meta && typeof kpi.meta === 'object' ? `${kpi.targetMeta} ${kpi.unit}` : `${kpi.meta} ${kpi.unit}`}
-                        </div>
+                {/* Brand Breakdown for Multi-brand KPIs */}
+                {kpi.meta && typeof kpi.meta === 'object' && Object.keys(kpi.meta).filter(b => (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR').length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                        {Object.keys(kpi.meta)
+                            .filter(b => (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR')
+                            .map(brand => {
+                                const dataKey = `${currentUser.company}-${brand}`;
+                                const bData = kpi.brandValues?.[dataKey];
+                                const hasData = bData?.hasData;
+                                const compColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : '#f59e0b')) : '#94a3b8';
+                                const valColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : (bData.semaphore === 'yellow' ? '#f59e0b' : 'var(--brand)'))) : '#94a3b8';
+                                
+                                return (
+                                    <div key={brand} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                        <div style={{ width: '80px' }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Marca</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1e293b' }}>{brand}</div>
+                                        </div>
+                                        <div style={{ textAlign: 'center', flex: 1 }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
+                                            <div style={{ fontSize: '0.9rem', fontWeight: 900, color: compColor }}>
+                                                {hasData ? `${bData.compliance}%` : '--'}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right', flex: 1 }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                                            <div style={{ fontSize: '0.9rem', fontWeight: 800, color: valColor }}>
+                                                {hasData ? formatKPIValue(bData.currentValue, kpi.unit) : '--'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                     </div>
-                    {kpi.hasData && (
-                        <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
-                            <div style={{
-                                fontSize: '0.9rem',
-                                fontWeight: 900,
-                                color: (kpi.semaphore === 'green' ? '#059669' : (kpi.semaphore === 'red' ? '#ef4444' : '#f59e0b'))
-                            }}>
-                                {kpi.compliance}%
+                ) : (
+                    /* Original Single Display */
+                    <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f8fafc', padding: '1rem', borderRadius: '16px', marginBottom: '1.25rem' }}>
+                        <div>
+                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#475569' }}>
+                                {kpi.meta && typeof kpi.meta === 'object' ? formatKPIValue(kpi.targetMeta, kpi.unit) : formatKPIValue(kpi.meta, kpi.unit)}
                             </div>
                         </div>
-                    )}
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
-                        <div style={{
-                            fontSize: '1rem',
-                            fontWeight: 800,
-                            color: kpi.hasData
-                                ? (kpi.semaphore === 'green' ? '#059669' : (kpi.semaphore === 'red' ? '#ef4444' : (kpi.semaphore === 'yellow' ? '#f59e0b' : 'var(--brand)')))
-                                : '#cbd5e1'
-                        }}>
-                            {kpi.hasData ? `${kpi.currentValue} ${kpi.unit}` : '--'}
+                        {kpi.hasData && (
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
+                                <div style={{
+                                    fontSize: '0.9rem',
+                                    fontWeight: 900,
+                                    color: (kpi.semaphore === 'green' ? '#059669' : (kpi.semaphore === 'red' ? '#ef4444' : '#f59e0b'))
+                                }}>
+                                    {kpi.compliance}%
+                                </div>
+                            </div>
+                        )}
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                            <div style={{
+                                fontSize: '1rem',
+                                fontWeight: 800,
+                                color: kpi.hasData
+                                    ? (kpi.semaphore === 'green' ? '#059669' : (kpi.semaphore === 'red' ? '#ef4444' : (kpi.semaphore === 'yellow' ? '#f59e0b' : 'var(--brand)')))
+                                    : '#cbd5e1'
+                            }}>
+                                {kpi.hasData ? formatKPIValue(kpi.currentValue, kpi.unit) : '--'}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Footer Box - Always Visible */}
                 <div style={{

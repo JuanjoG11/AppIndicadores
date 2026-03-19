@@ -91,7 +91,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     // Reset or set default brand when area or company changes
     React.useEffect(() => {
         if (isBrandSpecificArea && brandsForEntity.length > 0) {
-            setSelectedBrand(brandsForEntity[0]);
+            setSelectedBrand('all');
         } else {
             setSelectedBrand('all');
         }
