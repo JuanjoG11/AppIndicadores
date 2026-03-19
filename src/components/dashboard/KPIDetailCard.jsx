@@ -290,7 +290,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>
-                        {isBrandFocus ? `META ${selectedBrand}:` : `META CONSOLIDADA ${activeCompany || 'TYM'}:`} <span style={{ color: '#334155' }}>{displayTarget} {kpi.unit}</span>
+                        {isBrandFocus ? `META ${selectedBrand}:` : `META CONSOLIDADA ${activeCompany || 'TYM'}:`} <span style={{ color: '#334155', fontWeight: 900 }}>{formatKPIValue(displayTarget, kpi.unit)}</span>
                     </div>
                     <div style={{
                         fontSize: '0.6rem',

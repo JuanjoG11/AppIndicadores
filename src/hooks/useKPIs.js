@@ -82,9 +82,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 }
             }
 
-            // Resolver targetMeta basándose en la meta actual (que puede venir de DB o Código)
+            // Resolver targetMeta basándose en la meta actual (priorizando la marca específica)
             if (kpi.meta && typeof kpi.meta === 'object') {
-                targetMeta = kpi.meta[currentCompany] || kpi.meta.global ||
+                targetMeta = kpi.meta[currentBrand] || kpi.meta[currentCompany] || kpi.meta.global ||
                     kpi.meta[Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === currentCompany)] || 0;
             } else targetMeta = kpi.meta;
 
@@ -93,19 +93,24 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             // Cálculo de Semáforo y Cumplimiento
             let semaphore = 'gray';
             let compliance = 0;
-            if (typeof targetMeta === 'number') {
+            if (typeof targetMeta === 'number' && targetMeta !== 0) {
                 const isInverse = isInverseKPI(kpiId);
-                if (targetMeta === 0) {
-                    compliance = (isInverse ? (newValue === 0 ? 100 : 0) : 100);
-                } else {
-                    compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
-                }
-                if (newValue === 0 && isInverse && targetMeta !== 0) compliance = 100;
+                compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
+                
+                // Si es inverso y el resultado es 0, el cumplimiento es 100% (o más según lógica, pero 100% es seguro)
+                if (isInverse && newValue === 0) compliance = 100;
 
-                compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
+                compliance = Math.max(Math.round(compliance || 0), 0);
+                
                 if (compliance >= 95) semaphore = 'green';
                 else if (compliance >= 85) semaphore = 'yellow';
                 else semaphore = 'red';
+            } else if (targetMeta === 0 && newValue === 0) {
+                compliance = 100;
+                semaphore = 'green';
+            } else if (targetMeta === 0 && newValue > 0) {
+                compliance = isInverseKPI(kpiId) ? 0 : 100; // Si no hay meta y hay valor, depende de la lógica
+                semaphore = compliance >= 95 ? 'green' : 'red';
             }
 
             brandValues[dataKey] = {
