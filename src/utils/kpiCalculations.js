@@ -60,9 +60,7 @@ export const calculateKPIValue = (kpiId, d) => {
       case 'gasto-viaje-comercial':
         newValue = (d.gastosViaje / d.ventaTotal) * 100;
         break;
-      case 'gasto-fletes-comercial':
-        newValue = (d.gastosFletes / d.ventaTotal) * 100;
-        break;
+
       case 'dias-inventario-comercial':
         newValue = (d.diasInventario / d.metaInventario) * 100;
         break;
@@ -252,14 +250,15 @@ export const isInverseKPI = (kpiId) => {
     'rotacion-equipo-comercial',
     'gasto-personal-comercial',
     'gasto-viaje-comercial',
-    'gasto-fletes-comercial',
+
     'dias-inventario-comercial',
     'quiebres-inventario',
     'obsolescencia',
     'mermas',
     'diferencia-inventarios',
     'indice-arqueo-caja',
-    'cartera-mayor-30'
+    'cartera-mayor-30',
+    'valor-cartera-venta'
   ];
 
   return inverseKPIs.includes(kpiId) || kpiId.includes('vencida') || kpiId.includes('ajustes');

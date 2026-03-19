@@ -911,28 +911,7 @@ export const kpiDefinitions = [
         frecuenciaSustentacion: 'QUINCENAL',
         fuente: 'CONTABILIDAD'
     },
-    {
-        id: 'gasto-fletes-comercial',
-        name: 'Participación de Gastos de Fletes',
-        description: 'Gastos de fletes / ventas totales',
-        area: 'comercial',
-        objetivo: 'Eficiencia en el costo logístico comercial',
-        meta: {
-            ALPINA: 4.5,
-            UNILEVER: 4.2,
-            POLAR: 6,
-            ZENU: 3.4,
-            FLEISCHMANN: 2.5,
-            FAMILIA: 1.8
-        },
-        unit: '%',
-        frecuencia: 'SEMANAL',
-        responsable: 'CONTADOR',
-        formula: 'GASTOS DE FLETES / TOTAL VENTA',
-        sustentacion: 'COMERCIAL',
-        frecuenciaSustentacion: 'SEMANAL',
-        fuente: 'CONTABILIDAD'
-    },
+
     {
         id: 'dias-inventario-comercial',
         name: 'Días Promedio de Inventario',
@@ -1085,7 +1064,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'revision-margenes',
-        name: 'Cumplimiento de Revisiones',
+        name: 'Cumplimiento de Revisión de Márgenes',
         description: 'Cantidad de veces revisados / meta',
         area: 'administrativo',
         objetivo: 'Verificar rentabilidad parametrizada',
@@ -1106,7 +1085,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'revision-precios',
-        name: 'Cumplimiento de Revisiones',
+        name: 'Cumplimiento de Revisión de Precios',
         description: 'Cantidad de veces revisados / meta',
         area: 'administrativo',
         objetivo: 'Evitar errores de facturación al cliente',

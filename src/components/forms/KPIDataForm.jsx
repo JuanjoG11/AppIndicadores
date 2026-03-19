@@ -166,10 +166,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'gastosViaje', label: 'Gastos de Viaje ($)', type: 'number' },
                 { name: 'ventaTotal', label: 'Total Venta ($)', type: 'number' }
             ],
-            'gasto-fletes-comercial': [
-                { name: 'gastosFletes', label: 'Gastos de Fletes ($)', type: 'number' },
-                { name: 'ventaTotal', label: 'Total Venta ($)', type: 'number' }
-            ],
+
             'dias-inventario-comercial': [
                 { name: 'diasInventario', label: 'Días de Inventario', type: 'number' },
                 { name: 'metaInventario', label: 'Meta (Días)', type: 'number' }
