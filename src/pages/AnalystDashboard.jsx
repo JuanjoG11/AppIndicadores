@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, BRAND_TO_ENTITY } from '../utils/kpiHelpers';
+import { isInverseKPI } from '../utils/kpiCalculations';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
 
@@ -272,20 +273,26 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                                 
                                 return (
                                     <div key={brand} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <div style={{ width: '80px' }}>
+                                        <div style={{ width: '85px' }}>
                                             <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Marca</div>
                                             <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1e293b' }}>{brand}</div>
                                         </div>
                                         <div style={{ textAlign: 'center', flex: 1 }}>
-                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
-                                            <div style={{ fontSize: '0.9rem', fontWeight: 900, color: compColor }}>
-                                                {hasData ? `${bData.compliance}%` : '--'}
+                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>
+                                                {isInverseKPI(kpi.id) ? '≤ ' : '≥ '}{formatKPIValue(kpi.meta[brand], kpi.unit)}
                                             </div>
                                         </div>
-                                        <div style={{ textAlign: 'right', flex: 1 }}>
-                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                                        <div style={{ textAlign: 'center', flex: 1 }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Resultado</div>
                                             <div style={{ fontSize: '0.9rem', fontWeight: 800, color: valColor }}>
                                                 {hasData ? formatKPIValue(bData.currentValue, kpi.unit) : '--'}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right', width: '80px' }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Logro %</div>
+                                            <div style={{ fontSize: '0.9rem', fontWeight: 900, color: compColor }}>
+                                                {hasData ? `${bData.compliance}%` : '--'}
                                             </div>
                                         </div>
                                     </div>
@@ -298,12 +305,12 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                         <div>
                             <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
                             <div style={{ fontSize: '1rem', fontWeight: 800, color: '#475569' }}>
-                                {kpi.meta && typeof kpi.meta === 'object' ? formatKPIValue(kpi.targetMeta, kpi.unit) : formatKPIValue(kpi.meta, kpi.unit)}
+                                {isInverseKPI(kpi.id) ? '≤ ' : '≥ '}{kpi.meta && typeof kpi.meta === 'object' ? formatKPIValue(kpi.targetMeta, kpi.unit) : formatKPIValue(kpi.meta, kpi.unit)}
                             </div>
                         </div>
                         {kpi.hasData && (
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
+                                <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Logro %</div>
                                 <div style={{
                                     fontSize: '0.9rem',
                                     fontWeight: 900,
@@ -314,7 +321,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                             </div>
                         )}
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                            <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Resultado</div>
                             <div style={{
                                 fontSize: '1rem',
                                 fontWeight: 800,

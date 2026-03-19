@@ -16,6 +16,7 @@ import {
     Settings
 } from 'lucide-react';
 import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
+import { isInverseKPI } from '../../utils/kpiCalculations';
 
 const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selectedBrand }) => {
 
@@ -161,15 +162,21 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                                             <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#1e293b' }}>{brand}</div>
                                         </div>
                                         <div style={{ textAlign: 'center', flex: 1 }}>
-                                            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
-                                            <div style={{ fontSize: '1rem', fontWeight: 900, color: compColor }}>
-                                                {hasData ? `${bData.compliance}%` : '--'}
+                                            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Meta</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>
+                                                {isInverseKPI(kpi.id) ? '≤ ' : '≥ '}{formatKPIValue(kpi.meta[brand], kpi.unit)}
                                             </div>
                                         </div>
-                                        <div style={{ textAlign: 'right', flex: 1 }}>
-                                            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Actual</div>
+                                        <div style={{ textAlign: 'center', flex: 1 }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Resultado</div>
                                             <div style={{ fontSize: '1rem', fontWeight: 900, color: valColor }}>
                                                 {hasData ? formatKPIValue(bData.currentValue, kpi.unit) : '--'}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right', width: '80px' }}>
+                                            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Logro %</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: 900, color: compColor }}>
+                                                {hasData ? `${bData.compliance}%` : '--'}
                                             </div>
                                         </div>
                                     </div>
@@ -193,10 +200,10 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                                     display: 'flex', alignItems: 'center',
                                     color: color, fontWeight: 800, fontSize: '0.85rem'
                                 }}>
-                                    {isSuccess ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                                    {isInverseKPI(kpi.id) ? (displayCompliance >= 100 ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />) : (displayCompliance >= 100 ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />)}
                                     {displayCompliance.toFixed(1)}%
                                 </div>
-                                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>CUMPLIMIENTO</span>
+                                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>LOGRO META ({isInverseKPI(kpi.id) ? `≤ ${formatKPIValue(displayTarget, kpi.unit)}` : `≥ ${formatKPIValue(displayTarget, kpi.unit)}`})</span>
                             </div>
                         )}
                         {/* DETALLE DE CÁLCULO (Input values) */}
