@@ -174,8 +174,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             ],
 
             'dias-inventario-comercial': [
-                { name: 'diasInventario', label: 'Días de Inventario', type: 'number' },
-                { name: 'metaInventario', label: 'Meta (Días)', type: 'number' }
+                { name: 'diasInventario', label: 'Días de Inventario', type: 'number' }
             ],
             'cartera-no-vencida': [
                 { name: 'carteraNoVencida', label: 'Cartera No Vencida ($)', type: 'number', placeholder: 'Eje: 90000000' },

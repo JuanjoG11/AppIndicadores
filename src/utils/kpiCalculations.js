@@ -65,7 +65,7 @@ export const calculateKPIValue = (kpiId, d) => {
         break;
 
       case 'dias-inventario-comercial':
-        newValue = (d.diasInventario / d.metaInventario) * 100;
+        newValue = d.diasInventario;
         break;
 
       // CAJA / ARQUEOS
@@ -237,7 +237,7 @@ export const calculateKPIValue = (kpiId, d) => {
     return 0;
   }
 
-  return parseFloat((newValue || 0).toFixed(2));
+  return parseFloat(Number(newValue || 0).toFixed(2));
 };
 
 export const isInverseKPI = (kpiId) => {
@@ -271,7 +271,7 @@ export const isInverseKPI = (kpiId) => {
     'gasto-personal-comercial',
     'gasto-viaje-comercial',
 
-    'dias-inventario-comercial',
+
     'quiebres-inventario',
     'obsolescencia',
     'mermas',

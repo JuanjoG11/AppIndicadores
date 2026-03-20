@@ -156,8 +156,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
     const persistUpdate = async (kpiId, additionalData, value, user) => {
         try {
-            console.log("💾 Persistiendo en Supabase:", kpiId, additionalData);
+            console.log("💾 Persistiendo en Supabase:", kpiId, additionalData, "Empresa:", user?.company);
             const { error } = await supabase.from('kpi_updates').insert({
+                company_id: user?.company || 'TYM', // Identificador de empresa obligatorio
                 kpi_id: kpiId,
                 additional_data: additionalData,
                 value: value,
@@ -218,7 +219,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         const fetchInitialData = async () => {
             setIsLoading(true);
             try {
-                const { data } = await supabase.from('kpi_updates').select('*').order('updated_at', { ascending: true });
+                // Filtramos por empresa desde la consulta (esto es lo que diría un ingeniero para ser eficiente)
+                const { data } = await supabase
+                    .from('kpi_updates')
+                    .select('*')
+                    .eq('company_id', activeCompany)
+                    .order('updated_at', { ascending: true });
                 if (data) {
                     suppressPersist.current = true;
                     data.forEach(upd => {
@@ -235,8 +241,13 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
         if (kpiData.length > 0) fetchInitialData();
 
-        const channel = supabase.channel('realtime-kpi-sync')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'kpi_updates' }, (p) => {
+        const channel = supabase.channel(`realtime-kpi-sync-${activeCompany}`)
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'kpi_updates',
+                filter: `company_id=eq.${activeCompany}` 
+            }, (p) => {
                 applyKPIUpdate(p.new.kpi_id, p.new.additional_data, false);
                 if (onToast) onToast('info', `📊 KPI actualizado`);
             }).subscribe();
