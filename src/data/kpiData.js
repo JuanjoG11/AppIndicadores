@@ -952,15 +952,15 @@ export const kpiDefinitions = [
         area: 'administrativo',
         objetivo: 'Garantizar el control físico de existencias',
         meta: {
-            ALPINA: 16,
-            FLEISCHMANN: 16,
-            UNILEVER: 16,
-            FAMILIA: 16
+            ALPINA: 2,
+            FLEISCHMANN: 2,
+            UNILEVER: 2,
+            FAMILIA: 2
         },
         unit: 'cantidad',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
-        formula: 'INVENTARIOS REALIZADOS / INVENTARIOS PROGRAMADOS',
+        formula: 'INVENTARIOS REALIZADOS',
         sustentacion: 'ANALISTA DE INVENTARIOS',
         frecuenciaSustentacion: 'SEMANAL',
         fuente: 'ANALISTA DE INFORMACIÓN'
@@ -968,7 +968,7 @@ export const kpiDefinitions = [
     {
         id: 'fiabilidad-inventarios',
         name: 'Exactitud de Inventario',
-        description: '(Valor correcto / valor verificado) x100',
+        description: '(Valor verificado / valor correcto) x 100',
         area: 'administrativo',
         objetivo: 'Asegurar la exactitud de los registros contables',
         meta: {
@@ -980,7 +980,7 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
-        formula: '(VALOR CORRECTO / VALOR VERIFICADO) * 100',
+        formula: '(VALOR VERIFICADO / VALOR CORRECTO) * 100',
         sustentacion: 'ANALISTA DE INVENTARIOS',
         frecuenciaSustentacion: 'SEMANAL',
         fuente: 'ANALISTA DE INFORMACIÓN'
@@ -1048,27 +1048,7 @@ export const kpiDefinitions = [
         frecuenciaSustentacion: 'SEMANAL',
         fuente: 'ANALISTA DE INFORMACIÓN'
     },
-    {
-        id: 'diferencia-inventarios',
-        name: 'Diferencia de Inventario',
-        description: 'Valor diferencia fisica - valor del inventario',
-        area: 'administrativo',
-        objetivo: 'Eliminar descuadres entre stock físico y sistema',
-        meta: {
-            ALPINA: 0,
-            ZENU: 0,
-            FLEISCHMANN: 0,
-            UNILEVER: 0,
-            FAMILIA: 0
-        },
-        unit: '$',
-        frecuencia: 'SEMANAL',
-        responsable: 'ANALISTA DE INFORMACIÓN',
-        formula: 'VALOR DIFERENCIA FISICA - VALOR INVENTARIO',
-        sustentacion: 'ANALISTA DE INVENTARIOS',
-        frecuenciaSustentacion: 'SEMANAL',
-        fuente: 'ANALISTA DE INFORMACIÓN'
-    },
+
     {
         id: 'revision-margenes',
         name: 'Cumplimiento de Revisión de Márgenes',

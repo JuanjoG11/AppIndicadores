@@ -16,7 +16,7 @@ import {
     Settings
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
-import { filterKPIsByEntity, BRAND_TO_ENTITY } from '../utils/kpiHelpers';
+import { filterKPIsByEntity, BRAND_TO_ENTITY, getEntityBrands } from '../utils/kpiHelpers';
 import { isInverseKPI } from '../utils/kpiCalculations';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
@@ -51,10 +51,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         if (!k.meta || typeof k.meta !== 'object') return !k.hasData;
 
         // Si tiene marcas, ver si alguna de la entidad del usuario (excluyendo Polar) falta
-        const entityBrands = Object.keys(k.meta).filter(b =>
-            (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR'
-        );
-
+        const entityBrands = getEntityBrands(k, currentUser.company);
         if (entityBrands.length === 0) return !k.hasData;
 
         return entityBrands.some(brand => {
@@ -107,9 +104,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 total++;
                 if (k.hasData) done++;
             } else {
-                const entityBrands = Object.keys(k.meta).filter(b =>
-                    (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR'
-                );
+                const entityBrands = getEntityBrands(k, currentUser.company);
                 if (entityBrands.length === 0) {
                     total++;
                     if (k.hasData) done++;
@@ -142,9 +137,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         let pendingBrandsList = [];
 
         if (isMine && kpi.meta && typeof kpi.meta === 'object') {
-            const entityBrands = Object.keys(kpi.meta).filter(b =>
-                (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR'
-            );
+            const entityBrands = getEntityBrands(kpi, currentUser.company);
             if (entityBrands.length > 0) {
                 pendingBrandsList = entityBrands.filter(brand => {
                     const dataKey = `${currentUser.company}-${brand}`;
@@ -260,10 +253,9 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
 
                 {/* Brand Breakdown for Multi-brand KPIs */}
-                {kpi.meta && typeof kpi.meta === 'object' && Object.keys(kpi.meta).filter(b => (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR').length > 0 ? (
+                {kpi.meta && typeof kpi.meta === 'object' && getEntityBrands(kpi, currentUser.company).length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                        {Object.keys(kpi.meta)
-                            .filter(b => (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR')
+                        {getEntityBrands(kpi, currentUser.company)
                             .map(brand => {
                                 const dataKey = `${currentUser.company}-${brand}`;
                                 const bData = kpi.brandValues?.[dataKey];

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import {
     Calculator,
     X,
@@ -75,6 +75,23 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         newFrecuencia: kpi.frecuencia,
         ...getInitialBrandData(defaultBrand)
     });
+
+    // Refs para mantener la posición del cursor en campos con formato
+    const lastInput = useRef(null);
+    const lastSelectionStart = useRef(null);
+    const lastValueLength = useRef(0);
+
+    useLayoutEffect(() => {
+        if (lastInput.current && lastSelectionStart.current !== null) {
+            const input = lastInput.current;
+            const newLength = input.value.length;
+            const diff = newLength - lastValueLength.current;
+            const newPos = Math.max(0, lastSelectionStart.current + diff);
+            input.setSelectionRange(newPos, newPos);
+            // No reseteamos inmediatamente para permitir renders sucesivos si fuera necesario
+            // lastInput.current = null; // Quitamos esto para que sea más robusto
+        }
+    }, [formData]);
 
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -193,8 +210,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'valorVenta', label: 'Valor de la Venta ($)', type: 'number' }
             ],
             'fiabilidad-inventarios': [
-                { name: 'valorCorrecto', label: 'Valor Correcto ($)', type: 'number' },
-                { name: 'valorVerificado', label: 'Valor Verificado ($)', type: 'number' }
+                { name: 'valorVerificado', label: 'Valor Verificado ($)', type: 'number' },
+                { name: 'valorCorrecto', label: 'Valor Correcto ($)', type: 'number' }
             ],
             'quiebres-inventario': [
                 { name: 'quiebres', label: 'Quiebres de Inventario', type: 'number' },
@@ -208,10 +225,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'valorMermas', label: 'Valor Mermas ($)', type: 'number' },
                 { name: 'inventarioTotal', label: 'Inventario Total ($)', type: 'number' }
             ],
-            'diferencia-inventarios': [
-                { name: 'diferenciaFisica', label: 'Valor Diferencia Física ($)', type: 'number' },
-                { name: 'valorInventario', label: 'Valor del Inventario ($)', type: 'number' }
-            ],
+
             'revision-margenes': [
                 { name: 'revisionesEjecutadas', label: 'Revisiones Ejecutadas', type: 'number' },
                 { name: 'revisionesProgramadas', label: 'Revisiones Programadas', type: 'number' }
@@ -427,7 +441,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         }
     };
 
-    const handleChange = (fieldName, value) => {
+    const handleChange = (fieldName, value, e) => {
+        if (e && e.target && e.target.selectionStart !== null) {
+            lastInput.current = e.target;
+            lastSelectionStart.current = e.target.selectionStart;
+            lastValueLength.current = e.target.value.length;
+        }
         setFormData(prev => {
             let parsedValue = value;
             
@@ -666,7 +685,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                         inputMode="decimal"
                                         required
                                         value={formData.newMeta != null && formData.newMeta !== '' ? formData.newMeta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
-                                        onChange={(e) => handleChange('newMeta', e.target.value)}
+                                        onChange={(e) => handleChange('newMeta', e.target.value, e)}
                                         placeholder={`Eje: ${currentMeta}`}
                                         style={{
                                             width: '100%', padding: '1.1rem 1.25rem',
@@ -726,7 +745,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                                 inputMode={field.type === 'number' ? 'decimal' : undefined}
                                                 required
                                                 value={field.type === 'number' && formData[field.name] != null ? formData[field.name].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : (formData[field.name] ?? '')}
-                                                onChange={(e) => handleChange(field.name, e.target.value)}
+                                                onChange={(e) => handleChange(field.name, e.target.value, e)}
                                                 autoComplete="off"
                                                 style={{
                                                     width: '100%', padding: '1.1rem 1.25rem',
@@ -794,7 +813,6 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                         <div>
                                             <div style={{ fontSize: '0.85rem', fontWeight: 800, opacity: 0.9, letterSpacing: '0.05em' }}>CÁLCULO AUTOMÁTICO</div>
                                             <div style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1, display: 'flex', alignItems: 'baseline' }}>
-                                                {kpi.unit === '$' && <span style={{ fontSize: '1.5rem', opacity: 0.8, marginRight: '4px' }}>$</span>}
                                                 {(() => {
                                                     if (kpi.id === 'rotacion-cxc' || kpi.id === 'rotacion-cxp') {
                                                         const rotationVal = liveResult;

@@ -102,7 +102,7 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (d.notasDevolucion / d.valorVenta) * 100;
         break;
       case 'fiabilidad-inventarios':
-        newValue = (d.valorCorrecto / d.valorVerificado) * 100;
+        newValue = (d.valorVerificado / d.valorCorrecto) * 100;
         break;
       case 'quiebres-inventario':
         newValue = (d.quiebres / d.totalSku) * 100;
@@ -113,9 +113,7 @@ export const calculateKPIValue = (kpiId, d) => {
       case 'mermas':
         newValue = (d.valorMermas / d.inventarioTotal) * 100;
         break;
-      case 'diferencia-inventarios':
-        newValue = d.diferenciaFisica - d.valorInventario;
-        break;
+
       case 'revision-margenes':
       case 'revision-precios':
         newValue = (d.revisionesEjecutadas / d.revisionesProgramadas) * 100;
@@ -275,7 +273,7 @@ export const isInverseKPI = (kpiId) => {
     'quiebres-inventario',
     'obsolescencia',
     'mermas',
-    'diferencia-inventarios',
+
     'indice-arqueo-caja',
     'cartera-mayor-30',
     'valor-cartera-venta',

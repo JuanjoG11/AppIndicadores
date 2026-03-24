@@ -14,6 +14,25 @@ export const BRAND_TO_ENTITY = {
 export const getBrandEntity = (brand) => BRAND_TO_ENTITY[brand?.toUpperCase()] || null;
 
 /**
+ * Obtiene las marcas de una entidad para un KPI, 
+ * excluyendo el nombre de la empresa si existen marcas específicas.
+ */
+export const getEntityBrands = (kpi, entity) => {
+    if (!kpi.meta || typeof kpi.meta !== 'object') return [];
+    
+    const allBrands = Object.keys(kpi.meta);
+    const brandsOfEntity = allBrands.filter(b => (BRAND_TO_ENTITY[b] === entity || b === entity) && b !== 'POLAR');
+    
+    const hasSpecificBrands = brandsOfEntity.some(b => b !== entity && BRAND_TO_ENTITY[b] === entity);
+    
+    if (hasSpecificBrands) {
+        return brandsOfEntity.filter(b => b !== entity);
+    }
+    
+    return brandsOfEntity;
+};
+
+/**
  * Filters KPI data for a specific entity (TYM or TAT)
  * @param {Array} kpiData - The raw KPI data array
  * @param {string} entity - 'TYM' or 'TAT'
@@ -37,7 +56,7 @@ export const filterKPIsByEntity = (kpiData, entity) => {
         let targetMeta = kpi.meta;
         let entityBrands = [];
         if (kpi.meta && typeof kpi.meta === 'object') {
-            entityBrands = Object.keys(kpi.meta).filter(b => BRAND_TO_ENTITY[b] === entity || b === entity);
+            entityBrands = getEntityBrands(kpi, entity);
             if (entityBrands.length > 0) {
                 const totalMeta = entityBrands.reduce((sum, b) => sum + (kpi.meta[b] || 0), 0);
                 targetMeta = parseFloat((totalMeta / entityBrands.length).toFixed(2));
