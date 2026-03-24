@@ -219,7 +219,7 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (parseFloat(d.impuestosOptimizados || 0) / (parseFloat(d.totalImpuestos || 0) || 1)) * 100;
         break;
       case 'pedidos-facturados':
-        newValue = (parseFloat(d.pedidos || 0) / (parseFloat(d.facturas || 0) || 1)) * 100;
+        newValue = (parseFloat(d.facturas || 0) / (parseFloat(d.pedidos || 0) || 1)) * 100;
         break;
       case 'impresion-facturas':
         newValue = (parseFloat(d.facturasImpresas || 0) / (parseFloat(d.facturasGeneradas || 0) || 1)) * 100;

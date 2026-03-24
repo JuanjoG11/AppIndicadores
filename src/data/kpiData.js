@@ -1107,7 +1107,7 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'DIARIO',
         responsable: 'FACTURACION',
-        formula: 'PEDIDOS / FACTURAS',
+        formula: 'FACTURAS / PEDIDOS',
         sustentacion: 'SEMANAL',
         fuente: 'SISTEMA FACTURACIÓN'
     },
