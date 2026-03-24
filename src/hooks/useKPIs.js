@@ -220,11 +220,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             setIsLoading(true);
             try {
                 // Filtramos por empresa desde la consulta (esto es lo que diría un ingeniero para ser eficiente)
-                const { data } = await supabase
+                const { data, error } = await supabase
                     .from('kpi_updates')
                     .select('*')
                     .eq('company_id', activeCompany)
                     .order('updated_at', { ascending: true });
+                
+                if (error) {
+                    console.error("❌ Supabase fetch error:", error);
+                }
+
                 if (data) {
                     suppressPersist.current = true;
                     data.forEach(upd => {
