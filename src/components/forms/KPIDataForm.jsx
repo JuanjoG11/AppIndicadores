@@ -193,10 +193,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             'dias-inventario-comercial': [
                 { name: 'diasInventario', label: 'Días de Inventario', type: 'number' }
             ],
-            'cartera-no-vencida': [
-                { name: 'carteraNoVencida', label: 'Cartera No Vencida ($)', type: 'number', placeholder: 'Eje: 90000000' },
-                { name: 'carteraTotal', label: 'Cartera Total ($)', type: 'number', placeholder: 'Eje: 100000000' }
-            ],
+
             'cartera-11-30': [
                 { name: 'cartera1130', label: 'Cartera 11-30 días ($)', type: 'number', placeholder: 'Eje: 5000000' },
                 { name: 'carteraTotal', label: 'Cartera Total ($)', type: 'number', placeholder: 'Eje: 100000000' }
@@ -401,7 +398,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         : kpi.meta;
         
     const isInverse = isInverseKPI(kpi.id);
-    const isStrict = ['revision-margenes', 'revision-precios'].includes(kpi.id);
+    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
     
     // Forzar meta de 100 para indicadores de cumplimiento estricto
     if (isStrict) currentMeta = 100;

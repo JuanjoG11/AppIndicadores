@@ -102,7 +102,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
                 compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
                 
-                const isStrict = ['revision-margenes', 'revision-precios'].includes(kpiId);
+                const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
                 const greenThreshold = isStrict ? 100 : 95;
                 const yellowThreshold = isStrict ? 100 : 85;
 
@@ -195,7 +195,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     filteredMeta = {};
                     Object.keys(def.meta).forEach(brandKey => {
                         // EXCEPCIÓN: Forzamos la sincronización de metas críticas desde el código si cambian (para evitar valores basura de la DB)
-                        const isForcedMeta = ['revision-margenes', 'revision-precios'].includes(def.id);
+                        const isForcedMeta = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(def.id);
                         filteredMeta[brandKey] = (live.meta.hasOwnProperty(brandKey) && !isForcedMeta) ? live.meta[brandKey] : def.meta[brandKey];
                     });
                 }
