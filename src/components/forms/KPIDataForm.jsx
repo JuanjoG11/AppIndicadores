@@ -396,18 +396,30 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     const fields = getFormulaFields();
     const liveResult = calculateLiveResult();
-    const currentMeta = hasMultipleMetas
+    let currentMeta = hasMultipleMetas
         ? (kpi.meta[formData.brand] || kpi.meta[formData.brand?.toLowerCase()] || Object.values(kpi.meta)[0])
         : kpi.meta;
+        
     const isInverse = isInverseKPI(kpi.id);
+    const isStrict = ['revision-margenes', 'revision-precios'].includes(kpi.id);
+    
+    // Forzar meta de 100 para indicadores de cumplimiento estricto
+    if (isStrict) currentMeta = 100;
+    
     let isMeetingMeta = false;
+    let compliance = 0;
+
     if (currentMeta === 0 && liveResult === 0) {
-        isMeetingMeta = isInverse ? true : false;
+        compliance = isInverse ? 100 : 0;
     } else if (currentMeta === 0 && liveResult > 0) {
-        isMeetingMeta = isInverse ? false : true;
-    } else {
-        isMeetingMeta = liveResult !== null && (isInverse ? liveResult <= currentMeta : liveResult >= currentMeta);
+        compliance = isInverse ? 0 : 100;
+    } else if (typeof currentMeta === 'number') {
+        compliance = isInverse ? (currentMeta / liveResult) * 100 : (liveResult / currentMeta) * 100;
+        compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
     }
+
+    const greenThreshold = isStrict ? 100 : 95;
+    isMeetingMeta = liveResult !== null && compliance >= greenThreshold;
 
     const handleSubmit = (e) => {
         e.preventDefault();

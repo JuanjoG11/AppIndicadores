@@ -102,8 +102,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
                 compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
                 
-                if (compliance >= 95) semaphore = 'green';
-                else if (compliance >= 85) semaphore = 'yellow';
+                const isStrict = ['revision-margenes', 'revision-precios'].includes(kpiId);
+                const greenThreshold = isStrict ? 100 : 95;
+                const yellowThreshold = isStrict ? 100 : 85;
+
+                if (compliance >= greenThreshold) semaphore = 'green';
+                else if (compliance >= yellowThreshold) semaphore = 'yellow';
                 else semaphore = 'red';
             } else if (targetMeta === 0 && newValue === 0) {
                 compliance = isInverseKPI(kpiId) ? 100 : 0;
@@ -190,7 +194,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     // Mantener valores de la DB solo para las marcas que todavía existen en el código
                     filteredMeta = {};
                     Object.keys(def.meta).forEach(brandKey => {
-                        filteredMeta[brandKey] = live.meta.hasOwnProperty(brandKey) ? live.meta[brandKey] : def.meta[brandKey];
+                        // EXCEPCIÓN: Forzamos la sincronización de metas críticas desde el código si cambian (para evitar valores basura de la DB)
+                        const isForcedMeta = ['revision-margenes', 'revision-precios'].includes(def.id);
+                        filteredMeta[brandKey] = (live.meta.hasOwnProperty(brandKey) && !isForcedMeta) ? live.meta[brandKey] : def.meta[brandKey];
                     });
                 }
 

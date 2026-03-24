@@ -993,7 +993,7 @@ export const kpiDefinitions = [
         objetivo: 'Minimizar pedidos no servidos por falta de stock',
         meta: {
             ALPINA: 0,
-            ZENU: 0,
+
             FLEISCHMANN: 0,
             UNILEVER: 0,
             FAMILIA: 0
@@ -1052,20 +1052,20 @@ export const kpiDefinitions = [
     {
         id: 'revision-margenes',
         name: 'Cumplimiento de Revisión de Márgenes',
-        description: 'Cantidad de veces revisados / meta',
+        description: '(Ejecutadas / Programadas) * 100',
         area: 'administrativo',
         objetivo: 'Verificar rentabilidad parametrizada',
         meta: {
-            ALPINA: 4,
-            ZENU: 4,
-            FLEISCHMANN: 4,
-            UNILEVER: 4,
-            FAMILIA: 4
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100
         },
-        unit: 'veces',
+        unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
-        formula: 'REVISIONES EJECUTADAS / REVISIONES PROGRAMADAS',
+        formula: '(REVISIONES EJECUTADAS / REVISIONES PROGRAMADAS) * 100',
         sustentacion: 'ANALISTA DE INVENTARIOS',
         frecuenciaSustentacion: 'SEMANAL',
         fuente: 'ANALISTA DE INFORMACIÓN'
@@ -1073,20 +1073,20 @@ export const kpiDefinitions = [
     {
         id: 'revision-precios',
         name: 'Cumplimiento de Revisión de Precios',
-        description: 'Cantidad de veces revisados / meta',
+        description: '(Ejecutadas / Programadas) * 100',
         area: 'administrativo',
         objetivo: 'Evitar errores de facturación al cliente',
         meta: {
-            ALPINA: 4,
-            ZENU: 4,
-            FLEISCHMANN: 4,
-            UNILEVER: 4,
-            FAMILIA: 4
+            ALPINA: 100,
+            ZENU: 100,
+            FLEISCHMANN: 100,
+            UNILEVER: 100,
+            FAMILIA: 100
         },
-        unit: 'veces',
+        unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'ANALISTA DE INFORMACIÓN',
-        formula: 'REVISIONES EJECUTADAS / REVISIONES PROGRAMADAS',
+        formula: '(REVISIONES EJECUTADAS / REVISIONES PROGRAMADAS) * 100',
         sustentacion: 'ANALISTA DE INVENTARIOS',
         frecuenciaSustentacion: 'SEMANAL',
         fuente: 'ANALISTA DE INFORMACIÓN'
