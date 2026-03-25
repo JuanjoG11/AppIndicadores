@@ -76,29 +76,7 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
         setTimeout(() => setSaveStatus(''), 3000);
     };
 
-    const handlePurgeData = async () => {
-        const confirmPurge = window.confirm(
-            '⚠️ ATENCIÓN: Esta acción borrará permanentemente TODOS los registros de datos y actualizaciones de la base de datos de producción.\n\n¿Estás seguro de que deseas resetear el sistema a ceros?'
-        );
 
-        if (confirmPurge) {
-            try {
-                setSaveStatus('Limpiando base de datos...');
-                const { error } = await supabase
-                    .from('kpi_updates')
-                    .delete()
-                    .not('id', 'is', null);
-
-                if (error) throw error;
-
-                setSaveStatus('✅ Base de datos reseteada con éxito. Recargue la página.');
-                setTimeout(() => window.location.reload(), 2000);
-            } catch (err) {
-                console.error("Error al purgar datos:", err);
-                setSaveStatus('❌ Error al resetear datos');
-            }
-        }
-    };
 
     return (
         <div style={{
@@ -336,43 +314,7 @@ const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme
                                     Descargar Excel (.csv)
                                 </button>
 
-                                {/* PURGE DATA TOOL */}
-                                <div style={{
-                                    marginTop: '4rem',
-                                    padding: '2rem',
-                                    borderRadius: '20px',
-                                    border: '1px dashed #fee2e2',
-                                    background: '#fef2f2'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#dc2626', marginBottom: '1rem', justifyContent: 'center' }}>
-                                        <AlertTriangle size={20} />
-                                        <h4 style={{ margin: 0, fontWeight: 800 }}>Herramientas de Mantenimiento</h4>
-                                    </div>
-                                    <p style={{ fontSize: '0.85rem', color: '#991b1b', marginBottom: '1.5rem' }}>
-                                        Esta opción borrará **TODOS** los datos cargados en la base de datos de producción.
-                                        Úselo únicamente para reiniciar el sistema para el lanzamiento oficial.
-                                    </p>
-                                    <button
-                                        onClick={handlePurgeData}
-                                        style={{
-                                            padding: '0.75rem 1.5rem',
-                                            background: '#ef4444',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '12px',
-                                            fontWeight: 800,
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            margin: '0 auto',
-                                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)'
-                                        }}
-                                    >
-                                        <Database size={18} />
-                                        Limpiar Base de Datos (Reset a 0)
-                                    </button>
-                                </div>
+
                             </div>
                         )}
 

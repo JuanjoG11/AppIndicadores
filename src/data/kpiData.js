@@ -725,6 +725,7 @@ export const kpiDefinitions = [
         name: 'Cumplimiento de Ventas',
         description: 'Venta realizada / esperada',
         area: 'comercial',
+        subArea: 'Gestión de Ventas',
         objetivo: 'Cumplimiento de presupuesto de ventas',
         meta: {
             ALPINA: 100,
@@ -744,6 +745,7 @@ export const kpiDefinitions = [
         name: 'Margen Bruto',
         description: '(ventas - costo de ventas) / ventas x 100',
         area: 'comercial',
+        subArea: 'Gestión de Ventas',
         objetivo: 'Optimizar la rentabilidad bruta',
         meta: {
             ALPINA: 12,
@@ -765,6 +767,7 @@ export const kpiDefinitions = [
         name: 'Devoluciones en Buen Estado',
         description: '$ devolucion buen estado / total de la venta',
         area: 'comercial',
+        subArea: 'Servicio y Devoluciones',
         objetivo: 'Controlar devoluciones aptas para re-venta',
         meta: {
             ALPINA: 1.8,
@@ -786,6 +789,7 @@ export const kpiDefinitions = [
         name: 'Devoluciones en Mal Estado',
         description: '$ devolucion mal estado / venta',
         area: 'comercial',
+        subArea: 'Servicio y Devoluciones',
         objetivo: 'Disminuir mermas por devoluciones averiadas',
         meta: {
             ALPINA: 0.5,
@@ -807,6 +811,7 @@ export const kpiDefinitions = [
         name: 'Ventas Promedio por Vendedor',
         description: 'Ventas totales / # vendedores',
         area: 'comercial',
+        subArea: 'Gestión de Ventas',
         objetivo: 'Aumentar la productividad de la fuerza comercial',
         meta: {
             ALPINA: 60000000,
@@ -828,6 +833,7 @@ export const kpiDefinitions = [
         name: 'Participación de Ventas a Crédito',
         description: 'Venta credito / Venta total',
         area: 'comercial',
+        subArea: 'Cartera y Crédito',
         objetivo: 'Optimizar el recaudo inmediato',
         meta: {
             ALPINA: 10,
@@ -848,6 +854,7 @@ export const kpiDefinitions = [
         name: 'Cartera Vencida',
         description: 'Cartera vencida / Total de cartera',
         area: 'comercial',
+        subArea: 'Cartera y Crédito',
         objetivo: 'Reducir la mora en el recaudo',
         meta: 80,
         unit: '%',
@@ -863,6 +870,7 @@ export const kpiDefinitions = [
         name: 'Rotación de Personal',
         description: '(# de salidas / promedio empleados) x 100',
         area: 'comercial',
+        subArea: 'Operación y Gastos',
         objetivo: 'Fomentar la estabilidad laboral',
         meta: {
             ALPINA: 3.5,
@@ -884,6 +892,7 @@ export const kpiDefinitions = [
         name: 'Participación de Gastos de Personal',
         description: 'Gastos de personal / total venta',
         area: 'comercial',
+        subArea: 'Operación y Gastos',
         objetivo: 'Controlar costos operativos comerciales',
         meta: {
             ALPINA: 5,
@@ -905,6 +914,7 @@ export const kpiDefinitions = [
         name: 'Participación de Gastos de Viaje',
         description: 'Gastos de viaje / total ventas',
         area: 'comercial',
+        subArea: 'Operación y Gastos',
         objetivo: 'Optimizar gastos de representación y viaje',
         meta: {
             ALPINA: 0.2,
@@ -927,6 +937,7 @@ export const kpiDefinitions = [
         name: 'Días Promedio de Inventario',
         description: 'Dias promedio de inventario / meta',
         area: 'comercial',
+        subArea: 'Operación y Gastos',
         objetivo: 'Optimizar rotación de inventarios para flujo de caja',
         meta: {
             ALPINA: 7,
@@ -950,6 +961,7 @@ export const kpiDefinitions = [
         name: 'Cumplimiento de Inventarios',
         description: '# de inventarios realizados / programados',
         area: 'administrativo',
+        subArea: 'Control de Inventarios',
         objetivo: 'Garantizar el control físico de existencias',
         meta: {
             ALPINA: 2,
@@ -970,6 +982,7 @@ export const kpiDefinitions = [
         name: 'Exactitud de Inventario',
         description: '(Valor verificado / valor correcto) x 100',
         area: 'administrativo',
+        subArea: 'Control de Inventarios',
         objetivo: 'Asegurar la exactitud de los registros contables',
         meta: {
             ALPINA: 100,
@@ -988,8 +1001,9 @@ export const kpiDefinitions = [
     {
         id: 'quiebres-inventario',
         name: 'Quiebres de Inventario',
-        description: '# de quiebres de inventario en el periodo',
+        description: '# de quiebres de inventario en le periodo',
         area: 'administrativo',
+        subArea: 'Control de Inventarios',
         objetivo: 'Minimizar pedidos no servidos por falta de stock',
         meta: {
             ALPINA: 0,
@@ -1011,6 +1025,7 @@ export const kpiDefinitions = [
         name: 'Inventario Obsoleto',
         description: '(Inventario obsoleto / inventario total) x 100',
         area: 'administrativo',
+        subArea: 'Control de Inventarios',
         objetivo: 'Reducir pérdidas por productos vencidos o sin rotación',
         meta: {
             ALPINA: 0,
@@ -1032,6 +1047,7 @@ export const kpiDefinitions = [
         name: 'Mermas de Inventario',
         description: '(Valor mermas / inventario total) x 100',
         area: 'administrativo',
+        subArea: 'Control de Inventarios',
         objetivo: 'Controlar pérdidas físicas de mercancía',
         meta: {
             ALPINA: 0,
@@ -1054,6 +1070,7 @@ export const kpiDefinitions = [
         name: 'Cumplimiento de Revisión de Márgenes',
         description: '(Ejecutadas / Programadas) * 100',
         area: 'administrativo',
+        subArea: 'Auditoría y Parámetros',
         objetivo: 'Verificar rentabilidad parametrizada',
         meta: {
             ALPINA: 100,
@@ -1075,6 +1092,7 @@ export const kpiDefinitions = [
         name: 'Cumplimiento de Revisión de Precios',
         description: '(Ejecutadas / Programadas) * 100',
         area: 'administrativo',
+        subArea: 'Auditoría y Parámetros',
         objetivo: 'Evitar errores de facturación al cliente',
         meta: {
             ALPINA: 100,
@@ -1095,6 +1113,7 @@ export const kpiDefinitions = [
         id: 'pedidos-facturados',
         name: 'Pedidos Facturados',
         area: 'facturacion',
+        subArea: 'Operación Facturación',
         objetivo: 'Garantizar que cada pedido tenga su factura correspondiente',
         meta: {
             ALPINA: 100,
@@ -1115,6 +1134,7 @@ export const kpiDefinitions = [
         id: 'impresion-facturas',
         name: 'Impresión de Facturas',
         area: 'facturacion',
+        subArea: 'Operación Facturación',
         objetivo: 'Garantizar que todas las facturas generadas sean impresas',
         meta: {
             ALPINA: 100,
@@ -1135,6 +1155,7 @@ export const kpiDefinitions = [
         id: 'error-facturacion',
         name: 'Error sobre la Facturación',
         area: 'facturacion',
+        subArea: 'Operación Facturación',
         objetivo: 'Minimizar errores en el proceso de facturación',
         meta: {
             ALPINA: 0.5,

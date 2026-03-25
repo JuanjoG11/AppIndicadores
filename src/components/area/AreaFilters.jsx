@@ -32,7 +32,7 @@ const AreaFilters = ({
                         {subAreas.map(sub => (
                             <button
                                 key={sub}
-                                onClick={() => setActiveSubArea(sub === 'Todas' ? 'all' : sub)}
+                                onClick={() => setActiveSubArea(sub)}
                                 style={{
                                     padding: '0.7rem 1.4rem',
                                     borderRadius: '14px',
@@ -41,13 +41,13 @@ const AreaFilters = ({
                                     fontWeight: 800,
                                     cursor: 'pointer',
                                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    background: (activeSubArea === sub || (sub === 'Todas' && activeSubArea === 'all')) ? 'var(--brand)' : 'transparent',
-                                    color: (activeSubArea === sub || (sub === 'Todas' && activeSubArea === 'all')) ? 'white' : 'var(--text-soft)',
-                                    transform: (activeSubArea === sub || (sub === 'Todas' && activeSubArea === 'all')) ? 'scale(1.05)' : 'scale(1)',
-                                    boxShadow: (activeSubArea === sub || (sub === 'Todas' && activeSubArea === 'all')) ? '0 10px 15px -3px rgba(var(--brand-rgb), 0.3)' : 'none'
+                                    background: activeSubArea === sub ? 'var(--brand)' : 'transparent',
+                                    color: activeSubArea === sub ? 'white' : 'var(--text-soft)',
+                                    transform: activeSubArea === sub ? 'scale(1.05)' : 'scale(1)',
+                                    boxShadow: activeSubArea === sub ? '0 10px 15px -3px rgba(var(--brand-rgb), 0.3)' : 'none'
                                 }}
                             >
-                                {sub === 'Todas' ? 'Todas' : sub.split('Logística de ')[1] || sub}
+                                {sub.split('Logística de ')[1] || sub}
                             </button>
                         ))}
                     </div>

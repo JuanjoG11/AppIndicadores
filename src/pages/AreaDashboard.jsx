@@ -17,7 +17,9 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Cell
+    Cell,
+    ReferenceLine,
+    LabelList
 } from 'recharts';
 import {
     ArrowLeft as ArrowLeftIcon,
@@ -38,7 +40,12 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
-    const [activeSubArea, setActiveSubArea] = useState('all');
+    const [activeSubArea, setActiveSubArea] = useState(
+        areaId === 'logistica' ? 'Logística de Entrega' : 
+        areaId === 'comercial' ? 'Gestión de Ventas' : 
+        areaId === 'administrativo' ? 'Control de Inventarios' :
+        areaId === 'facturacion' ? 'Operación Facturación' : 'all'
+    );
     const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
     const [isChartExpanded, setIsChartExpanded] = useState(false);
@@ -72,8 +79,16 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const companyKPIs = filterKPIsByEntity(kpiData, activeCompany || 'TYM');
     const areaKPIs = companyKPIs.filter(kpi => kpi.area === areaId);
 
-    // 2. Sub-areas filter logic for Logistics
-    const subAreas = areaId === 'logistica' ? ['Todas', 'Logística de Entrega', 'Logística de Picking', 'Logística de Depósito'] : [];
+    // 2. Sub-areas filter logic (Removed 'Todas' to avoid cluttered charts)
+    const subAreas = areaId === 'logistica' 
+        ? ['Logística de Entrega', 'Logística de Picking', 'Logística de Depósito']
+        : areaId === 'comercial'
+        ? ['Gestión de Ventas', 'Servicio y Devoluciones', 'Cartera y Crédito', 'Operación y Gastos']
+        : areaId === 'administrativo'
+        ? ['Control de Inventarios', 'Auditoría y Parámetros']
+        : areaId === 'facturacion'
+        ? ['Operación Facturación']
+        : [];
 
 
     // 3. Brand filter logic for specific areas
@@ -88,6 +103,16 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
 
     const [selectedBrand, setSelectedBrand] = useState('all');
 
+    // Reset or set default sub-area when areaId changes
+    React.useEffect(() => {
+        const defaultSubArea = 
+            areaId === 'logistica' ? 'Logística de Entrega' : 
+            areaId === 'comercial' ? 'Gestión de Ventas' : 
+            areaId === 'administrativo' ? 'Control de Inventarios' :
+            areaId === 'facturacion' ? 'Operación Facturación' : 'all';
+        setActiveSubArea(defaultSubArea);
+    }, [areaId]);
+
     // Reset or set default brand when area or company changes
     React.useEffect(() => {
         if (isBrandSpecificArea && brandsForEntity.length > 0) {
@@ -100,17 +125,41 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const showBrandFilter = isBrandSpecificArea;
 
     // 4. Filtered KPIs for the CURRENT view (Area or Sub-Area + Brand)
-    let filteredKPIs = areaId === 'logistica' && activeSubArea !== 'all' && activeSubArea !== 'Todas'
+    const hasSubAreas = subAreas.length > 0;
+    let filteredKPIs = hasSubAreas && activeSubArea !== 'all'
         ? areaKPIs.filter(kpi => kpi.subArea === activeSubArea)
         : areaKPIs;
 
 
-    // Apply brand filter ONLY if we are in a brand-specific area and a brand is selected
+    // 5. Apply brand-specific data mapping when a brand is selected
     if (isBrandSpecificArea && selectedBrand !== 'all') {
-        filteredKPIs = filteredKPIs.filter(kpi => {
-            if (!kpi.meta || typeof kpi.meta !== 'object') return false;
-            return kpi.meta.hasOwnProperty(selectedBrand);
-        });
+        filteredKPIs = filteredKPIs.map(kpi => {
+            const brandKey = `${activeCompany}-${selectedBrand}`;
+            const brandData = kpi.brandValues && kpi.brandValues[brandKey];
+            
+            if (brandData && brandData.hasData) {
+                return {
+                    ...kpi,
+                    currentValue: brandData.currentValue,
+                    compliance: Math.round(brandData.compliance),
+                    semaphore: brandData.semaphore,
+                    hasData: true,
+                    targetMeta: (kpi.meta && kpi.meta[selectedBrand]) || kpi.targetMeta
+                };
+            }
+            // If the brand is in meta but has no specific data yet, show as 0
+            if (kpi.meta && kpi.meta.hasOwnProperty(selectedBrand)) {
+                return {
+                    ...kpi,
+                    currentValue: 0,
+                    compliance: 0,
+                    semaphore: 'gray',
+                    hasData: false,
+                    targetMeta: kpi.meta[selectedBrand]
+                };
+            }
+            return kpi;
+        }).filter(kpi => kpi.meta && kpi.meta.hasOwnProperty(selectedBrand));
     }
 
 
@@ -137,18 +186,21 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     const warningAlerts = kpiAlerts.filter(k => k.isUrgent);
 
     const radarData = filteredKPIs.map(kpi => ({
-        subject: kpi.name.length > 20 ? kpi.name.substring(0, 17) + '...' : kpi.name,
+        subject: filteredKPIs.length <= 6 
+            ? (kpi.name.length > 30 ? kpi.name.substring(0, 27) + '...' : kpi.name)
+            : (kpi.name.length > 20 ? kpi.name.substring(0, 17) + '...' : kpi.name),
         fullValue: kpi.name,
         value: kpi.compliance || 0
     }));
 
     const complianceData = kpisWithData
         .filter(kpi => kpi.compliance !== undefined)
-        .slice(0, 10)
+        .slice(0, 12)
         .map(kpi => ({
             name: kpi.name,
             cumplimiento: kpi.compliance,
-            color: kpi.semaphore === 'green' ? '#059669' : '#ef4444'
+            color: kpi.semaphore === 'green' ? '#10b981' : (kpi.semaphore === 'yellow' ? '#f59e0b' : '#f43f5e'),
+            status: kpi.semaphore
         }));
 
     const handleSaveKPI = (kpiId, data) => {
@@ -250,12 +302,12 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                         <div style={{ color: 'var(--brand)' }}><Activity size={20} /></div>
                         <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 900, color: '#1e293b', textTransform: 'uppercase' }}>Equilibrio de Indicadores</h4>
                     </div>
-                    <ResponsiveContainer width="100%" height={220}>
-                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                            <PolarGrid stroke="#e2e8f0" />
+                    <ResponsiveContainer width="100%" height={260}>
+                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                            <PolarGrid stroke="#f1f5f9" strokeWidth={2} />
                             <PolarAngleAxis
                                 dataKey="subject"
-                                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
+                                tick={{ fill: '#64748b', fontSize: 10, fontWeight: 800 }}
                             />
                             <Tooltip
                                 content={({ active, payload }) => {
@@ -263,14 +315,17 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                                         return (
                                             <div style={{
                                                 background: 'white',
-                                                padding: '0.75rem',
+                                                padding: '1rem',
                                                 border: '1px solid #e2e8f0',
-                                                borderRadius: '12px',
-                                                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                                                fontSize: '0.8rem'
+                                                borderRadius: '16px',
+                                                boxShadow: 'var(--shadow-premium)',
+                                                fontSize: '0.85rem'
                                             }}>
-                                                <p style={{ margin: 0, fontWeight: 700, color: '#1e293b' }}>{payload[0].payload.fullValue}</p>
-                                                <p style={{ margin: 0, color: area.color, fontWeight: 800 }}>{payload[0].value}%</p>
+                                                <p style={{ margin: '0 0 0.25rem 0', fontWeight: 800, color: '#1e293b' }}>{payload[0].payload.fullValue}</p>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: area.color }}></div>
+                                                    <p style={{ margin: 0, color: area.color, fontWeight: 900, fontSize: '1.1rem' }}>{payload[0].value}%</p>
+                                                </div>
                                             </div>
                                         );
                                     }
@@ -281,9 +336,13 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                                 name={area.name}
                                 dataKey="value"
                                 stroke={area.color}
+                                strokeWidth={3}
                                 fill={area.color}
-                                fillOpacity={0.3}
-                                animationDuration={1000}
+                                fillOpacity={0.4}
+                                dot={{ r: 4, fill: 'white', stroke: area.color, strokeWidth: 2 }}
+                                activeDot={{ r: 6, fill: area.color, stroke: 'white', strokeWidth: 2 }}
+                                animationDuration={1500}
+                                animationEasing="ease-out"
                             />
                         </RadarChart>
                     </ResponsiveContainer>
@@ -309,26 +368,67 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                             <Maximize2 size={18} />
                         </button>
                     </div>
-                    <ResponsiveContainer width="100%" height={220} minWidth={0} debounce={50}>
-                        <BarChart data={complianceData}>
+                    <ResponsiveContainer width="100%" height={260} minWidth={0} debounce={50}>
+                        <BarChart data={complianceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <defs>
+                                <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#34d399" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#059669" stopOpacity={1}/>
+                                </linearGradient>
+                                <linearGradient id="colorYellow" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#d97706" stopOpacity={1}/>
+                                </linearGradient>
+                                <linearGradient id="colorRed" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#f87171" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#dc2626" stopOpacity={1}/>
+                                </linearGradient>
+                            </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis
                                 dataKey="name"
-                                tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
-                                tickFormatter={(name) => name.length > 12 ? name.substring(0, 10) + '...' : name}
+                                tick={{ fontSize: 9, fill: '#64748b', fontWeight: 700 }}
+                                tickFormatter={(name) => name.length > 15 ? name.substring(0, 12) + '...' : name}
                                 axisLine={false}
                                 tickLine={false}
                                 interval={0}
                             />
-                            <YAxis hide />
-                            <Tooltip
-                                cursor={{ fill: '#f8fafc' }}
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
+                            <YAxis 
+                                domain={[0, 115]} 
+                                hide 
                             />
-                            <Bar dataKey="cumplimiento" radius={[8, 8, 8, 8]} barSize={32}>
-                                {complianceData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
+                            <Tooltip
+                                cursor={{ fill: '#f8fafc', radius: 10 }}
+                                contentStyle={{ 
+                                    borderRadius: '16px', 
+                                    border: 'none', 
+                                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                                    padding: '12px',
+                                    fontWeight: 700
+                                }}
+                                formatter={(val) => [`${val}%`, 'Logro']}
+                            />
+                            
+                            {/* Target Line at 100% */}
+                            <ReferenceLine 
+                                y={100} 
+                                stroke="#94a3b8" 
+                                strokeDasharray="5 5" 
+                                label={{ position: 'right', value: 'Meta', fill: '#94a3b8', fontSize: 10, fontWeight: 800 }} 
+                            />
+
+                            <Bar dataKey="cumplimiento" radius={[10, 10, 0, 0]} barSize={28}>
+                                {complianceData.map((entry, index) => {
+                                    const gradientId = entry.status === 'green' ? 'url(#colorGreen)' : 
+                                                     entry.status === 'yellow' ? 'url(#colorYellow)' : 'url(#colorRed)';
+                                    return <Cell key={`cell-${index}`} fill={gradientId} />;
+                                })}
+                                <LabelList 
+                                    dataKey="cumplimiento" 
+                                    position="top" 
+                                    formatter={(val) => `${val}%`}
+                                    style={{ fill: '#64748b', fontSize: 10, fontWeight: 800 }} 
+                                />
                             </Bar>
                         </BarChart>
                     </ResponsiveContainer>
@@ -351,7 +451,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     {subAreas.map(sub => (
                         <button
                             key={sub}
-                            onClick={() => setActiveSubArea(sub === 'Todas' ? 'all' : sub)}
+                            onClick={() => setActiveSubArea(sub)}
                             style={{
                                 padding: '0.6rem 1.25rem',
                                 borderRadius: '12px',
@@ -360,11 +460,11 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                                 fontWeight: 800,
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',
-                                background: (activeSubArea === sub || (sub === 'Todas' && activeSubArea === 'all')) ? 'var(--brand)' : 'transparent',
-                                color: (activeSubArea === sub || (sub === 'Todas' && activeSubArea === 'all')) ? 'white' : '#64748b'
+                                background: activeSubArea === sub ? 'var(--brand)' : 'transparent',
+                                color: activeSubArea === sub ? 'white' : '#64748b'
                             }}
                         >
-                            {sub === 'Todas' ? 'Todas' : sub.split('Logística de ')[1]}
+                            {sub.split('Logística de ')[1]}
                         </button>
                     ))}
                 </div>
@@ -606,10 +706,24 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                                     data={kpisWithData.map(k => ({
                                         name: k.name,
                                         cumplimiento: k.compliance,
-                                        color: k.semaphore === 'green' ? '#059669' : '#ef4444'
+                                        status: k.semaphore
                                     }))}
-                                    margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                                    margin={{ top: 40, right: 30, left: 20, bottom: 100 }}
                                 >
+                                    <defs>
+                                        <linearGradient id="colorGreenModal" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#34d399" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#059669" stopOpacity={1}/>
+                                        </linearGradient>
+                                        <linearGradient id="colorYellowModal" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#d97706" stopOpacity={1}/>
+                                        </linearGradient>
+                                        <linearGradient id="colorRedModal" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#f87171" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#dc2626" stopOpacity={1}/>
+                                        </linearGradient>
+                                    </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                     <XAxis
                                         dataKey="name"
@@ -622,30 +736,44 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                                         tickLine={false}
                                     />
                                     <YAxis
-                                        domain={[0, 100]}
+                                        domain={[0, 115]}
                                         tick={{ fontSize: 12, fill: '#94a3b8', fontWeight: 600 }}
                                         axisLine={false}
                                         tickLine={false}
                                         tickFormatter={(val) => `${val}%`}
                                     />
                                     <Tooltip
-                                        cursor={{ fill: '#f8fafc' }}
+                                        cursor={{ fill: '#f8fafc', radius: 10 }}
                                         contentStyle={{
-                                            borderRadius: '16px',
+                                            borderRadius: '20px',
                                             border: 'none',
                                             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-                                            padding: '1rem',
+                                            padding: '1.25rem',
                                             fontWeight: 700
                                         }}
                                         formatter={(val) => [`${val}%`, 'Cumplimiento']}
                                     />
-                                    <Bar dataKey="cumplimiento" radius={[10, 10, 10, 10]} barSize={40}>
-                                        {kpisWithData.map((entry, index) => (
-                                            <Cell
-                                                key={`cell-${index}`}
-                                                fill={entry.semaphore === 'green' ? '#059669' : '#ef4444'}
-                                            />
-                                        ))}
+
+                                    <ReferenceLine 
+                                        y={100} 
+                                        stroke="#94a3b8" 
+                                        strokeDasharray="5 5" 
+                                        label={{ position: 'right', value: 'Meta (100%)', fill: '#94a3b8', fontSize: 12, fontWeight: 900 }} 
+                                    />
+
+                                    <Bar dataKey="cumplimiento" radius={[12, 12, 0, 0]} barSize={40}>
+                                        {kpisWithData.map((entry, index) => {
+                                            const status = entry.semaphore || (entry.compliance >= 100 ? 'green' : 'red');
+                                            const gradientId = status === 'green' ? 'url(#colorGreenModal)' : 
+                                                            status === 'yellow' ? 'url(#colorYellowModal)' : 'url(#colorRedModal)';
+                                            return <Cell key={`cell-${index}`} fill={gradientId} />;
+                                        })}
+                                        <LabelList 
+                                            dataKey="cumplimiento" 
+                                            position="top" 
+                                            formatter={(val) => `${val}%`}
+                                            style={{ fill: '#64748b', fontSize: 11, fontWeight: 800 }} 
+                                        />
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
