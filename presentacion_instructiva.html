@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentación Zentra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --brand: #2563eb;
+            --brand-soft: rgba(37, 99, 235, 0.1);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg: #0f172a;
+            --white: #ffffff;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .glow {
+            position: fixed;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
+            top: -20vw;
+            right: -20vw;
+            z-index: -1;
+            filter: blur(100px);
+        }
+
+        .presentation {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(30px);
+            transition: var(--transition);
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+            z-index: 10;
+        }
+
+        .content {
+            text-align: left;
+            max-width: 600px;
+            padding-left: 2rem;
+        }
+
+        .badge {
+            background: var(--brand);
+            color: white;
+            padding: 0.6rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 2.5rem;
+            display: inline-block;
+        }
+
+        h2.title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.desc {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .features {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .feature-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 16px;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s;
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            background: var(--brand-soft);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand);
+            font-size: 1.1rem;
+        }
+
+        .feature-item h4 {
+            margin-bottom: 0.1rem;
+            font-size: 1rem;
+        }
+
+        .feature-item p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .visual-panel {
+            position: relative;
+            width: 100%;
+            height: 85vh;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            overflow: visible;
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .visual-panel img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.7);
+        }
+
+        .placeholder-text {
+            color: var(--text-muted);
+            font-weight: 700;
+            text-align: center;
+            padding: 2rem;
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .panel-desc {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 4rem;
+            right: 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .slide-num {
+            font-weight: 800;
+            color: var(--text-muted);
+            font-size: 1rem;
+            letter-spacing: 0.15rem;
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-nav {
+            background: var(--card-bg);
+            color: white;
+            border: 1px solid var(--border);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .btn-nav:hover {
+            background: var(--brand);
+            border-color: var(--brand);
+        }
+
+        /* Zentra Logo Styling */
+        .zentra-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            border-radius: 20px;
+            padding: 10px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 1000px) {
+            .slide {
+                grid-template-columns: 1fr;
+                padding: 2rem;
+                overflow-y: auto;
+                height: auto;
+                min-height: 100vh;
+                position: relative;
+                display: none;
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .slide.active {
+                display: block;
+            }
+
+            .visual-panel {
+                height: 250px;
+                margin-top: 1.5rem;
+            }
+
+            body {
+                overflow-y: auto;
+            }
+
+            .content {
+                padding-left: 0;
+            }
+        }
+
+        .slide-intro {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+
+        .slide-intro .content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 0;
+        }
+
+        .slide-intro h2.title {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="glow"></div>
+
+    <div class="presentation" id="presentation">
+
+        <!-- 1. PORTADA -->
+        <div class="slide slide-intro active">
+            <div class="content">
+                <div class="zentra-logo">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M25 30H75L25 70H75" stroke="white" stroke-width="10" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M15 65 L40 45 L55 55 L75 35 L90 40" stroke="#38bdf8" stroke-width="4"
+                            stroke-linecap="round" />
+                        <circle cx="15" cy="65" r="4" fill="white" />
+                        <circle cx="40" cy="45" r="4" fill="white" />
+                        <circle cx="55" cy="55" r="4" fill="white" />
+                        <circle cx="75" cy="35" r="4" fill="white" />
+                    </svg>
+                </div>
+                <div class="badge">ZENTRA Analytics</div>
+                <h2 class="title">Toma el Mando <br>de tu Estrategia</h2>
+                <p class="desc">La plataforma definitiva para Gerencia, diseñada para ver el rendimiento de TYM y TAT
+                    con datos reales y total claridad.</p>
+                <div
+                    style="margin-top: 3rem; display: flex; justify-content: center; gap: clamp(1rem, 5vw, 3rem); flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <span style="font-size: 2.2rem; font-weight: 900; color: var(--brand);">Fácil</span>
+                        <p style="color: var(--text-muted); font-size: 0.8rem;">En Vivo</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="font-size: 2.2rem; font-weight: 900; color: var(--success);">Total</span>
+                        <p style="color: var(--text-muted); font-size: 0.8rem;">Control Gerencial</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. LOGIN -->
+        <div class="slide">
+            <div class="content">
+                <div class="badge">Identidad</div>
+                <h2 class="title">Acceso Seguro <br>por Áreas</h2>
+                <p class="desc">Cada miembro entra a un entorno diseñado para su función. La seguridad empieza desde el
+                    inicio de sesión.</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">🏢</div>
+                        <div>
+                            <h4>Semejanzas por proveedores</h4>
+                            <p>Datos separados y organizados por línea de negocio de manera automática.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔐</div>
+                        <div>
+                            <h4>Roles y Seguridad</h4>
+                            <p>Control total sobre quién puede ver y quién puede modificar la información.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="visual-panel">
+                <div class="placeholder-text">📸 Captura de: <br>PANTALLA DE LOGIN<br>(Archivo: public/slides/login.png)
+                </div>
+                <img src="public/slides/login.png" onload="this.previousElementSibling.style.display='none'"
+                    onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <!-- 3. EL TABLERO PRINCIPAL (COMO LO PEDISTE) -->
+        <div class="slide">
+            <div class="content">
+                <div class="badge">Visión 360</div>
+                <h2 class="title">Tablero Central <br>de Gerencia</h2>
+                <p class="desc">Esta es tu herramienta principal. Una sola pantalla para entender cómo va todo el
+                    corazón de la compañía al instante.</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">🌍</div>
+                        <div>
+                            <h4>Resumen Unificado</h4>
+                            <p>Mira de un solo vistazo el cumplimiento global de todas tus áreas.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div>
+                            <h4>Indicadores Clave</h4>
+                            <p>Información procesada y lista para la toma de decisiones estratégicas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="visual-panel">
+                <div class="placeholder-text">📸 Captura de: <br>TABLERO DE GERENCIA PRINCIPAL<br>(Archivo:
+                    public/slides/gerencia_principal.png)</div>
+                <img src="public/slides/gerencia_principal.png"
+                    onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                <div class="panel-desc">
+                    <span>Tablero de Control Maestro</span>
+                    <span style="color: var(--success);">Vigilancia en Vivo</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. GESTION DE METAS -->
+        <div class="slide">
+            <div class="content">
+                <div class="badge">Control Maestro</div>
+                <h2 class="title">Ajuste Directo <br>de Objetivos</h2>
+                <p class="desc">Tú defines la estrategia. ZENTRA la ejecuta. Cambia, adapta y comunica metas al instante
+                    sin depender de nadie más.</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">🎯</div>
+                        <div>
+                            <h4>Cambio de Metas en Tiempo Real</h4>
+                            <p>Ajusta los objetivos mensuales directamente desde el panel gerencial. El cambio se
+                                refleja de inmediato en toda la plataforma.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🏭</div>
+                        <div>
+                            <h4>Metas por Marca y Empresa</h4>
+                            <p>Define objetivos diferenciados para cada proveedor. Granularidad total a tu disposición.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔒</div>
+                        <div>
+                            <h4>Solo para Gerencia</h4>
+                            <p>El acceso a la modificación de metas está restringido al rol gerencial. Nadie más puede
+                                alterar los objetivos estratégicos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="visual-panel">
+                <div class="placeholder-text">📸 Captura de: <br>EDICIÓN DE METAS<br>(Archivo: public/slides/metas.png)
+                </div>
+                <img src="public/slides/metas.png" onload="this.previousElementSibling.style.display='none'"
+                    onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <!-- 5. TRANSPARENCIA -->
+        <div class="slide">
+            <div class="content">
+                <div class="badge">Transparencia</div>
+                <h2 class="title">¿Quién, Qué <br>y Cuándo?</h2>
+                <p class="desc">Con ZENTRA no hay información oculta. Cada acción queda registrada, visible y trazable
+                    para quien deba verla.</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">🕒</div>
+                        <div>
+                            <h4>Hora Exacta del Reporte</h4>
+                            <p>Cada indicador muestra el momento preciso en que fue actualizado. Sabes si el dato es de
+                                hoy o está atrasado.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">👤</div>
+                        <div>
+                            <h4>Quién Modificó Cada Dato</h4>
+                            <p>El sistema registra qué usuario realizó cada cambio o actualización. Responsabilidad
+                                individual garantizada.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📋</div>
+                        <div>
+                            <h4>Historial de Cambios en Metas</h4>
+                            <p>Cada vez que gerencia modifica una meta, queda registrado el valor anterior, el nuevo y
+                                la fecha del cambio.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="visual-panel">
+                <div class="placeholder-text">📸 Captura de: <br>REGISTRO DE CAMBIOS O AUDITORIA<br>(Archivo:
+                    public/slides/auditoria.png)</div>
+                <img src="public/slides/auditoria.png" onload="this.previousElementSibling.style.display='none'"
+                    onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <!-- 6. OPERACIÓN (ANALISTAS) -->
+        <div class="slide">
+            <div class="content">
+                <div class="badge">Operación</div>
+                <h2 class="title">Fuerza para <br>tus Analistas</h2>
+                <p class="desc">El equipo operativo tiene un entorno propio, enfocado y sin ruido. Cada analista entra y
+                    sabe exactamente qué tiene que hacer.</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">🚀</div>
+                        <div>
+                            <h4>Solo mis Indicadores</h4>
+                            <p>Cada analista ve únicamente los KPIs que le corresponden según su cargo y área. Sin
+                                distracciones ni accesos innecesarios.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">✏️</div>
+                        <div>
+                            <h4>Ingreso Rápido de Datos</h4>
+                            <p>Actualizar un indicador toma segundos. Formularios simples, validaciones automáticas y
+                                confirmación inmediata del sistema.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div>
+                            <h4>Progreso Visible en Tiempo Real</h4>
+                            <p>Al ingresar el dato, el analista ve al instante cómo va vs. la meta. Motivación y
+                                claridad en cada reporte.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="visual-panel">
+                <div class="placeholder-text">📸 Captura de: <br>VISTA DE ANALISTA<br>(Archivo:
+                    public/slides/analista.png)</div>
+                <img src="public/slides/analista.png" onload="this.previousElementSibling.style.display='none'"
+                    onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <!-- 7. ALERTAS -->
+        <div class="slide">
+            <div class="content">
+                <div class="badge">Alarmas</div>
+                <h2 class="title">Detección de <br>Alertas Críticas</h2>
+                <p class="desc">ZENTRA no espera a que gerencia pregunte. El sistema detecta el problema y lo pone al
+                    frente antes de que escale.</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">⚠️</div>
+                        <div>
+                            <h4>Semáforo de Cumplimiento</h4>
+                            <p>Cada indicador muestra su estado en color: verde si cumple, amarillo si está en riesgo,
+                                rojo si está crítico. Sin necesidad de interpretar tablas.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔔</div>
+                        <div>
+                            <h4>KPIs sin Reporte del Día</h4>
+                            <p>Si un analista no ha ingresado el dato del día, el sistema lo marca con alerta visible
+                                para que gerencia pueda actuar de inmediato.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📉</div>
+                        <div>
+                            <h4>Áreas en Estado Crítico</h4>
+                            <p>El tablero resalta qué áreas están más lejos de su meta, permitiendo priorizar esfuerzos
+                                donde más se necesita.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="visual-panel">
+                <div class="placeholder-text">📸 Captura de: <br>PANEL DE ALERTAS<br>(Archivo:
+                    public/slides/alertas.png)</div>
+                <img src="public/slides/alertas.png" onload="this.previousElementSibling.style.display='none'"
+                    onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <!-- 8. TENDENCIAS -->
+        <div class="slide">
+            <div class="content">
+                <div class="badge">Historial</div>
+                <h2 class="title">Visión <br>Cronológica</h2>
+                <p class="desc">Los datos de hoy son más valiosos cuando los comparas con el ayer. ZENTRA te da la
+                    perspectiva completa para tomar mejores decisiones.</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">📈</div>
+                        <div>
+                            <h4>Gráficas de Tendencia por Área</h4>
+                            <p>Visualiza el progreso acumulado de cada área mes a mes. Detecta si el desempeño mejora,
+                                se estanca o cae en el tiempo.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔄</div>
+                        <div>
+                            <h4>Comparativo Real vs. Meta</h4>
+                            <p>Cada gráfica muestra la línea de meta junto al resultado real. La brecha entre ambas es
+                                la oportunidad de mejora visible.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🗓️</div>
+                        <div>
+                            <h4>Análisis Mensual Acumulado</h4>
+                            <p>Consulta el histórico por mes y entiende qué períodos fueron exitosos y cuáles
+                                presentaron desafíos para aprender de ellos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="visual-panel">
+                <div class="placeholder-text">📸 Captura de: <br>GRÁFICAS DE TENDENCIAS<br>(Archivo:
+                    public/slides/tendencias.png)</div>
+                <img src="public/slides/tendencias.png" onload="this.previousElementSibling.style.display='none'"
+                    onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <!-- 9. RESULTADOS Y BENEFICIOS -->
+        <div class="slide slide-intro">
+            <div class="content" style="max-width: 1100px;">
+                <div class="badge">¿Por qué ZENTRA?</div>
+                <h2 class="title" style="margin-bottom: 1rem;">Lo que ZENTRA<br>genera para ti</h2>
+                <p class="desc" style="margin-bottom: 2.5rem;">Una plataforma diseñada para transformar datos en
+                    decisiones, y decisiones en resultados reales.</p>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; text-align: left;">
+
+                    <div class="feature-item"
+                        style="flex-direction: column; gap: 0.75rem; padding: 1.5rem; border-color: rgba(37,99,235,0.4); background: rgba(37,99,235,0.06);">
+                        <div style="font-size: 2rem;">⚡</div>
+                        <h4 style="font-size: 1.05rem; color: white;">Decisiones más rápidas</h4>
+                        <p style="font-size: 0.85rem;">Gerencia accede al estado real de la empresa en segundos, sin
+                            esperar reportes manuales.</p>
+                    </div>
+
+                    <div class="feature-item"
+                        style="flex-direction: column; gap: 0.75rem; padding: 1.5rem; border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.06);">
+                        <div style="font-size: 2rem;">🎯</div>
+                        <h4 style="font-size: 1.05rem; color: white;">Metas que se cumplen</h4>
+                        <p style="font-size: 0.85rem;">Las metas se ajustan en tiempo real. Cada área sabe exactamente
+                            qué se espera de ella.</p>
+                    </div>
+
+                    <div class="feature-item"
+                        style="flex-direction: column; gap: 0.75rem; padding: 1.5rem; border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.06);">
+                        <div style="font-size: 2rem;">🔍</div>
+                        <h4 style="font-size: 1.05rem; color: white;">Total transparencia</h4>
+                        <p style="font-size: 0.85rem;">Auditoría completa de quién reportó, qué reportó y cuándo. Cero
+                            dudas, todo trazable.</p>
+                    </div>
+
+                    <div class="feature-item"
+                        style="flex-direction: column; gap: 0.75rem; padding: 1.5rem; border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.06);">
+                        <div style="font-size: 2rem;">📱</div>
+                        <h4 style="font-size: 1.05rem; color: white;">Acceso desde cualquier lugar</h4>
+                        <p style="font-size: 0.85rem;">Disponible en computador y celular. El control gerencial va
+                            contigo a donde vayas.</p>
+                    </div>
+
+                    <div class="feature-item"
+                        style="flex-direction: column; gap: 0.75rem; padding: 1.5rem; border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.06);">
+                        <div style="font-size: 2rem;">🚨</div>
+                        <h4 style="font-size: 1.05rem; color: white;">Alertas antes de que sea tarde</h4>
+                        <p style="font-size: 0.85rem;">El sistema detecta incumplimientos y te avisa automáticamente
+                            para actuar a tiempo.</p>
+                    </div>
+
+                    <div class="feature-item"
+                        style="flex-direction: column; gap: 0.75rem; padding: 1.5rem; border-color: rgba(6,182,212,0.4); background: rgba(6,182,212,0.06);">
+                        <div style="font-size: 2rem;">📈</div>
+                        <h4 style="font-size: 1.05rem; color: white;">Cultura de resultados</h4>
+                        <p style="font-size: 0.85rem;">Cada persona sabe cómo va. La visibilidad genera responsabilidad
+                            y mejora continua.</p>
+                    </div>
+
+                </div>
+
+                <div
+                    style="margin-top: 2.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.05em;">
+                    ZENTRA Analytics &nbsp;·&nbsp; Control Gerencial Élite &nbsp;·&nbsp; TYM & TAT
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CONTROLES -->
+    <div class="controls">
+        <div class="slide-num" id="slideNum">01 / 09</div>
+        <div class="nav-btns">
+            <button class="btn-nav" onclick="prevSlide()">←</button>
+            <button class="btn-nav" onclick="nextSlide()">→</button>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const slideNum = document.getElementById('slideNum');
+        let currentSlide = 0;
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) slide.classList.add('active');
+            });
+            const total = slides.length.toString().padStart(2, '0');
+            const current = (currentSlide + 1).toString().padStart(2, '0');
+            slideNum.innerText = `${current} / ${total}`;
+        }
+
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; updateSlide(); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        updateSlide();
+    </script>
+</body>
+
+</html>
