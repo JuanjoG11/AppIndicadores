@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppIndicadores: Misión TYM & TAT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Outfit:wght@400;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #39ff14;
+            --bg-dark: #050505;
+            --panel: rgba(20, 20, 20, 0.8);
+            --border: rgba(0, 242, 255, 0.2);
+            --transition: cubic-bezier(1, 0, 0, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-dark);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Cyber Background Effect */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            perspective: 500px;
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, var(--bg-dark) 80%);
+        }
+
+        /* Slide Engine */
+        .stage {
+            position: relative;
+            width: 100%; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 90%; max-width: 1200px; height: 80vh;
+            display: flex; flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            opacity: 0; visibility: hidden;
+            transform: scale(1.1) rotateX(10deg);
+            transition: all 0.8s var(--transition);
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
+        }
+
+        .slide.active {
+            opacity: 1; visibility: visible;
+            transform: scale(1) rotateX(0deg);
+        }
+
+        .slide.prev {
+            opacity: 0; transform: scale(0.9) rotateX(-10deg);
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 900; line-height: 0.9;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            color: #fff;
+            text-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem; font-weight: 800; margin-bottom: 1rem;
+            color: var(--neon-blue);
+        }
+
+        .subtitle {
+            font-size: 1.5rem; color: #888; margin-bottom: 3rem;
+            letter-spacing: 2px;
+        }
+
+        /* Widgets */
+        .widget-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+        }
+
+        .widget {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            padding: 2rem; border-radius: 30px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .widget:hover {
+            border-color: var(--neon-blue);
+            background: rgba(0, 242, 255, 0.05);
+            transform: translateY(-10px);
+        }
+
+        .alert-lamp {
+            width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 1.5rem;
+            animation: pulse-lamp 2s infinite alternate;
+        }
+
+        @keyframes pulse-lamp {
+            from { box-shadow: 0 0 5px currentColor; }
+            to { box-shadow: 0 0 30px currentColor; }
+        }
+
+        /* Navigation HUD */
+        .hud {
+            position: fixed; bottom: 5vh; left: 0; width: 100%;
+            display: flex; justify-content: center; align-items: center; gap: 3rem;
+            z-index: 100;
+        }
+
+        .hud-btn {
+            background: none; border: 1px solid var(--border);
+            color: var(--neon-blue); padding: 1rem; border-radius: 50%;
+            width: 60px; height: 60px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+
+        .hud-btn:hover {
+            background: var(--neon-blue); color: #000;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        .hud-progress {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem; font-weight: 700; color: var(--neon-blue);
+        }
+
+        /* Area Spotlight */
+        .spotlight {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+        }
+
+        .kpi-mini-card {
+            border-left: 4px solid var(--neon-blue);
+            padding: 1rem 1.5rem; margin-bottom: 1rem;
+            background: rgba(0, 242, 255, 0.02);
+            font-size: 1.1rem;
+        }
+
+        /* Bonus Calculator Surprise */
+        .calculator {
+            background: #111; border-radius: 20px; padding: 2rem;
+            border: 1px solid var(--neon-purple); text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="grid-bg"></div>
+
+    <div class="stage" id="stage">
+
+        <!-- 1. INTRO: THE MISSION -->
+        <div class="slide active">
+            <p class="subtitle" style="color: var(--neon-blue);">// PROTOCOLO TYM & TAT ACTIVADO</p>
+            <h1>EL PODER <br>DE LOS <br>DATOS</h1>
+            <p style="color: #aaa; font-size: 1.2rem; max-width: 600px;">Transformando la operación diaria en resultados extraordinarios. Bienvenido a la nueva consola de AppIndicadores.</p>
+        </div>
+
+        <!-- 2. USO: LA INTERFAZ -->
+        <div class="slide">
+            <div class="spotlight">
+                <div>
+                    <div class="badge" style="color: var(--neon-blue); text-transform: uppercase;">Guía de Usuario</div>
+                    <h2>Uso Táctico</h2>
+                    <p style="margin-bottom: 2rem; color: #888;">El sistema detecta tu perfil. Solo verás lo que tu área necesita controlar.</p>
+                    <div class="kpi-mini-card"><b>1. Identificación:</b> Ingreso seguro por cargo.</div>
+                    <div class="kpi-mini-card" style="border-color: var(--neon-purple);"><b>2. Diagnóstico:</b> Dashboard de alertas en tiempo real.</div>
+                    <div class="kpi-mini-card" style="border-color: var(--neon-green);"><b>3. Acción:</b> Carga proactiva antes del cierre semanal.</div>
+                </div>
+                <div style="text-align: center; position: relative;">
+                    <div style="font-size: 15rem; opacity: 0.1;">📱</div>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <div style="padding: 2rem; border: 1px solid var(--neon-blue); border-radius: 20px; background: #000;">
+                            <p style="color: var(--neon-blue);">ESTADO: OK</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. ALERTAS: EL SEMÁFORO NEÓN -->
+        <div class="slide">
+            <h2>Alertas de Meta</h2>
+            <p class="subtitle">El lenguaje del éxito es visual.</p>
+            <div class="widget-grid">
+                <div class="widget">
+                    <div class="alert-lamp" style="background: var(--neon-green); color: var(--neon-green);"></div>
+                    <h4 style="color: var(--neon-green);">CUMPLIDO</h4>
+                    <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 1rem;">Zona de confort. Meta alcanzada. No se requiere acción inmediata.</p>
+                </div>
+                <div class="widget" style="border-color: #f59e0b;">
+                    <div class="alert-lamp" style="background: #f59e0b; color: #f59e0b;"></div>
+                    <h4 style="color: #f59e0b;">ATENCIÓN</h4>
+                    <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 1rem;">Riesgo operativo. La meta está cerca pero el tiempo se agota.</p>
+                </div>
+                <div class="widget" style="border-color: var(--danger);">
+                    <div class="alert-lamp" style="background: #ff0000; color: #ff0000;"></div>
+                    <h4 style="color: #ff0000;">URGENTE</h4>
+                    <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 1rem;">Fallo crítico. Acción requerida por jefatura de área hoy mismo.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. CARGA: FEEDING THE BEAST -->
+        <div class="slide" style="text-align: center;">
+            <h2>Alimentación Eficiente</h2>
+            <p class="subtitle">Ingreso de datos rápido, limpio y sin errores.</p>
+            <div style="max-width: 700px; margin: 0 auto; background: rgba(255,255,255,0.02); padding: 3rem; border-radius: 40px; border: 2px dashed #333;">
+                <div style="font-size: 3rem; margin-bottom: 2rem;">🔢</div>
+                <p style="font-size: 1.4rem; line-height: 1.6;">"Simplemente elige tu indicador, ingresa el valor de la semana y pulsa **SINCRONIZAR**. El sistema hará los cálculos pesados por ti."</p>
+                <div style="margin-top: 2rem; color: var(--neon-blue); font-weight: 700;">+ 100% TRANSPARENCIA</div>
+            </div>
+        </div>
+
+        <!-- 5-11. ÁREAS SPOTLIGHT -->
+        <div class="slide">
+            <div class="spotlight">
+                <div>
+                    <div class="badge">ÁREA: LOGÍSTICA</div>
+                    <h2>Felipe Arias</h2>
+                    <div class="kpi-mini-card">🚚 Devoluciones (Meta 1.80%)</div>
+                    <div class="kpi-mini-card">📦 Productividad Auxiliares (80 ped)</div>
+                    <div class="kpi-mini-card">⚡ Picking (8 segundos)</div>
+                </div>
+                <div>
+                    <div class="badge" style="background: var(--neon-purple);">ÁREA: G. HUMANA</div>
+                    <h2>Diana Marín</h2>
+                    <div class="kpi-mini-card">👥 Rotación de Personal (5%)</div>
+                    <div class="kpi-mini-card">🤒 Ausentismo (2.5%)</div>
+                    <div class="kpi-mini-card">📅 Vacantes (8 días)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="spotlight">
+                <div>
+                    <div class="badge">ÁREA: CAJA / CARTERA</div>
+                    <h2>Sandra & Tesorería</h2>
+                    <div class="kpi-mini-card">💰 Cierre Planillas (100%)</div>
+                    <div class="kpi-mini-card">📑 Cartera al Día (10%)</div>
+                    <div class="kpi-mini-card">🔍 Recircularizaciones</div>
+                </div>
+                <div>
+                    <div class="badge" style="background: var(--neon-purple);">ÁREA: CONTABILIDAD</div>
+                    <h2>Oscar Giraldo</h2>
+                    <div class="kpi-mini-card">📈 Tiempo Cierre (12 días)</div>
+                    <div class="kpi-mini-card">🏦 Bancos & Conciliaciones</div>
+                    <div class="kpi-mini-card">⚖️ Optimización Tributaria</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. BONIFICACIONES: EL PREMIO -->
+        <div class="slide">
+            <h1 style="color: var(--neon-purple);">TU PREMIO</h1>
+            <p class="subtitle">La excelencia tiene sabor a recompensa.</p>
+            <div class="widget-grid">
+                <div class="calculator">
+                    <span style="font-size: 2rem;">🔋</span>
+                    <h4>DÍA LIBRE</h4>
+                    <p style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.5;">Por mantener el 100% de cumplimiento mensual.</p>
+                </div>
+                <div class="calculator" style="border-color: var(--neon-blue);">
+                    <span style="font-size: 2rem;">💎</span>
+                    <h4>BONO "EXACTO"</h4>
+                    <p style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.5;">Reconocimiento económico por cero errores de carga.</p>
+                </div>
+                <div class="calculator" style="border-color: var(--neon-green);">
+                    <span style="font-size: 2rem;">🏆</span>
+                    <h4>EQUIPO MVP</h4>
+                    <p style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.5;">Almuerzo corporativo para el área líder.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. CIERRE -->
+        <div class="slide" style="text-align: center;">
+            <div style="font-size: 5rem; margin-bottom: 2rem;">⚡</div>
+            <h1>ERES PARTE <br>DEL PLAN</h1>
+            <p class="subtitle">// TYM & TAT ANALYTICS 2026 //</p>
+        </div>
+
+    </div>
+
+    <!-- NAVIGATION HUD -->
+    <div class="hud">
+        <button class="hud-btn" onclick="prevSlide()">←</button>
+        <div class="hud-progress" id="hudProgress">01 / 08</div>
+        <button class="hud-btn" onclick="nextSlide()">→</button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progress = document.getElementById('hudProgress');
+        let current = 0;
+
+        function update() {
+            slides.forEach((s, i) => {
+                s.classList.remove('active', 'prev');
+                if (i === current) s.classList.add('active');
+                if (i === current - 1) s.classList.add('prev');
+            });
+            progress.innerText = `${(current + 1).toString().padStart(2, '0')} / ${slides.length.toString().padStart(2, '0')}`;
+        }
+
+        function nextSlide() { if(current < slides.length - 1) { current++; update(); } }
+        function prevSlide() { if(current > 0) { current--; update(); } }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        window.addEventListener('wheel', e => {
+            if (e.deltaY > 0) nextSlide();
+            else prevSlide();
+        });
+
+        update();
+    </script>
+</body>
+</html>
