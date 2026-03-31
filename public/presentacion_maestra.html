@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppIndicadores - Plataforma de Control Maestro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;900&family=Plus+Jakarta+Sans:wght@300;500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+            --safe: #10b981;
+            --risk: #f59e0b;
+            --alert: #ef4444;
+            --bg: #0b0f1a;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Ambient Background */
+        .ambient-sphere {
+            position: fixed;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(100px);
+            animation: move-sphere 20s infinite alternate linear;
+        }
+
+        @keyframes move-sphere {
+            0% { top: -10%; left: -10%; }
+            100% { top: 60%; left: 60%; }
+        }
+
+        /* Presentation Engine */
+        .viewport {
+            width: 100%; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 85%; height: 80vh;
+            padding: 3rem;
+            display: flex; flex-direction: column;
+            justify-content: center;
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.9) translateY(40px) rotateY(-5deg);
+            transition: var(--transition);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .slide.active {
+            opacity: 1; visibility: visible;
+            transform: scale(1) translateY(0) rotateY(0deg);
+        }
+
+        .slide.prev {
+            opacity: 0; transform: scale(1.1) translateY(-40px);
+        }
+
+        /* UI Elements */
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 900; line-height: 1;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #fff, #4f46e5);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem; font-weight: 800; margin-bottom: 1.5rem;
+        }
+
+        .badge {
+            background: var(--primary);
+            padding: 0.5rem 1.25rem; border-radius: 12px;
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.15em; margin-bottom: 2.5rem; display: inline-block;
+        }
+
+        .tagline {
+            font-size: 1.25rem; color: var(--text-dim); line-height: 1.6;
+            margin-bottom: 3rem; max-width: 600px;
+        }
+
+        /* Grid Layouts */
+        .content-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+        }
+
+        /* Alerts Visualization */
+        .alert-system {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+        }
+
+        .alert-card {
+            padding: 2rem; border-radius: 30px; border: 1px solid var(--glass-border);
+            text-align: center; transition: 0.3s;
+        }
+
+        .alert-card.green { background: rgba(16, 185, 129, 0.1); border-color: var(--safe); }
+        .alert-card.yellow { background: rgba(245, 158, 11, 0.1); border-color: var(--risk); }
+        .alert-card.red { background: rgba(239, 68, 68, 0.1); border-color: var(--alert); }
+
+        .status-dot {
+            width: 20px; height: 20px; border-radius: 50%; margin: 0 auto 1.5rem;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        /* Usage Steps */
+        .step-list { display: flex; flex-direction: column; gap: 1.5rem; }
+        .step { display: flex; gap: 1.5rem; align-items: flex-start; }
+        .step-n {
+            min-width: 50px; height: 50px; border-radius: 15px; background: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.25rem;
+        }
+
+        /* KPI Tables */
+        .kpi-board {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem;
+        }
+        .kpi-tag {
+            background: rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 20px;
+            font-size: 0.9rem; font-weight: 600; display: flex; justify-content: space-between;
+            border: 1px solid transparent; transition: 0.3s;
+        }
+        .kpi-tag:hover { border-color: var(--primary); background: rgba(255,255,255,0.08); }
+
+        /* Navigation Controls */
+        .toolbar {
+            position: fixed; bottom: 3rem; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 2rem; align-items: center;
+            background: rgba(15, 23, 42, 0.6); padding: 1rem 2.5rem; border-radius: 25px;
+            backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
+            z-index: 1000;
+        }
+
+        .btn-control {
+            background: none; border: none; color: white; cursor: pointer;
+            font-size: 1.5rem; opacity: 0.5; transition: 0.3s;
+        }
+        .btn-control:hover { opacity: 1; transform: scale(1.1); }
+
+        .progress-track {
+            height: 4px; width: 200px; background: rgba(255,255,255,0.1); border-radius: 2px;
+            position: relative; overflow: hidden;
+        }
+        .progress-bar {
+            position: absolute; height: 100%; background: var(--primary);
+            width: 0%; transition: 0.3s;
+        }
+
+        /* Mobile */
+        @media (max-width: 1000px) {
+            .slide { width: 95%; height: auto; padding: 2rem; }
+            .content-grid { grid-template-columns: 1fr; gap: 2rem; }
+            .badge { margin-bottom: 1rem; }
+            h1 { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-sphere"></div>
+
+    <div class="viewport" id="deck">
+
+        <!-- 1. PORTADA -->
+        <div class="slide active">
+            <div class="badge">Master Vision 2026</div>
+            <h1>CONTROL <br>ESTRATÉGICO</h1>
+            <p class="tagline">La evolución de TYM & TAT en tus manos. Una plataforma diseñada para ganar, medir y optimizar cada decisión.</p>
+            <div style="display: flex; gap: 4rem;">
+                <div><h3 style="color: var(--primary); font-size: 2.5rem;">01</h3><p style="color: var(--text-dim);">Un Solo Acceso</p></div>
+                <div><h3 style="color: var(--safe); font-size: 2.5rem;">∞</h3><p style="color: var(--text-dim);">Datos en Vivo</p></div>
+                <div><h3 style="color: var(--risk); font-size: 2.5rem;">TOP</h3><p style="color: var(--text-dim);">Rentabilidad</p></div>
+            </div>
+        </div>
+
+        <!-- 2. MODO DE USO -->
+        <div class="slide">
+            <div class="content-grid">
+                <div>
+                    <div class="badge">Inteligencia Operativa</div>
+                    <h2>Modo de Uso <br>& Navegación</h2>
+                    <div class="step-list">
+                        <div class="step">
+                            <div class="step-n">1</div>
+                            <div>
+                                <h4 style="font-size: 1.2rem;">Identidad</h4>
+                                <p style="color: var(--text-dim);">Inicia sesión con tus credenciales asignadas. El sistema reconoce tu área automáticamente.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-n">2</div>
+                            <div>
+                                <h4 style="font-size: 1.2rem;">Monitoreo</h4>
+                                <p style="color: var(--text-dim);">Revisa el tablero principal para ver el estado global de tus indicadores.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-n">3</div>
+                            <div>
+                                <h4 style="font-size: 1.2rem;">Alimentación</h4>
+                                <p style="color: var(--text-dim);">Identifica los KPIs marcados como "Por Alimentar" para completar tu reporte.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 2rem; background: rgba(255,255,255,0.02); border-radius: 30px; border: 1px dashed var(--glass-border); text-align: center;">
+                    <span style="font-size: 10rem;">🖱️</span>
+                    <p style="margin-top: 1rem; color: var(--primary);">Interfaz Táctil & Web</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. CARGA DE DATOS -->
+        <div class="slide">
+            <div class="content-grid">
+                <div style="text-align: center; border: 2px solid var(--primary); padding: 4rem; border-radius: 40px; background: rgba(79, 70, 229, 0.05);">
+                    <span style="font-size: 6rem; display: block; margin-bottom: 2rem;">📥</span>
+                    <h4 style="font-size: 1.5rem;">Carga en 3 Segundos</h4>
+                    <p style="color: var(--text-dim); margin-top: 1rem;">Clic -> Valor -> Guardar</p>
+                </div>
+                <div>
+                    <div class="badge">Gestión de Datos</div>
+                    <h2>¿Cómo Cargar?</h2>
+                    <p class="tagline">La precisión es nuestro activo más valioso. Al cargar un dato, este se integra al tablero de gerencia de forma inmediata.</p>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem;">
+                        <li style="display: flex; align-items: center; gap: 1rem;"><div style="width: 10px; height: 10px; background: var(--safe); border-radius: 50%;"></div> Solo valores numéricos reales.</li>
+                        <li style="display: flex; align-items: center; gap: 1rem;"><div style="width: 10px; height: 10px; background: var(--safe); border-radius: 50%;"></div> Desglose por marcas (Alpina, Zenú, etc).</li>
+                        <li style="display: flex; align-items: center; gap: 1rem;"><div style="width: 10px; height: 10px; background: var(--primary); border-radius: 50%;"></div> Confirmación instantánea de envío.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. ALERTAS SEGÚN META (EL SEMÁFORO) -->
+        <div class="slide">
+            <div class="badge">Control de Alerta</div>
+            <h2>El Nuevo Semáforo <br>de Meta</h2>
+            <p class="tagline">El sistema analiza tu carga vs la meta estratégica y activa alertas visuales para avisarte si estás cumpliendo u operando en riesgo.</p>
+            
+            <div class="alert-system">
+                <div class="alert-card green">
+                    <div class="status-dot" style="color: var(--safe); background: var(--safe);"></div>
+                    <h4>CUMPLIMIENTO</h4>
+                    <p style="font-size: 0.8rem; margin-top: 1rem;">Estamos en zona segura. El indicador está por encima del 100% de la meta.</p>
+                </div>
+                <div class="alert-card yellow">
+                    <div class="status-dot" style="color: var(--risk); background: var(--risk);"></div>
+                    <h4>EN RIESGO</h4>
+                    <p style="font-size: 0.8rem; margin-top: 1rem;">Estamos cerca de la meta pero no llegamos. ¡Acción inmediata requerida!</p>
+                </div>
+                <div class="alert-card red">
+                    <div class="status-dot" style="color: var(--alert); background: var(--alert);"></div>
+                    <h4>CRÍTICO</h4>
+                    <p style="font-size: 0.8rem; margin-top: 1rem;">Estamos lejos de la meta. Se activa reporte especial para Gerencia.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. AREA: LOGISTICA -->
+        <div class="slide">
+            <div class="badge">Área Enfoque</div>
+            <h2>📦 Logística & <br>Operaciones</h2>
+            <p style="font-weight: 800; color: var(--primary);">LIDER: Felipe Arias</p>
+            <div class="kpi-board">
+                <div class="kpi-tag">Devoluciones <span style="color: var(--safe);">Meta: 1.80%</span></div>
+                <div class="kpi-tag">Productividad <span style="color: var(--safe);">Meta: 80 ped</span></div>
+                <div class="kpi-tag">Picking <span style="color: var(--risk);">Meta: 8 seg</span></div>
+                <div class="kpi-tag">Fletes <span style="color: var(--safe);">Meta: 3.4%</span></div>
+                <div class="kpi-tag">Averías <span style="color: var(--safe);">Meta: 0.20%</span></div>
+                <div class="kpi-tag">Embalajes <span style="color: var(--safe);">Meta: 0 perd</span></div>
+            </div>
+        </div>
+
+        <!-- 6. AREA: GESTION HUMANA -->
+        <div class="slide">
+            <div class="badge">Área Enfoque</div>
+            <h2>👥 Gestión <br>de Talento</h2>
+            <p style="font-weight: 800; color: var(--primary);">LIDER: Diana Marín</p>
+            <div class="kpi-board">
+                <div class="kpi-tag">Rotación <span style="color: var(--safe);">Meta: 5%</span></div>
+                <div class="kpi-tag">Ausentismo <span style="color: var(--safe);">Meta: 2.5%</span></div>
+                <div class="kpi-tag">SST <span style="color: var(--safe);">Meta: 90%</span></div>
+                <div class="kpi-tag">Cultura <span style="color: var(--safe);">Meta: 100%</span></div>
+                <div class="kpi-tag">Vacantes <span style="color: var(--safe);">Meta: 8 días</span></div>
+                <div class="kpi-tag">HE en Nómina <span style="color: var(--safe);">Meta: 3%</span></div>
+            </div>
+        </div>
+
+        <!-- 7. AREA: CAJA & CARTERA -->
+        <div class="slide">
+            <div class="badge">Área Enfoque</div>
+            <h2>💰 Tesorería & <br>Cartera</h2>
+            <p style="font-weight: 800; color: var(--primary);">LIDERES: Sandra Milena & Tesorería</p>
+            <div class="kpi-board">
+                <div class="kpi-tag">Planillas <span style="color: var(--safe);">Meta: 100%</span></div>
+                <div class="kpi-tag">Vales <span style="color: var(--safe);">Meta: 0.5%</span></div>
+                <div class="kpi-tag">Cartera al Día <span style="color: var(--safe);">Meta: 10%</span></div>
+                <div class="kpi-tag">Cartera >30d <span style="color: var(--safe);">Meta: 5%</span></div>
+                <div class="kpi-tag">Recirculariz. <span style="color: var(--safe);">Bimestral</span></div>
+                <div class="kpi-tag">Arqueos <span style="color: var(--safe);">8 al mes</span></div>
+            </div>
+        </div>
+
+        <!-- 8. AREA: CONTABILIDAD -->
+        <div class="slide">
+            <div class="badge">Área Enfoque</div>
+            <h2>⚖️ Contabilidad <br>& Fiscal</h2>
+            <p style="font-weight: 800; color: var(--primary);">LIDER: Oscar Giraldo</p>
+            <div class="kpi-board">
+                <div class="kpi-tag">Cierre <span style="color: var(--safe);">Meta: 12 días</span></div>
+                <div class="kpi-tag">Ajustes <span style="color: var(--alert);">Meta: 1 máx</span></div>
+                <div class="kpi-tag">Conciliaciones <span style="color: var(--safe);">Quincenal</span></div>
+                <div class="kpi-tag">Impuestos <span style="color: var(--safe);">Optimización</span></div>
+                <div class="kpi-tag">Activos <span style="color: var(--safe);">94%</span></div>
+                <div class="kpi-tag">Sanciones <span style="color: var(--safe);">0.1%</span></div>
+            </div>
+        </div>
+
+        <!-- 9. AREA: COMERCIAL -->
+        <div class="slide">
+            <div class="badge">Área Enfoque</div>
+            <h2>🤝 Gestión <br>Comercial</h2>
+            <p style="font-weight: 800; color: var(--primary);">LIDER: Gerencia Comercial</p>
+            <div class="kpi-board">
+                <div class="kpi-tag">Cumplimiento <span style="color: var(--safe);">100%</span></div>
+                <div class="kpi-tag">Margen Bruto <span style="color: var(--safe);">12%</span></div>
+                <div class="kpi-tag">Venta/Vend <span style="color: var(--safe);">$60M</span></div>
+                <div class="kpi-tag">Inventario <span style="color: var(--risk);">7 días</span></div>
+                <div class="kpi-tag">Devoluciones <span style="color: var(--safe);">1.8%</span></div>
+                <div class="kpi-tag">Cartera Venc. <span style="color: var(--alert);">80% cobro</span></div>
+            </div>
+        </div>
+
+        <!-- 10. AREA: INFO / INV / FACT -->
+        <div class="slide">
+            <div class="badge">Área Enfoque</div>
+            <h2>🛠️ Soporte & <br>Facturación</h2>
+            <p style="font-weight: 800; color: var(--primary);">LIDERES: Control Interno & Maricela</p>
+            <div class="kpi-board">
+                <div class="kpi-tag">Exactitud ERI <span style="color: var(--safe);">100%</span></div>
+                <div class="kpi-tag">Mermas <span style="color: var(--safe);">0%</span></div>
+                <div class="kpi-tag">Obsolescencia <span style="color: var(--safe);">0%</span></div>
+                <div class="kpi-tag">Facturación <span style="color: var(--safe);">100%</span></div>
+                <div class="kpi-tag">Notas Crédito <span style="color: var(--safe);">Oportunidad</span></div>
+                <div class="kpi-tag">Errores Fact. <span style="color: var(--safe);">0.5%</span></div>
+            </div>
+        </div>
+
+        <!-- 11. BONIFICACIONES -->
+        <div class="slide">
+            <div class="badge" style="background: var(--risk);">Incentivos 2026</div>
+            <h2>El Sistema de <br>Recompensas</h2>
+            <p class="tagline">Premiamos la puntualidad, la exactitud y el trabajo en equipo. ¡Gana más allá de tu salario!</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 2rem;">
+                <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 30px; border: 1px solid var(--primary);">
+                    <h4 style="color: var(--primary);">Eficacia</h4>
+                    <p style="font-size: 0.85rem; margin-top: 1rem; color: var(--text-dim);">Bono para analistas que cierran la semana sin un solo indicador pendiente.</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 30px; border: 1px solid var(--safe);">
+                    <h4 style="color: var(--safe);">Calidad</h4>
+                    <p style="font-size: 0.85rem; margin-top: 1rem; color: var(--text-dim);">Incentivo por cero errores en auditorías de datos mensuales.</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 30px; border: 1px solid var(--risk);">
+                    <h4 style="color: var(--risk);">Cumplimiento</h4>
+                    <p style="font-size: 0.85rem; margin-top: 1rem; color: var(--text-dim);">Tarde libre para el equipo que mantenga el semáforo en verde todo el mes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. CIERRE -->
+        <div class="slide" style="text-align: center;">
+            <span style="font-size: 5rem;">🚀</span>
+            <h2 style="margin-top: 2rem;">¡Empieza Ahora!</h2>
+            <p class="tagline" style="margin: 0 auto;">Tu área depende de tu visión. Haz que los datos hablen por ti.</p>
+            <div style="margin-top: 4rem; opacity: 0.3; font-weight: 900; letter-spacing: 0.5em;">TYM & TAT ANALYTICS</div>
+        </div>
+
+    </div>
+
+    <!-- CONTROLES -->
+    <div class="toolbar">
+        <button class="btn-control" onclick="prevSlide()">←</button>
+        <div class="progress-track">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <button class="btn-control" onclick="nextSlide()">→</button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        let current = 0;
+
+        function update() {
+            slides.forEach((s, i) => {
+                s.classList.remove('active', 'prev');
+                if (i === current) s.classList.add('active');
+                if (i === current - 1) s.classList.add('prev');
+            });
+            const progress = ((current + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function nextSlide() { if(current < slides.length - 1) { current++; update(); } }
+        function prevSlide() { if(current > 0) { current--; update(); } }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Swipe support
+        let startX = 0;
+        window.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+        window.addEventListener('touchend', e => {
+            const diff = startX - e.changedTouches[0].clientX;
+            if (diff > 50) nextSlide();
+            if (diff < -50) prevSlide();
+        });
+
+        // Mouse Wheel
+        window.addEventListener('wheel', e => {
+            if (e.deltaY > 0) nextSlide();
+            else prevSlide();
+        });
+
+        update();
+    </script>
+</body>
+</html>
