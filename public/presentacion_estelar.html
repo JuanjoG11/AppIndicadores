@@ -27,7 +27,7 @@
             position: absolute; width: 95%; height: 92vh; max-width: 1500px;
             background: var(--glass); backdrop-filter: blur(60px);
             border: 1px solid var(--border); border-radius: 40px;
-            padding: 2.5rem; display: flex; flex-direction: column;
+            padding: 3rem; display: flex; flex-direction: column;
             opacity: 0; visibility: hidden; transform: rotateX(10deg) translateY(50px) scale(0.9);
             transition: all 0.9s cubic-bezier(0.2, 1, 0.2, 1);
             box-shadow: 0 50px 150px rgba(0,0,0,0.8);
@@ -36,36 +36,50 @@
         .slide.active { opacity: 1; visibility: visible; transform: rotateX(0deg) translateY(0) scale(1); }
 
         h1 { font-family: 'Outfit'; font-size: clamp(3rem, 7vw, 6rem); font-weight: 900; line-height: 0.85; margin-bottom: 2rem; }
-        h2 { font-family: 'Outfit'; font-size: 2.5rem; font-weight: 800; color: var(--p); display: flex; align-items: center; gap: 1rem; }
+        h2 { font-family: 'Outfit'; font-size: 2.8rem; font-weight: 800; color: var(--p); display: flex; align-items: center; gap: 1.2rem; margin-bottom: 1.5rem; }
         
-        .label { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.25rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241,0.2); border-radius: 100px; color: var(--p); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 1rem; }
+        .label { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.5rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241,0.2); border-radius: 100px; color: var(--p); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 1.5rem; }
 
+        /* MEMBER FOCUS SLIDE */
+        .member-focus-list { display: flex; gap: 3rem; justify-content: center; align-items: center; flex: 1; }
+        .member-focus-item { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; text-align: center; position: relative; }
+        
+        .photo-container { position: relative; width: 220px; height: 220px; cursor: pointer; border-radius: 50%; border: 6px solid var(--p); overflow: hidden; transition: 0.3s; box-shadow: 0 0 50px rgba(99, 102, 241, 0.3); background: #000; }
+        .photo-container::after { content: 'EDITAR FOTO'; position: absolute; bottom: 0; left: 0; width: 100%; padding: 0.5rem; background: rgba(99, 102, 241, 0.9); color: #fff; font-size: 0.8rem; font-weight: 900; opacity: 0; transition: 0.3s; }
+        .photo-container:hover::after { opacity: 1; }
+        .photo-container:hover { transform: scale(1.05); border-color: #fff; }
+        
+        .focus-photo { width: 100%; height: 100%; object-fit: cover; }
+        .focus-name { font-family: 'Outfit'; font-size: 2.5rem; font-weight: 900; margin-top: 1rem; line-height: 1.1; }
+        .focus-role { font-size: 1.1rem; color: var(--p); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Bento Grid */
         .bento-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;
-            flex: 1; overflow-y: auto; padding: 1rem; margin-top: 1rem;
+            flex: 1; overflow-y: auto; padding: 1rem;
         }
 
         .kpi-card {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 24px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px;
             padding: 1.5rem; transition: 0.4s; position: relative; overflow: hidden;
         }
-        .kpi-card:hover { transform: translateY(-5px) scale(1.02); border-color: var(--p); background: rgba(99, 102, 241, 0.05); }
+        .kpi-card:hover { transform: translateY(-5px); border-color: var(--p); background: rgba(99, 102, 241, 0.05); }
 
-        .kpi-icon { font-size: 2rem; margin-bottom: 1rem; display: block; }
-        .kpi-name { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; color: #e2e8f0; line-height: 1.2; }
-        .kpi-meta { font-size: 0.8rem; color: var(--p); font-weight: 700; margin-bottom: 0.25rem; }
-        .kpi-plazo { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        .kpi-icon { font-size: 2rem; margin-bottom: 0.8rem; display: block; }
+        .kpi-name { font-weight: 800; font-size: 1rem; margin-bottom: 0.4rem; color: #e2e8f0; line-height: 1.2; height: 2.4rem; display: flex; align-items: center; }
+        .kpi-meta { font-size: 0.85rem; color: var(--s); font-weight: 700; margin-top: 0.4rem; }
+        .kpi-plazo { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.4rem; }
 
-        .badge-load { position: absolute; top: 1.5rem; right: 1.5rem; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.6rem; font-weight: 900; }
-        .badge-load.me { background: var(--s); color: #000; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .badge-load { position: absolute; top: 1.5rem; right: 1.5rem; padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.65rem; font-weight: 900; }
+        .badge-load.me { background: var(--s); color: #000; }
         .badge-load.other { background: rgba(255,255,255,0.1); color: #94a3b8; }
 
-        .hud { position: fixed; bottom: 3rem; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 3rem; background: rgba(10, 10, 20, 0.8); backdrop-filter: blur(20px); padding: 1.2rem 3rem; border-radius: 100px; border: 1px solid var(--border); z-index: 1000; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .hud { position: fixed; bottom: 2.5rem; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 3rem; background: rgba(10, 10, 20, 0.8); backdrop-filter: blur(20px); padding: 1rem 3rem; border-radius: 100px; border: 1px solid var(--border); z-index: 1000; }
         .hud-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 1.8rem; transition: 0.3s; opacity: 0.4; }
         .hud-btn:hover { opacity: 1; color: var(--p); transform: scale(1.2); }
         .hud-progress { font-family: 'Outfit'; font-weight: 900; font-size: 1.2rem; color: var(--p); }
 
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
         .float { animation: floating 3s infinite ease-in-out; }
@@ -84,182 +98,299 @@
             <div class="float" style="font-size: 6rem; margin-bottom: 2rem;">🚀</div>
             <div class="label">ZENTRA ANALYTICS</div>
             <h1>EL PODER DE <br><span style="color: var(--p);">TUS DATOS</span></h1>
-            <p style="color: #64748b; font-size: 1.5rem; max-width: 600px; margin: 2rem auto;">La red definitiva de indicadores reales TYM & TAT bajo el estándar <b>ZENTRA</b>.</p>
+            <p style="color: #64748b; font-size: 1.5rem;">Ecosistema de Indicadores TYM & TAT // 2026</p>
         </div>
 
-        <!-- 2. USO RÁPIDO -->
+        <!-- 2. MANUAL -->
         <div class="slide" style="justify-content: center; text-align: center;">
-            <div class="label">Manual Administrativo</div>
+            <div class="label">Protocolo Administrativo</div>
             <h2>Manual de Uso ZENTRA</h2>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 4rem;">
-                <div class="kpi-card" style="padding: 3rem;">
-                    <span style="font-size: 3rem; display: block; margin-bottom: 2rem;">🛡️</span>
-                    <h3 style="margin-bottom: 1rem;">ACCESO</h3>
-                    <p style="color: #64748b; font-size: 0.9rem;">El sistema reconoce tu cargo. Solo verás los tableros de ZENTRA vinculados a tu área.</p>
+                <div class="kpi-card" style="padding: 4rem;">
+                    <span style="font-size: 4rem; display: block; margin-bottom: 2rem;">🛡️</span>
+                    <h3 style="margin-bottom: 1rem; font-size: 2rem;">SEGURIDAD</h3>
+                    <p style="color: #64748b;">Información protegida y segmentada por área.</p>
                 </div>
-                <div class="kpi-card" style="padding: 3rem; border-color: var(--p);">
-                    <span style="font-size: 3rem; display: block; margin-bottom: 2rem;">📊</span>
-                    <h3 style="margin-bottom: 1rem;">ALIMENTACIÓN</h3>
-                    <p style="color: #64748b; font-size: 0.9rem;">Si ves <b style="color: var(--s);">[ESTE ES TUYO]</b>, carga tus resultados antes del cierre semanal.</p>
+                <div class="kpi-card" style="padding: 4rem; border-color: var(--p);">
+                    <span style="font-size: 4rem; display: block; margin-bottom: 2rem;">📸</span>
+                    <h3 style="margin-bottom: 1rem; font-size: 2rem;">RECUERDA</h3>
+                    <p style="color: #64748b;">¡Haz clic sobre cualquier círculo de foto para subir una propia!</p>
                 </div>
-                <div class="kpi-card" style="padding: 3rem;">
-                    <span style="font-size: 3rem; display: block; margin-bottom: 2rem;">⚡</span>
-                    <h3 style="margin-bottom: 1rem;">TIEMPO REAL</h3>
-                    <p style="color: #64748b; font-size: 0.9rem;">Toda actualización en ZENTRA se refleja de inmediato para la gerencia.</p>
+                <div class="kpi-card" style="padding: 4rem;">
+                    <span style="font-size: 4rem; display: block; margin-bottom: 2rem;">⚡</span>
+                    <h3 style="margin-bottom: 1rem; font-size: 2rem;">FLUJO</h3>
+                    <p style="color: #64748b;">Navega con las flechas o la rueda del mouse.</p>
                 </div>
             </div>
         </div>
 
-        <!-- 3. LOGISTICA (PARTE 1) -->
-        <div class="slide">
-            <div class="label">LÍDER: Felipe Arias / LOGÍSTICA</div>
-            <h2>📦 Operación de Entrega (1/2)</h2>
-            <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🚚</span><div class="kpi-name">Índice de Devoluciones</div><div class="kpi-meta">META: 1.80%</div><div class="kpi-plazo">PLAZO: DIARIO</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">📋</span><div class="kpi-name">Prod. Auxiliares x Marca</div><div class="kpi-meta">META: 80 ped</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🚛</span><div class="kpi-name">Productividad x Vehículo</div><div class="kpi-meta">META: 80 ped</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">GH CARGA</span><span class="kpi-icon">💰</span><div class="kpi-name">Nómina Logística vs Venta</div><div class="kpi-meta">META: 3.40%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">CONT CARGA</span><span class="kpi-icon">💸</span><div class="kpi-name">Fletes vs Venta</div><div class="kpi-meta">META: 4.20%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">GH CARGA</span><span class="kpi-icon">⏱️</span><div class="kpi-name">Horas Extras x Auxiliar</div><div class="kpi-meta">META: 1.5 horas</div><div class="kpi-plazo">PLAZO: QUINCENAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">📦</span><div class="kpi-name">Pérdida de Embalajes</div><div class="kpi-meta">META: 0 Cantidad</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">⚠️</span><div class="kpi-name">Índice de Averías</div><div class="kpi-meta">META: 0.20%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
+        <!-- 3. EQUIPO ENTREGA -->
+        <div class="slide" style="justify-content: center; text-align: center;">
+            <div class="label">LOGÍSTICA DE ENTREGA // RESPONSABLES</div>
+            <h2>Squad de Entrega</h2>
+            <div class="member-focus-list">
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-seb')"><img id="photo-seb" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Seb" class="focus-photo" alt="Seb"></div>
+                    <div class="focus-name">Sebastián Arias</div><div class="focus-role">RESPONSABLE TAT</div>
+                </div>
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-dav')"><img id="photo-dav" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Dav" class="focus-photo" alt="Dav"></div>
+                    <div class="focus-name">David Aguirre</div><div class="focus-role">ALPINA / FLEISCHMANN</div>
+                </div>
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-fel')"><img id="photo-fel" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Fel" class="focus-photo" alt="Fel"></div>
+                    <div class="focus-name">Felipe Murillo</div><div class="focus-role">RESPONSABLE ZENU</div>
+                </div>
             </div>
         </div>
 
-        <!-- 4. LOGISTICA (PARTE 2) -->
+        <!-- 4. INDICADORES ENTREGA -->
         <div class="slide">
-            <div class="label">OPERACIÓN DEPÓSITO & PICKING</div>
-            <h2>⚡ Eficiencia de Bodega (2/2)</h2>
+            <div class="label">LOGÍSTICA DE ENTREGA // INDICADORES</div>
+            <h2>📦 Operación de Entrega</h2>
             <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">⚡</span><div class="kpi-name">Tiempo Picking x Unidad</div><div class="kpi-meta">META: 8 seg</div><div class="kpi-plazo">PLAZO: DIARIO</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">💵</span><div class="kpi-name">Valor Separado x Hombre</div><div class="kpi-meta">META: $218M</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🎯</span><div class="kpi-name">Eficiencia Separación</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: DIARIO</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🚫</span><div class="kpi-name">Impacto Notas x Error</div><div class="kpi-meta">META: 1.00%</div><div class="kpi-plazo">PLAZO: DIARIO</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📄</span><div class="kpi-name">Separación de Planillas</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: DIARIO</div></div>
-                <div class="kpi-card"><span class="badge-load other">GH CARGA</span><span class="kpi-icon">👥</span><div class="kpi-name">Nómina Picking vs Venta</div><div class="kpi-meta">META: 1.00%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">GH CARGA</span><span class="kpi-icon">⏳</span><div class="kpi-name">HE Picking vs Venta</div><div class="kpi-meta">META: 1.00</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚚</span><div class="kpi-name">Índice de Devoluciones</div><div class="kpi-meta">META: 1.80%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📋</span><div class="kpi-name">Prod. Auxiliares x Marca</div><div class="kpi-meta">META: 80 ped</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚛</span><div class="kpi-name">Productividad x Vehículo</div><div class="kpi-meta">META: 80 ped</div></div>
+                <div class="kpi-card"><span class="badge-load other">GH CARGA</span><span class="kpi-icon">💸</span><div class="kpi-name">Participación de Nómina</div><div class="kpi-meta">META: 3.40%</div></div>
+                <div class="kpi-card"><span class="badge-load other">CONT CARGA</span><span class="kpi-icon">💰</span><div class="kpi-name">Participación de Fletes</div><div class="kpi-meta">META: 4.20%</div></div>
             </div>
         </div>
 
-        <!-- 5. GESTION HUMANA -->
-        <div class="slide">
-            <div class="label">LÍDER: Diana Marín / G. HUMANA</div>
-            <h2>👥 Corazón Organizacional</h2>
-            <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🔄</span><div class="kpi-name">Rotación de Personal</div><div class="kpi-meta">META: 5.0%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🤒</span><div class="kpi-name">Índice de Ausentismo</div><div class="kpi-meta">META: 2.5%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">⛑️</span><div class="kpi-name">Cumplimiento SST</div><div class="kpi-meta">META: 90%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">💰</span><div class="kpi-name">H.E. en Nómina</div><div class="kpi-meta">META: 3.0%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🏦</span><div class="kpi-name">Nómina vs Ventas (General)</div><div class="kpi-meta">META: 11.0%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">❤️</span><div class="kpi-name">Actividades Cultura</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🤝</span><div class="kpi-name">Tiempo de Contratación</div><div class="kpi-meta">META: 8 días</div><div class="kpi-plazo">PLAZO: QUINCENAL</div></div>
+        <!-- 5. EQUIPO BODEGA -->
+        <div class="slide" style="justify-content: center; text-align: center;">
+            <div class="label">LOGÍSTICA BODEGA // RESPONSABLE</div>
+            <h2>Gestión de Bodega</h2>
+            <div class="member-focus-list">
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-ana')"><img id="photo-ana" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ana" class="focus-photo" alt="Ana"></div>
+                    <div class="focus-name">Analista Info</div><div class="focus-role">RESPONSABLE ALIMENTACIÓN</div>
+                </div>
             </div>
         </div>
 
-        <!-- 6. CAJA & CARTERA -->
+        <!-- 6. INDICADORES BODEGA -->
         <div class="slide">
-            <div class="label">LÍDER: Sandra Milena / CONTABILIDAD</div>
-            <h2>💰 Caja, Arqueos & Recaudo</h2>
+            <div class="label">LOGÍSTICA BODEGA // INDICADORES</div>
+            <h2>⚡ Eficiencia de Bodega</h2>
             <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🔍</span><div class="kpi-name">Cumplimiento de Arqueos</div><div class="kpi-meta">META: 8 arqueos/mes</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">📉</span><div class="kpi-name">Índice Diferencia Arqueo</div><div class="kpi-meta">META: 0 diferencias</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🔒</span><div class="kpi-name">Cierre de Planillas</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🎟️</span><div class="kpi-name">Vales en Cuadres</div><div class="kpi-meta">META: 0.5%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">📅</span><div class="kpi-name">Cartera al Día</div><div class="kpi-meta">META: 10% vencida</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🚨</span><div class="kpi-name">Cartera > 30 Días</div><div class="kpi-meta">META: 5% máx.</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🔃</span><div class="kpi-name">Recircularizaciones</div><div class="kpi-meta">META: 100% (Bimestral)</div><div class="kpi-plazo">PLAZO: BIMESTRAL</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">⏱️</span><div class="kpi-name">Tiempo Picking x Unidad</div><div class="kpi-meta">META: 8 seg</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">💵</span><div class="kpi-name">Valor Separado x Hombre</div><div class="kpi-meta">META: $218M</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🎯</span><div class="kpi-name">Eficiencia Separación</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🚫</span><div class="kpi-name">Impacto Notas x Error</div><div class="kpi-meta">META: 1.00%</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📄</span><div class="kpi-name">Separación de Planillas</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load other">GH CARGA</span><span class="kpi-icon">💰</span><div class="kpi-name">Relación HE vs Ventas</div><div class="kpi-meta">META: 1%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📦</span><div class="kpi-name">Pérdida de Embalajes</div><div class="kpi-meta">META: 0 Cant.</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⚠️</span><div class="kpi-name">Índice de Averías</div><div class="kpi-meta">META: 0.20%</div></div>
             </div>
         </div>
 
-        <!-- 7. CONTABILIDAD FISCAL -->
-        <div class="slide">
-            <div class="label">CONTADOR: Oscar Giraldo / CONTABILIDAD</div>
-            <h2>⚖️ Gestión Contable Élite</h2>
-            <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">⏳</span><div class="kpi-name">Días de Cierre</div><div class="kpi-meta">META: 12 días</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">✏️</span><div class="kpi-name">Ajustes Posteriores</div><div class="kpi-meta">META: 1 máx.</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🧐</span><div class="kpi-name">Ajustes Revisoría</div><div class="kpi-meta">META: 1 máx.</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">📈</span><div class="kpi-name">Rotación CxC</div><div class="kpi-meta">META: 1.5 veces</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">📉</span><div class="kpi-name">Rotación CxP</div><div class="kpi-meta">META: 1.5 veces</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🏦</span><div class="kpi-name">Conciliación Bancaria</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: QUINCENAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🏛️</span><div class="kpi-name">Conciliación Activos</div><div class="kpi-meta">META: 94%</div><div class="kpi-plazo">PLAZO: BIMESTRAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">⚖️</span><div class="kpi-name">Impacto Sanciones</div><div class="kpi-meta">META: 0.1%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
+        <!-- 7. EQUIPO GH -->
+        <div class="slide" style="justify-content: center; text-align: center;">
+            <div class="label">TALENTO HUMANO // RESPONSABLES</div>
+            <h2>Liderazgo Estratégico GH</h2>
+            <div class="member-focus-list">
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-eri')"><img id="photo-eri" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Erika" class="focus-photo" alt="Eri"></div>
+                    <div class="focus-name">Erika Valencia</div><div class="focus-role">TYM Y TAT</div>
+                </div>
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-kar')"><img id="photo-kar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Karina" class="focus-photo" alt="Kar"></div>
+                    <div class="focus-name">Karina Taba</div><div class="focus-role">TAT</div>
+                </div>
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-mj')"><img id="photo-mj" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Maria" class="focus-photo" alt="MJ"></div>
+                    <div class="focus-name">María José Franco</div><div class="focus-role">TYM</div>
+                </div>
             </div>
         </div>
 
-        <!-- 8. COMERCIAL -->
+        <!-- 8. INDICADORES GH -->
         <div class="slide">
-            <div class="label">GERENCIA COMERCIAL</div>
-            <h2>🤝 Ventas & Productividad</h2>
+            <div class="label">GESTIÓN HUMANA // INDICADORES</div>
+            <h2>👥 Gestión Humana</h2>
             <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🎯</span><div class="kpi-name">Cumplimiento Ventas</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">💸</span><div class="kpi-name">Margen Bruto</div><div class="kpi-meta">META: 11% avg.</div><div class="kpi-plazo">PLAZO: QUINCENAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📦</span><div class="kpi-name">Devol. Buen Estado</div><div class="kpi-meta">META: 1.8%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">👤</span><div class="kpi-name">Venta Prom. Vendedor</div><div class="kpi-meta">META: $55M</div><div class="kpi-plazo">PLAZO: MENSUAL</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">💳</span><div class="kpi-name">Participación Crédito</div><div class="kpi-meta">META: 10%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📦</span><div class="kpi-name">Días de Inventario</div><div class="kpi-meta">META: 7-18 días</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔄</span><div class="kpi-name">Rotación de Personal</div><div class="kpi-meta">META: 5%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🤒</span><div class="kpi-name">Índice de Ausentismo</div><div class="kpi-meta">META: 2.5%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⛑️</span><div class="kpi-name">Cumplimiento SST</div><div class="kpi-meta">META: 90%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🎭</span><div class="kpi-name">Actividades Cultura</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⏳</span><div class="kpi-name">Cobertura Vacantes</div><div class="kpi-meta">META: 8 días</div></div>
             </div>
         </div>
 
-        <!-- 9. ADMINISTRATIVO (INVENTARIOS) -->
-        <div class="slide">
-            <div class="label">CONTROL INTERNO</div>
-            <h2>⚙️ Auditoría & Inventarios</h2>
-            <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📏</span><div class="kpi-name">Exactitud Inventario</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🛑</span><div class="kpi-name">Quiebres Inventario</div><div class="kpi-meta">META: 0%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📅</span><div class="kpi-name">Inventario Obsoleto</div><div class="kpi-meta">META: 0%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📉</span><div class="kpi-name">Mermas Físicas</div><div class="kpi-meta">META: 0%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">⚖️</span><div class="kpi-name">Revisión de Márgenes</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
-                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🏷️</span><div class="kpi-name">Revisión de Precios</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
+        <!-- 9. EQUIPO CAJA -->
+        <div class="slide" style="justify-content: center; text-align: center;">
+            <div class="label">CAJA // RESPONSABLE</div>
+            <h2>Gestión de Caja</h2>
+            <div class="member-focus-list">
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-san')"><img id="photo-san" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sandra" class="focus-photo" alt="San"></div>
+                    <div class="focus-name">Sandra Milena</div><div class="focus-role">LÍDER CAJA</div>
+                </div>
             </div>
         </div>
 
-        <!-- 10. FACTURACION -->
+        <!-- 10. INDICADORES CAJA -->
         <div class="slide">
-            <div class="label">LÍDER: EQUIPO FACTURACIÓN</div>
-            <h2>🕵️ Área de Facturación</h2>
+            <div class="label">CAJA // INDICADORES</div>
+            <h2>💰 Caja & Recaudo</h2>
             <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">📑</span><div class="kpi-name">Pedidos Facturados</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: DIARIO</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">🖨️</span><div class="kpi-name">Impresión Facturas</div><div class="kpi-meta">META: 100%</div><div class="kpi-plazo">PLAZO: DIARIO</div></div>
-                <div class="kpi-card"><span class="badge-load me">ESTE ES TUYO</span><span class="kpi-icon">❌</span><div class="kpi-name">Error Facturación</div><div class="kpi-meta">META: 0.5%</div><div class="kpi-plazo">PLAZO: SEMANAL</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔍</span><div class="kpi-name">Cumplimiento Arqueos</div><div class="kpi-meta">META: 8/mes</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⚖️</span><div class="kpi-name">Índice Arqueo (Dif 0)</div><div class="kpi-meta">META: 0 Dif</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔒</span><div class="kpi-name">Cierre de Planillas</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🎫</span><div class="kpi-name">Part. Vales en Cuadres</div><div class="kpi-meta">META: 0.5%</div></div>
             </div>
         </div>
 
-        <!-- 11. BONOS -->
+        <!-- 11. EQUIPO CARTERA -->
+        <div class="slide" style="justify-content: center; text-align: center;">
+            <div class="label">CARTERA // RESPONSABLE</div>
+            <h2>Gestión de Recaudo</h2>
+            <div class="member-focus-list">
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-dig')"><img id="photo-dig" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Diana" class="focus-photo" alt="Dia"></div>
+                    <div class="focus-name">Diana García</div><div class="focus-role">LÍDER CARTERA (TYM Y TAT)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. INDICADORES CARTERA -->
+        <div class="slide">
+            <div class="label">CARTERA // INDICADORES</div>
+            <h2>📈 Eficiencia Cartera</h2>
+            <div class="bento-grid">
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📅</span><div class="kpi-name">Cartera al Día</div><div class="kpi-meta">META: 10% Venc.</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚨</span><div class="kpi-name">Cartera > 30 Días</div><div class="kpi-meta">META: 5% Max.</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔄</span><div class="kpi-name">Recircularizaciones</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">💸</span><div class="kpi-name">Cartera vs Venta</div><div class="kpi-meta">META: 10-20%</div></div>
+            </div>
+        </div>
+
+        <!-- 13. EQUIPO CONTABILIDAD -->
+        <div class="slide" style="justify-content: center; text-align: center;">
+            <div class="label">CONTABILIDAD // LÍDER</div>
+            <h2>Integridad Financiera</h2>
+            <div class="member-focus-list">
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-osc')"><img id="photo-osc" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Oscar" class="focus-photo" alt="Osc"></div>
+                    <div class="focus-name">Oscar Giraldo</div><div class="focus-role">CONTADOR PRINCIPAL</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 14. INDICADORES CONTABILIDAD -->
+        <div class="slide">
+            <div class="label">CONTABILIDAD // INDICADORES</div>
+            <h2>⚖️ Gestión Contable</h2>
+            <div class="bento-grid">
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📅</span><div class="kpi-name">Días de Cierre</div><div class="kpi-meta">META: 12 días</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">✏️</span><div class="kpi-name">Ajustes Posteriores</div><div class="kpi-meta">META: 1 max</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🕵️</span><div class="kpi-name">Ajustes Revisoría</div><div class="kpi-meta">META: 1 max</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔁</span><div class="kpi-name">Rotación CxC</div><div class="kpi-meta">META: 1.5 veces</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🏦</span><div class="kpi-name">Conciliaciones Bancarias</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🏛️</span><div class="kpi-name">Multas & Sanciones</div><div class="kpi-meta">META: 0.1%</div></div>
+            </div>
+        </div>
+
+        <!-- 15. COMERCIAL -->
+        <div class="slide">
+            <div class="label">COMERCIAL // VENTAS</div>
+            <h2>🤝 Gestión Comercial</h2>
+            <div class="bento-grid">
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🎯</span><div class="kpi-name">Cumplimiento Ventas</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">💸</span><div class="kpi-name">Margen Bruto</div><div class="kpi-meta">META: 11%</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📦</span><div class="kpi-name">Buen Estado</div><div class="kpi-meta">META: 1.8%</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">⚠️</span><div class="kpi-name">Mal Estado</div><div class="kpi-meta">META: 0.5%</div></div>
+            </div>
+        </div>
+
+        <!-- 16. AUDITORIA -->
+        <div class="slide">
+            <div class="label">AUDITORÍA // CONTROL</div>
+            <h2>⚙️ Control de Inventarios</h2>
+            <div class="bento-grid">
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📐</span><div class="kpi-name">Exactitud Inventario</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">🛑</span><div class="kpi-name">Quiebres Inventario</div><div class="kpi-meta">META: 0%</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">📉</span><div class="kpi-name">Mermas Físicas</div><div class="kpi-meta">META: 0%</div></div>
+                <div class="kpi-card"><span class="badge-load other">ANALISTA CARGA</span><span class="kpi-icon">⚖️</span><div class="kpi-name">Revisión Márgenes</div><div class="kpi-meta">META: 100%</div></div>
+            </div>
+        </div>
+
+        <!-- 17. EQUIPO FACTURACIÓN -->
+        <div class="slide" style="justify-content: center; text-align: center;">
+            <div class="label">FACTURACIÓN // RESPONSABLES</div>
+            <h2>Squad de Facturación</h2>
+            <div class="member-focus-list">
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-est')"><img id="photo-est" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Esteban" class="focus-photo" alt="Est"></div>
+                    <div class="focus-name">Esteban Loaiza</div><div class="focus-role">ZENU Y FLEI</div>
+                </div>
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-enr')"><img id="photo-enr" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Enrique" class="focus-photo" alt="Enr"></div>
+                    <div class="focus-name">Enrique Díaz</div><div class="focus-role">ALPINA</div>
+                </div>
+                <div class="member-focus-item">
+                    <div class="photo-container" onclick="up('photo-mar')"><img id="photo-mar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana" class="focus-photo" alt="Mar"></div>
+                    <div class="focus-name">Mariana Gallego</div><div class="focus-role">UNI Y FAM</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 18. INDICADORES FACTURACIÓN -->
+        <div class="slide">
+            <div class="label">FACTURACIÓN // INDICADORES</div>
+            <h2>🕵️ Gestión Operativa</h2>
+            <div class="bento-grid">
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📑</span><div class="kpi-name">Pedidos Facturados</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🖨️</span><div class="kpi-name">Impresión Facturas</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">❌</span><div class="kpi-name">Error Facturación</div><div class="kpi-meta">META: 0.5%</div></div>
+            </div>
+        </div>
+
+        <!-- 19. TERMINAL -->
         <div class="slide" style="text-align: center; justify-content: center;">
-            <div class="label" style="background: rgba(245, 158, 11, 0.1); color: var(--a);">RECONOCIMIENTO ZENTRA</div>
-            <h1>EXCELENCIA <br><span style="color: var(--s);">RECOMPENSADA</span></h1>
-            <div style="display: flex; gap: 2rem; justify-content: center; margin-top: 4rem;">
-                <div class="kpi-card" style="min-width: 280px; border-color: var(--s);">
-                    <div style="font-size: 3rem;">🥇</div>
-                    <h3 style="margin-top: 1rem;">BONO ORO</h3>
-                    <p style="color: #64748b; font-size: 0.8rem; margin-top: 1rem;">100% Metas del Área</p>
-                </div>
-                <div class="kpi-card" style="min-width: 280px; border-color: var(--p);">
-                    <div style="font-size: 3rem;">💳</div>
-                    <h3 style="margin-top: 1rem;">BONO CERO</h3>
-                    <p style="color: #64748b; font-size: 0.8rem; margin-top: 1rem;">Cero retrasos en ZENTRA</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 12. CIERRE -->
-        <div class="slide" style="text-align: center; justify-content: center;">
-            <div class="float" style="font-size: 5rem; margin-bottom: 2rem;">🌟</div>
-            <h1>EL ÉXITO ES <br>UN EQUIPO</h1>
-            <div class="label" style="margin-top: 1rem;">ZENTRA TYM & TAT // 2026</div>
+            <div class="float" style="font-size: 5rem; margin-bottom: 2rem;">🏆</div>
+            <h1>EXCELENCIA <br><span style="color: var(--s);">ZENTRA 2026</span></h1>
+            <div class="label" style="margin-top: 2rem;">PROTOCOLOS TYM & TAT COMPLETOS</div>
         </div>
 
     </div>
 
+    <!-- SISTEMA DE CARGA -->
+    <input type="file" id="fIn" style="display:none" accept="image/*">
+
     <div class="hud">
         <button class="hud-btn" onclick="p()">←</button>
-        <div class="hud-progress" id="idx">01 / 12</div>
+        <div class="hud-progress" id="idx">01 / 19</div>
         <button class="hud-btn" onclick="n()">→</button>
     </div>
 
     <script>
+        let tImg = null;
+        function up(id) { tImg = id; document.getElementById('fIn').click(); }
+
+        document.getElementById('fIn').onchange = e => {
+            const f = e.target.files[0]; if (!f) return;
+            const r = new FileReader();
+            r.onload = ev => {
+                const b = ev.target.result;
+                document.getElementById(tImg).src = b;
+                // Guardamos con el ID fijo para que nunca se pierda
+                localStorage.setItem('zentra-photo-' + tImg, b);
+            };
+            r.readAsDataURL(f);
+        };
+
+        window.onload = () => {
+            // Intentamos recuperar de todas las versiones anteriores para que no se pierda nada
+            document.querySelectorAll('img').forEach(img => {
+                const saved = localStorage.getItem('zentra-photo-' + img.id) || 
+                              localStorage.getItem('zentra-v3-' + img.id) || 
+                              localStorage.getItem('z-p-' + img.id);
+                if (saved) img.src = saved;
+            });
+        };
+
         const ss = document.querySelectorAll('.slide');
         const id = document.getElementById('idx');
         let c = 0;
@@ -273,7 +404,7 @@
         function n() { if (c < ss.length - 1) { c++; u(); } }
         function p() { if (c > 0) { c--; u(); } }
         window.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === ' ') n(); if (e.key === 'ArrowLeft') p(); });
-        window.addEventListener('wheel', e => { if (e.deltaY > 0) n(); else p(); });
+        window.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > 50) { if (e.deltaY > 0) n(); else p(); } }, { passive: true });
         u();
     </script>
 </body>
