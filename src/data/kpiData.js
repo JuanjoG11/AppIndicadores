@@ -1132,7 +1132,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'impresion-facturas',
-        name: 'Impresión de Facturas',
+        name: 'Control Operativo De Facturación',
         area: 'facturacion',
         subArea: 'Operación Facturación',
         objetivo: 'Garantizar que todas las facturas generadas sean impresas',
