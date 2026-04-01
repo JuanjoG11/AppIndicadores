@@ -85,6 +85,18 @@
         .float { animation: floating 3s infinite ease-in-out; }
         @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
+        .kpi-bonus {
+            margin-top: 0.8rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--s);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            display: inline-block;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
     </style>
 </head>
 <body>
@@ -149,11 +161,11 @@
             <div class="label">LOGÍSTICA DE ENTREGA // INDICADORES</div>
             <h2>📦 Operación de Entrega</h2>
             <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚚</span><div class="kpi-name">Índice de Devoluciones</div><div class="kpi-meta">META: 1.80%</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📋</span><div class="kpi-name">Prod. Auxiliares x Marca</div><div class="kpi-meta">META: 80 ped</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚛</span><div class="kpi-name">Productividad x Vehículo</div><div class="kpi-meta">META: 80 ped</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚚</span><div class="kpi-name">Índice de Devoluciones</div><div class="kpi-meta" style="font-size: 0.75rem;">ALP: 1.5% | UNI: 2% | ZEN: 1.8%</div><div class="kpi-bonus">🎁 BONO: $75.000</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📋</span><div class="kpi-name">Productividad Auxiliares</div><div class="kpi-meta" style="font-size: 0.75rem;">ALP: 40 | UNI: 55 | ZEN: 70</div><div class="kpi-bonus">🎁 BONO: $75.000</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚛</span><div class="kpi-name">Productividad Vehículo</div><div class="kpi-meta" style="font-size: 0.75rem;">ALP: 60 | UNI: 50 | ZEN: 70</div><div class="kpi-bonus">🎁 BONO: $75.000</div></div>
                 <div class="kpi-card"><span class="badge-load other">GH CARGA</span><span class="kpi-icon">💸</span><div class="kpi-name">Participación de Nómina</div><div class="kpi-meta">META: 3.40%</div></div>
-                <div class="kpi-card"><span class="badge-load other">CONT CARGA</span><span class="kpi-icon">💰</span><div class="kpi-name">Participación de Fletes</div><div class="kpi-meta">META: 4.20%</div></div>
+                <div class="kpi-card"><span class="badge-load other">CONT CARGA</span><span class="kpi-icon">💰</span><div class="kpi-name">Participación de Fletes</div><div class="kpi-meta" style="font-size: 0.75rem;">ALP: 4.8% | UNI: 4.2% | ZEN: 3.9%</div><div class="kpi-bonus">🎁 BONO: $75.000</div></div>
             </div>
         </div>
 
@@ -212,9 +224,9 @@
             <div class="bento-grid">
                 <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔄</span><div class="kpi-name">Rotación de Personal</div><div class="kpi-meta">META: 5%</div></div>
                 <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🤒</span><div class="kpi-name">Índice de Ausentismo</div><div class="kpi-meta">META: 2.5%</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⛑️</span><div class="kpi-name">Cumplimiento SST</div><div class="kpi-meta">META: 90%</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🎭</span><div class="kpi-name">Actividades Cultura</div><div class="kpi-meta">META: 100%</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⏳</span><div class="kpi-name">Cobertura Vacantes</div><div class="kpi-meta">META: 8 días</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⛑️</span><div class="kpi-name">Cumplimiento SST</div><div class="kpi-meta">META: 92%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🎭</span><div class="kpi-name">Actividades Cultura</div><div class="kpi-meta">META: 90%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⏳</span><div class="kpi-name">Cobertura Vacantes</div><div class="kpi-meta">META: 8 días</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
             </div>
         </div>
 
@@ -236,9 +248,9 @@
             <h2>💰 Caja & Recaudo</h2>
             <div class="bento-grid">
                 <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔍</span><div class="kpi-name">Cumplimiento Arqueos</div><div class="kpi-meta">META: 8/mes</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⚖️</span><div class="kpi-name">Índice Arqueo (Dif 0)</div><div class="kpi-meta">META: 0 Dif</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔒</span><div class="kpi-name">Cierre de Planillas</div><div class="kpi-meta">META: 100%</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🎫</span><div class="kpi-name">Part. Vales en Cuadres</div><div class="kpi-meta">META: 0.5%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">⚖️</span><div class="kpi-name">Indice de Arqueos</div><div class="kpi-meta">META: 0%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔒</span><div class="kpi-name">Cierre de Planillas</div><div class="kpi-meta">META: 100%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🎫</span><div class="kpi-name">Vales en Cuadres</div><div class="kpi-meta">META: 0,5%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
             </div>
         </div>
 
@@ -259,10 +271,10 @@
             <div class="label">CARTERA // INDICADORES</div>
             <h2>📈 Eficiencia Cartera</h2>
             <div class="bento-grid">
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📅</span><div class="kpi-name">Cartera al Día</div><div class="kpi-meta">META: 10% Venc.</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚨</span><div class="kpi-name">Cartera > 30 Días</div><div class="kpi-meta">META: 5% Max.</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📅</span><div class="kpi-name">Cartera al Día</div><div class="kpi-meta">META: 10%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🚨</span><div class="kpi-name">Cartera > 30 Días</div><div class="kpi-meta">META: 5%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
                 <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔄</span><div class="kpi-name">Recircularizaciones</div><div class="kpi-meta">META: 100%</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">💸</span><div class="kpi-name">Cartera vs Venta</div><div class="kpi-meta">META: 10-20%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">💸</span><div class="kpi-name">Relación Cartera vs Ventas</div><div class="kpi-meta">META: 10%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
             </div>
         </div>
 
@@ -287,7 +299,9 @@
                 <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">✏️</span><div class="kpi-name">Ajustes Posteriores</div><div class="kpi-meta">META: 1 max</div></div>
                 <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🕵️</span><div class="kpi-name">Ajustes Revisoría</div><div class="kpi-meta">META: 1 max</div></div>
                 <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🔁</span><div class="kpi-name">Rotación CxC</div><div class="kpi-meta">META: 1.5 veces</div></div>
-                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🏦</span><div class="kpi-name">Conciliaciones Bancarias</div><div class="kpi-meta">META: 100%</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🏦</span><div class="kpi-name">Conciliaciones Bancarias</div><div class="kpi-meta">META: 8/mes</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
+                <div class="kpi-card"><span class="badge-load other">CONTAB.</span><span class="kpi-icon">💵</span><div class="kpi-name">Arqueos de Caja</div><div class="kpi-meta">META: 4/mes</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
+                <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">📋</span><div class="kpi-name">Cierre de Planillas</div><div class="kpi-meta">META: 100%</div><div class="kpi-bonus">🎁 BONO: $100.000</div></div>
                 <div class="kpi-card"><span class="badge-load me">CARGAS TÚ</span><span class="kpi-icon">🏛️</span><div class="kpi-name">Multas & Sanciones</div><div class="kpi-meta">META: 0.1%</div></div>
             </div>
         </div>
