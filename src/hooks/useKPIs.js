@@ -215,21 +215,31 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     const persistUpdate = async (kpiId, additionalData, value, user) => {
         try {
             const period = getCurrentPeriod();
-            console.log("💾 Persistiendo en Supabase:", kpiId, additionalData, "Empresa:", user?.company, "Período:", period);
-            const { error } = await supabase.from('kpi_updates').insert({
+            const persistBrand = additionalData?.brand || (Array.isArray(user?.activeBrand) ? null : user?.activeBrand) || null;
+            
+            const payload = {
                 company_id: user?.company || 'TYM',
                 kpi_id: kpiId,
-                additional_data: { ...additionalData, period },
+                additional_data: { 
+                    ...additionalData, 
+                    brand: persistBrand,
+                    period 
+                },
                 value: value,
-                cargo: user?.cargo || 'Sistema',
-                brand: additionalData?.brand || (Array.isArray(user?.activeBrand) ? null : user?.activeBrand) || null,
-                period: period   // columna optional – si no existe en la tabla se ignora via additional_data
-            });
-            if (error) throw error;
+                cargo: user?.cargo || 'Sistema'
+            };
+
+            console.log("💾 Enviando a Supabase:", JSON.stringify(payload, null, 2));
+            const { error } = await supabase.from('kpi_updates').insert(payload);
+            
+            if (error) {
+                console.error("❌ Detalle Error Supabase:", error.message, error.details, error.hint);
+                throw error;
+            }
             setLastSyncTime(new Date());
         } catch (err) {
             console.error("❌ Error persistiendo en Supabase:", err);
-            if (onToast) onToast('error', 'Error al guardar en la nube');
+            if (onToast) onToast('error', `Error: ${err.message || 'Error al guardar'}`);
         }
     };
 
