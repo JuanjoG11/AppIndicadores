@@ -71,7 +71,9 @@ const AppInner = () => {
     handleLogin(user);
     // Usar la empresa del usuario; el Gerente puede cambiarla desde el dashboard
     if (user.company) setActiveCompany(user.company);
-    const brandLabel = user.activeBrand ? ` · ${user.activeBrand}` : '';
+    const brandLabel = user.activeBrand 
+      ? ` · ${Array.isArray(user.activeBrand) ? user.activeBrand.join(' + ') : user.activeBrand}` 
+      : '';
     addToast('success', `¡Bienvenido, ${user.name}${brandLabel}! 🎉`);
   };
 

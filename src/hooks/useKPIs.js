@@ -222,7 +222,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 additional_data: { ...additionalData, period },
                 value: value,
                 cargo: user?.cargo || 'Sistema',
-                brand: user?.activeBrand || additionalData?.brand || null,
+                brand: additionalData?.brand || (Array.isArray(user?.activeBrand) ? null : user?.activeBrand) || null,
                 period: period   // columna optional – si no existe en la tabla se ignora via additional_data
             });
             if (error) throw error;

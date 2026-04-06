@@ -2,7 +2,7 @@
  * ZENTRA - Tabla de Usuarios del Sistema
  * 
  * Áreas con login por proveedor: LOGÍSTICA y FACTURACIÓN
- *   TYM → Alpina, Zenú, Fleischmann
+ *   TYM → Alpina, Zenú, Fleischmann, Multi-Marca (Zenú+Fleischmann)
  *   TAT → Unilever, Familia
  *
  * Resto de áreas: login simple por área (sin separación de proveedor)
@@ -130,6 +130,18 @@ export const SYSTEM_USERS = [
         cargo: 'FACTURACION',
         company: 'TYM',
         activeBrand: 'FLEISCHMANN',
+        allowedAreas: ['facturacion'],
+        color: '#06b6d4',
+        icon: 'ClipboardList'
+    },
+    {
+        username: 'fact_tym',
+        password: 'Fact_TYM2026',
+        name: 'Facturación · Multi-Marca',
+        role: 'Analista',
+        cargo: 'FACTURACION',
+        company: 'TYM',
+        activeBrand: ['ZENU', 'FLEISCHMANN'],
         allowedAreas: ['facturacion'],
         color: '#06b6d4',
         icon: 'ClipboardList'

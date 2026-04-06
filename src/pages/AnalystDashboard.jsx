@@ -35,7 +35,13 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
     const getEffectiveBrands = (kpi) => {
         const all = getEntityBrands(kpi, currentUser.company);
-        if (lockedBrand) return all.filter(b => b === lockedBrand);
+        if (lockedBrand) {
+            // Handle single brand or array of brands
+            if (Array.isArray(lockedBrand)) {
+                return all.filter(b => lockedBrand.includes(b));
+            }
+            return all.filter(b => b === lockedBrand);
+        }
         return all;
     };
 

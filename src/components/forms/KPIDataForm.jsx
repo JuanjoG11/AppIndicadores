@@ -34,7 +34,11 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             commercialBrands = allBrands;
         } else if (lockedBrand) {
             // Usuario con proveedor fijo: solo ve SU marca si existe en este KPI
-            commercialBrands = allBrands.filter(b => b === lockedBrand);
+            if (Array.isArray(lockedBrand)) {
+                commercialBrands = allBrands.filter(b => lockedBrand.includes(b));
+            } else {
+                commercialBrands = allBrands.filter(b => b === lockedBrand);
+            }
         } else {
             // Analistas sin restricción: ven marcas comerciales de su entidad
             commercialBrands = allBrands.filter(b => BRAND_TO_ENTITY[b] === userEntity);
@@ -58,9 +62,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         : null);
 
     // Si no hay marcas comerciales y no es gerente, la marca asignada automáticamente es la propia entidad.
-    const defaultBrand = validatedInitialBrand || ((!isMetaMode && !hasCommercialBrands)
-        ? userEntity
-        : (commercialBrands.find(isBrandPending) || commercialBrands[0] || userEntity));
+    const defaultBrand = 
+        (Array.isArray(validatedInitialBrand) 
+            ? (validatedInitialBrand.find(isBrandPending) || validatedInitialBrand[0]) 
+            : validatedInitialBrand) || 
+        ((!isMetaMode && !hasCommercialBrands)
+            ? userEntity
+            : (commercialBrands.find(isBrandPending) || commercialBrands[0] || userEntity));
 
     // Obtener datos iniciales específicos de la marca si existen
     const getInitialBrandData = (brandName) => {
