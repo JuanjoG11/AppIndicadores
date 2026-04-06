@@ -527,9 +527,28 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [] }) => {
                                                                 <td style={{ padding: '0.8rem 1rem' }}>
                                                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                                         <span style={{ color: '#1e293b', fontWeight: 800 }}>{kpi?.name || log.kpi_id}</span>
-                                                                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 700 }}>
-                                                                            {kpi?.area || 'General'}
-                                                                        </span>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                            <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 700 }}>
+                                                                                {kpi?.area || 'General'}
+                                                                            </span>
+                                                                            {log.additional_data?.faltanteInventario && (
+                                                                                <span style={{ 
+                                                                                    fontSize: '0.65rem', background: '#fef2f2', color: '#ef4444', 
+                                                                                    border: '1px solid #fee2e2', borderRadius: '4px', padding: '1px 5px',
+                                                                                    fontWeight: 800, textTransform: 'uppercase'
+                                                                                }}>
+                                                                                    Faltante
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        {log.additional_data?.detalleFaltante && (
+                                                                            <span style={{ 
+                                                                                fontSize: '0.75rem', color: '#b91c1c', marginTop: '0.2rem', 
+                                                                                fontStyle: 'italic', maxWidth: '300px' 
+                                                                            }}>
+                                                                                "{log.additional_data.detalleFaltante}"
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '0.8rem 1rem' }}>

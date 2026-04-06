@@ -437,12 +437,15 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         e.preventDefault();
         const cleanedData = { ...formData };
         // Ensure numbers are really numbers before saving
-        // And strip separators
+        // And strip separators, but EXCLUDE non-numeric fields
         Object.keys(cleanedData).forEach(key => {
+            const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id'];
+            if (skipKeys.includes(key)) return;
+
             if (typeof cleanedData[key] === 'string' && cleanedData[key] !== '') {
                 // Remove dots (thousands separators)
                 const val = cleanedData[key].replace(/\./g, '').replace(',', '.');
-                if (!isNaN(parseFloat(val))) {
+                if (!isNaN(parseFloat(val)) && /^-?\d+(\.\d+)?$/.test(val)) {
                    cleanedData[key] = parseFloat(val);
                 }
             }
@@ -474,20 +477,22 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         setFormData(prev => {
             let parsedValue = value;
             
-            // Si es campo numérico, removemos separadores antes de guardar en el estado
-            // Pero mantendremos el formateo visual
-            const isNumberField = /^[0-9.,]*$/.test(value.replace(/\s/g, ''));
-            
-            // No hacemos parsing aquí si queremos manejar el formateo visual en el value del input
-            // Guardamos el raw value (limpio)
-            const cleanValue = value.replace(/[^0-9,]/g, ''); // Quitamos puntos (miles) pero dejamos coma (decimal)
-            parsedValue = cleanValue;
+            // Si es un string, intentamos limpiar formateo de miles
+            if (typeof value === 'string') {
+                // Solo si parece un campo numérico (contiene números, puntos o comas)
+                const isNumericSource = /^[0-9.,\s]*$/.test(value);
+                
+                if (isNumericSource && fieldName !== 'brand' && fieldName !== 'newFrecuencia' && fieldName !== 'detalleFaltante') {
+                    // Guardamos el raw value (limpio de puntos de miles)
+                    const cleanValue = value.replace(/[^0-9,]/g, ''); 
+                    parsedValue = cleanValue;
+                }
+            }
 
             if (fieldName === 'brand') {
                 const brandData = getInitialBrandData(value);
                 const newCompany = (value === 'TYM' || value === 'TAT') ? value : (BRAND_TO_ENTITY[value] || userEntity);
                 
-                // Si es modo meta, reseteamos el input de nueva meta pero cargamos los otros metadatos
                 if (isMetaMode) {
                     return {
                         ...brandData,
@@ -498,7 +503,6 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                     };
                 }
 
-                // Si es modo data, cargamos todos los valores previos de esa marca
                 return {
                     ...brandData,
                     brand: value,
@@ -784,6 +788,63 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* CONDITIONAL OBSERVATIONS (e.g. for Pedidos Facturados) */}
+                        {!isMetaMode && kpi.id === 'pedidos-facturados' && (
+                            <div style={{ 
+                                marginBottom: '2.5rem', padding: '1.5rem', background: '#fef2f2', 
+                                borderRadius: '20px', border: '1px solid #fee2e2',
+                                animation: 'fadeIn 0.4s ease-out'
+                            }}>
+                                <label style={{ 
+                                    display: 'flex', alignItems: 'center', gap: '0.75rem', 
+                                    fontSize: '0.85rem', fontWeight: 800, color: '#991b1b', marginBottom: '1rem',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    <AlertTriangle size={17} />
+                                    Observaciones de Inventario
+                                </label>
+                                
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer', userSelect: 'none' }}>
+                                        <div style={{ 
+                                            position: 'relative', width: '22px', height: '22px', 
+                                            background: formData.faltanteInventario ? '#ef4444' : 'white',
+                                            border: `2px solid ${formData.faltanteInventario ? '#ef4444' : '#d1d5db'}`,
+                                            borderRadius: '6px', transition: 'all 0.2s',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                        }}>
+                                            <input 
+                                                type="checkbox"
+                                                checked={formData.faltanteInventario || false}
+                                                onChange={(e) => handleChange('faltanteInventario', e.target.checked)}
+                                                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                            {formData.faltanteInventario && <CheckCircle2 size={14} color="white" />}
+                                        </div>
+                                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e293b' }}>
+                                            Reportar Faltante por Inventario
+                                        </span>
+                                    </label>
+
+                                    {formData.faltanteInventario && (
+                                        <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                                            <textarea 
+                                                value={formData.detalleFaltante || ''}
+                                                onChange={(e) => handleChange('detalleFaltante', e.target.value)}
+                                                placeholder="Indica qué productos o referencias no se pudieron facturar por falta de stock..."
+                                                style={{ 
+                                                    width: '100%', padding: '1rem', borderRadius: '14px', border: '2px solid #fee2e2',
+                                                    fontSize: '0.85rem', fontWeight: 500, minHeight: '90px', outline: 'none',
+                                                    background: 'white', color: '#1e293b', fontFamily: 'inherit',
+                                                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 

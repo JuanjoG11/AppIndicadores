@@ -33,11 +33,11 @@ export const SYSTEM_USERS = [
     {
         username: 'log_alpina',
         password: 'Log_Alpina26',
-        name: 'Logística · Alpina',
+        name: 'Logística · Alpina + Fleisch',
         role: 'Analista',
         cargo: 'LOGISTICA',
         company: 'TYM',
-        activeBrand: 'ALPINA',
+        activeBrand: ['ALPINA', 'FLEISCHMANN'],
         allowedAreas: ['logistica'],
         color: '#0ea5e9',
         icon: 'Truck'
@@ -73,11 +73,11 @@ export const SYSTEM_USERS = [
     {
         username: 'log_unilever',
         password: 'Log_Unilever26',
-        name: 'Logística · Unilever',
+        name: 'Logística · Unilever + Familia',
         role: 'Analista',
         cargo: 'LOGISTICA',
         company: 'TAT',
-        activeBrand: 'UNILEVER',
+        activeBrand: ['UNILEVER', 'FAMILIA'],
         allowedAreas: ['logistica'],
         color: '#0ea5e9',
         icon: 'Truck'
