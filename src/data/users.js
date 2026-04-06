@@ -174,6 +174,18 @@ export const SYSTEM_USERS = [
         color: '#06b6d4',
         icon: 'ClipboardList'
     },
+    {
+        username: 'fact_tat',
+        password: 'Fact_TAT2026',
+        name: 'Facturación · Multi-Marca',
+        role: 'Analista',
+        cargo: 'FACTURACION',
+        company: 'TAT',
+        activeBrand: ['UNILEVER', 'FAMILIA'],
+        allowedAreas: ['facturacion'],
+        color: '#06b6d4',
+        icon: 'ClipboardList'
+    },
 
     // ═══════════════════════════════════════════
     // GESTIÓN HUMANA (sin separación de proveedor)
