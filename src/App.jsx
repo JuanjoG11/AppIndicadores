@@ -31,7 +31,7 @@ const AppInner = () => {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
 
   // ── KPI Data (via custom hook) ────────────────────────────────────────────
-  const { kpiData, isLoading, lastSyncTime, applyKPIUpdate } = useKPIs(
+  const { kpiData, rawUpdates, isLoading, lastSyncTime, applyKPIUpdate } = useKPIs(
     currentUser,
     activeCompany,
     addToast
@@ -162,7 +162,7 @@ const AppInner = () => {
                 path="/"
                 element={
                   currentUser.role === 'Gerente'
-                    ? <ExecutiveDashboard kpiData={kpiData} activeCompany={activeCompany} setActiveCompany={setActiveCompany} />
+                    ? <ExecutiveDashboard kpiData={kpiData} rawUpdates={rawUpdates} activeCompany={activeCompany} setActiveCompany={setActiveCompany} />
                     : <Navigate to="/mis-indicadores" />
                 }
               />

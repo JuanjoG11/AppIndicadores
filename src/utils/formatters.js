@@ -104,8 +104,10 @@ export const getKPIDeadline = (frequency) => {
     const today = new Date();
     const now = new Date();
 
-    switch (frequency) {
+    const cleanFrequency = frequency?.toUpperCase();
+    switch (cleanFrequency) {
         case 'DIARIO':
+        case 'DIARIA':
             const EOD = new Date(today.setHours(23, 59, 0, 0));
             return EOD;
         case 'SEMANAL':

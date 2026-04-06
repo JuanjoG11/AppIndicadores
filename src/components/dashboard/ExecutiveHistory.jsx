@@ -103,9 +103,12 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
-const ExecutiveHistory = ({ kpiData }) => {
-    const [tab, setTab] = useState('overview'); // 'overview' | 'areas'
+const ExecutiveHistory = ({ kpiData, rawUpdates = [] }) => {
+    const [tab, setTab] = useState('overview'); // 'overview' | 'areas' | 'log'
     const [selectedArea, setSelectedArea] = useState('logistica');
+    const [logAreaFilter, setLogAreaFilter] = useState('all');
+    const [logMonthFilter, setLogMonthFilter] = useState(new Date().toISOString().substring(0, 7)); // YYYY-MM
+    const [searchQuery, setSearchQuery] = useState('');
 
     const months = useMemo(() => kpiData.find(k => k.history?.length)?.history.map(h => h.month) || [], [kpiData]);
 
@@ -181,7 +184,11 @@ const ExecutiveHistory = ({ kpiData }) => {
 
             {/* TAB SWITCHER */}
             <div style={{ display: 'flex', gap: '0.5rem', background: '#f8fafc', padding: '0.3rem', borderRadius: '12px', width: 'fit-content' }}>
-                {[{ id: 'overview', label: '📈 Tendencia General' }, { id: 'areas', label: '🗂️ Por Área' }].map(t => (
+                {[
+                    { id: 'overview', label: '📈 Tendencia General' }, 
+                    { id: 'areas', label: '🗂️ Por Área' },
+                    { id: 'log', label: '📜 Bitácora de Carga' }
+                ].map(t => (
                     <button key={t.id} onClick={() => setTab(t.id)} style={{
                         padding: '0.5rem 1.25rem', borderRadius: '10px', border: 'none', cursor: 'pointer',
                         fontWeight: 700, fontSize: '0.85rem',
@@ -380,6 +387,184 @@ const ExecutiveHistory = ({ kpiData }) => {
                                     )}
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {tab === 'log' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} className="fade-in">
+                    {/* FILTERS FOR LOG */}
+                    <div style={{ 
+                        display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'center',
+                        background: 'white', padding: '1.25rem 1.5rem', borderRadius: '16px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>📦 Área</label>
+                            <select 
+                                value={logAreaFilter} 
+                                onChange={(e) => setLogAreaFilter(e.target.value)}
+                                style={{ 
+                                    padding: '0.6rem 2.5rem 0.6rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', 
+                                    background: '#f8fafc', fontWeight: 700, color: '#1e293b', fontSize: '0.85rem'
+                                }}
+                            >
+                                <option value="all">Todas las Áreas</option>
+                                {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                            </select>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>📅 Período (Mes)</label>
+                            <select 
+                                value={logMonthFilter} 
+                                onChange={(e) => setLogMonthFilter(e.target.value)}
+                                style={{ 
+                                    padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', 
+                                    background: '#f8fafc', fontWeight: 700, color: '#1e293b', fontSize: '0.85rem'
+                                }}
+                            >
+                                <option value="all">Ver Historico Completo</option>
+                                {['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'].map(m => (
+                                    <option key={m} value={m}>{m}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flexGrow: 1 }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>🔍 Buscar Indicador</label>
+                            <input 
+                                type="text"
+                                placeholder="Escribe el nombre del KPI..."
+                                onChange={(e) => {
+                                    const search = e.target.value.toLowerCase();
+                                    // I'll filter rawUpdates inside the map, so I don't need another state here
+                                    // But let's add one for clarity
+                                    setSearchQuery(search);
+                                }}
+                                style={{ 
+                                    padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', 
+                                    background: '#f8fafc', fontWeight: 500, color: '#1e293b', fontSize: '0.85rem', width: '100%'
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <div>
+                                <p style={{ margin: 0, fontWeight: 800, color: '#0f172a', fontSize: '1.1rem' }}>
+                                    Bitácora Cronológica de Carga
+                                </p>
+                                <p style={{ margin: '0.2rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
+                                    Listado detallado de todas las actividades registradas
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {(() => {
+                                const filtered = [...rawUpdates].reverse().filter(log => {
+                                    const kpi = kpiData.find(k => k.id === log.kpi_id);
+                                    const matchesArea = logAreaFilter === 'all' || kpi?.area === logAreaFilter;
+                                    const itemPeriod = log.period || log.additional_data?.period || (log.updated_at ? log.updated_at.substring(0, 7) : null);
+                                    const matchesMonth = logMonthFilter === 'all' || itemPeriod === logMonthFilter;
+                                    const matchesSearch = !searchQuery || (kpi?.name || log.kpi_id).toLowerCase().includes(searchQuery);
+                                    return matchesArea && matchesMonth && matchesSearch;
+                                });
+
+                                if (filtered.length === 0) {
+                                    return (
+                                        <div style={{ textAlign: 'center', padding: '4rem 2rem', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
+                                            <p style={{ color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>No hay registros que coincidan con los filtros seleccionados.</p>
+                                        </div>
+                                    );
+                                }
+
+                                // Group by day
+                                const groups = {};
+                                filtered.forEach(log => {
+                                    const day = new Date(log.updated_at || log.created_at).toLocaleDateString('es-CO', { 
+                                        weekday: 'long', day: 'numeric', month: 'long' 
+                                    });
+                                    if (!groups[day]) groups[day] = [];
+                                    groups[day].push(log);
+                                });
+
+                                return Object.keys(groups).map((day, gi) => (
+                                    <div key={gi} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <h5 style={{ 
+                                            margin: gi === 0 ? '0 0 0.5rem' : '1.5rem 0 0.5rem', 
+                                            fontSize: '0.8rem', fontWeight: 800, color: 'var(--brand)', 
+                                            textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                        }}>
+                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
+                                            {day}
+                                        </h5>
+                                        <div style={{ overflowX: 'auto', background: '#fcfcfc', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                                <thead>
+                                                    <tr style={{ background: '#f1f5f940', textAlign: 'left' }}>
+                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem' }}>Hora</th>
+                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem' }}>Indicador / Área</th>
+                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem', textAlign: 'center' }}>Marca</th>
+                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem', textAlign: 'right' }}>Valor</th>
+                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem', textAlign: 'center' }}>Responsable</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {groups[day].map((log, li) => {
+                                                        const kpi = kpiData.find(k => k.id === log.kpi_id);
+                                                        const date = new Date(log.updated_at || log.created_at);
+                                                        const brand = log.brand || log.additional_data?.brand || 'Global';
+                                                        const isMeta = log.additional_data?.type === 'META_UPDATE';
+                                                        
+                                                        return (
+                                                            <tr key={li} style={{ borderTop: '1px solid #f1f5f9' }}>
+                                                                <td style={{ padding: '0.8rem 1rem', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                                                    {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                                </td>
+                                                                <td style={{ padding: '0.8rem 1rem' }}>
+                                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                        <span style={{ color: '#1e293b', fontWeight: 800 }}>{kpi?.name || log.kpi_id}</span>
+                                                                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 700 }}>
+                                                                            {kpi?.area || 'General'}
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td style={{ textAlign: 'center', padding: '0.8rem 1rem' }}>
+                                                                    <span style={{ 
+                                                                        padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 900,
+                                                                        background: brand === 'Global' ? '#f1f5f9' : '#3b82f615',
+                                                                        color: brand === 'Global' ? '#64748b' : '#3b82f6',
+                                                                        border: `1px solid ${brand === 'Global' ? '#e2e8f0' : '#3b82f620'}`
+                                                                    }}>
+                                                                        {brand}
+                                                                    </span>
+                                                                </td>
+                                                                <td style={{ textAlign: 'right', padding: '0.8rem 1rem' }}>
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                                                        <span style={{ fontWeight: 900, color: '#1e293b', fontSize: '1rem' }}>
+                                                                            {log.value}{kpi?.unit === '%' ? '%' : ''}
+                                                                        </span>
+                                                                        {isMeta && <span style={{ fontSize: '0.65rem', color: 'var(--brand)', fontWeight: 800 }}>META</span>}
+                                                                    </div>
+                                                                </td>
+                                                                <td style={{ textAlign: 'center', padding: '0.8rem 1rem' }}>
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                                                        <span style={{ fontWeight: 800, color: '#1e293b', fontSize: '0.75rem' }}>{log.cargo || 'Audit'}</span>
+                                                                        <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 600 }}>{log.company_id}</span>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
                         </div>
                     </div>
                 </div>

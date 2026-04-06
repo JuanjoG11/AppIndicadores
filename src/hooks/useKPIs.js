@@ -12,7 +12,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     // 1. Estado inicial
     const [kpiData, setKpiData] = useState(initialMockData);
     const [isLoading, setIsLoading] = useState(true);
+    const [rawUpdates, setRawUpdates] = useState([]);
     const [lastSyncTime, setLastSyncTime] = useState(null);
+
+    // ... (rest of the state and logic)
 
     // Ref para ignorar persistencia automática en procesos internos
     const suppressPersist = useRef(false);
@@ -314,6 +317,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 }
 
                  if (data) {
+                    setRawUpdates(data);
                     suppressPersist.current = true;
                     data.forEach(upd => {
                         applyKPIUpdate(upd.kpi_id, { ...upd.additional_data, updatedAt: upd.updated_at, period: upd.period || upd.additional_data?.period }, false);
@@ -337,6 +341,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 filter: `company_id=eq.${activeCompany}`
             }, (p) => {
                 // Solo aplicar actualizaciones del mes actual en tiempo real
+                setRawUpdates(prev => [...prev, p.new]);
                 const { start, end } = getMonthDateRange();
                 const updatedAt = new Date(p.new.updated_at);
                 const startDate = new Date(start);
@@ -350,5 +355,5 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         return () => { supabase.removeChannel(channel); };
     }, [applyKPIUpdate, onToast, activeCompany, kpiData.length === 0]);
 
-    return { kpiData, isLoading, lastSyncTime, applyKPIUpdate };
+    return { kpiData, rawUpdates, isLoading, lastSyncTime, applyKPIUpdate };
 };

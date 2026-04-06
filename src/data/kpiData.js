@@ -1166,7 +1166,7 @@ export const kpiDefinitions = [
             TAT: 0.5
         },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'DIARIO',
         responsable: 'FACTURACION',
         formula: 'ERRORES / FACTURAS',
         sustentacion: 'SEMANAL',
