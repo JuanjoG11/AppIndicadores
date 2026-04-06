@@ -22,6 +22,23 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
 
+    // ── Período mensual actual (YYYY-MM) para reseteо automático ──────────────
+    const getCurrentPeriod = () => {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        return `${y}-${m}`;
+    };
+    const currentPeriod = getCurrentPeriod();
+
+    // Inicio y fin del mes actual para el filtro de Supabase
+    const getMonthDateRange = () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        return { start: start.toISOString(), end: end.toISOString() };
+    };
+
     /**
      * Aplica actualizaciones locales al estado.
      */
@@ -137,20 +154,57 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 persistUpdate(kpiId, updatedAdditionalData, newValue, currentUser);
             }
 
-            const targetMonth = MONTH_NAMES[new Date(d.updatedAt || new Date()).getMonth()];
+            let targetMonthIndex;
+            let recordDate;
+            if (d.period && d.period.includes('-')) {
+                const [yyyy, mm] = d.period.split('-');
+                targetMonthIndex = parseInt(mm, 10) - 1;
+                recordDate = new Date(parseInt(yyyy, 10), targetMonthIndex, 1);
+            } else {
+                // If there's no period (legacy test data), force it to be March 2026
+                recordDate = new Date(d.updatedAt || new Date());
+                targetMonthIndex = recordDate.getMonth();
+                if (!d.period) {
+                    targetMonthIndex = 2; // Marzo
+                    recordDate = new Date(2026, 2, 1);
+                    d.period = '2026-03';
+                }
+            }
+            const targetMonth = MONTH_NAMES[targetMonthIndex];
             const targetCompany = d.company || 'TYM';
 
-            const newKpi = {
-                ...kpi,
-                currentValue: newValue,
-                targetMeta,
-                compliance,
-                semaphore,
-                hasData: hasAnyData,
-                additionalData: updatedAdditionalData,
-                brandValues: { ...brandValues },
-                history: kpi.history.map(h => h.month === targetMonth ? { ...h, [targetCompany]: newValue } : h)
-            };
+            // Check if it's a historical record by comparing periods explicitly
+            const isHistoricalUpdate = d.type !== 'META_UPDATE' && (
+                d.period ? d.period !== currentPeriod : 
+                (recordDate.getMonth() !== new Date().getMonth() || recordDate.getFullYear() !== new Date().getFullYear())
+            );
+
+            const newHistory = kpi.history.map(h => h.month === targetMonth ? { ...h, [targetCompany]: newValue } : h);
+
+            let newKpi;
+            if (isHistoricalUpdate) {
+                // Use oldKpi to discard all current-month mutations (brandValues, currentValue)
+                newKpi = {
+                    ...oldKpi,
+                    history: newHistory
+                };
+                if (d.type === 'META_UPDATE') {
+                    newKpi.meta = kpi.meta;
+                    newKpi.targetMeta = targetMeta;
+                }
+            } else {
+                newKpi = {
+                    ...kpi,
+                    currentValue: newValue,
+                    targetMeta,
+                    compliance,
+                    semaphore,
+                    hasData: hasAnyData,
+                    additionalData: updatedAdditionalData,
+                    brandValues: { ...brandValues },
+                    history: newHistory
+                };
+            }
 
             const newDataList = [...prevData];
             newDataList[index] = newKpi;
@@ -160,13 +214,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
     const persistUpdate = async (kpiId, additionalData, value, user) => {
         try {
-            console.log("💾 Persistiendo en Supabase:", kpiId, additionalData, "Empresa:", user?.company);
+            const period = getCurrentPeriod();
+            console.log("💾 Persistiendo en Supabase:", kpiId, additionalData, "Empresa:", user?.company, "Período:", period);
             const { error } = await supabase.from('kpi_updates').insert({
-                company_id: user?.company || 'TYM', // Identificador de empresa obligatorio
+                company_id: user?.company || 'TYM',
                 kpi_id: kpiId,
-                additional_data: additionalData,
+                additional_data: { ...additionalData, period },
                 value: value,
-                cargo: user?.cargo || 'Sistema'
+                cargo: user?.cargo || 'Sistema',
+                brand: user?.activeBrand || additionalData?.brand || null,
+                period: period   // columna optional – si no existe en la tabla se ignora via additional_data
             });
             if (error) throw error;
             setLastSyncTime(new Date());
@@ -220,26 +277,36 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         });
     }, [kpiDefinitions]);
 
-    // ── 2. CARGA DE DATOS DE SUPABASE ──
+    // ── 2. CARGA DE DATOS DE SUPABASE (histórico del año + suscripción realtime) ──
     useEffect(() => {
         const fetchInitialData = async () => {
             setIsLoading(true);
             try {
-                // Filtramos por empresa desde la consulta (esto es lo que diría un ingeniero para ser eficiente)
+                // Get start of the YEAR to load all history correctly
+                const now = new Date();
+                const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
+                // We keep 'end' at current month's end just in case
+                const { end } = getMonthDateRange();
+
+                console.log(`📅 Cargando datos históricos desde ${startOfYear} hasta ${end}`);
+
+                // Fetch data for the current company from the start of the year
                 const { data, error } = await supabase
                     .from('kpi_updates')
                     .select('*')
                     .eq('company_id', activeCompany)
+                    .gte('updated_at', startOfYear)
+                    .lte('updated_at', end)
                     .order('updated_at', { ascending: true });
                 
                 if (error) {
                     console.error("❌ Supabase fetch error:", error);
                 }
 
-                if (data) {
+                 if (data) {
                     suppressPersist.current = true;
                     data.forEach(upd => {
-                        applyKPIUpdate(upd.kpi_id, { ...upd.additional_data, updatedAt: upd.updated_at }, false);
+                        applyKPIUpdate(upd.kpi_id, { ...upd.additional_data, updatedAt: upd.updated_at, period: upd.period || upd.additional_data?.period }, false);
                     });
                     suppressPersist.current = false;
                     setLastSyncTime(new Date());
@@ -252,19 +319,26 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
         if (kpiData.length > 0) fetchInitialData();
 
-        const channel = supabase.channel(`realtime-kpi-sync-${activeCompany}`)
-            .on('postgres_changes', { 
-                event: 'INSERT', 
-                schema: 'public', 
+        const channel = supabase.channel(`realtime-kpi-sync-${activeCompany}-${currentPeriod}`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
                 table: 'kpi_updates',
-                filter: `company_id=eq.${activeCompany}` 
+                filter: `company_id=eq.${activeCompany}`
             }, (p) => {
-                applyKPIUpdate(p.new.kpi_id, p.new.additional_data, false);
-                if (onToast) onToast('info', `📊 KPI actualizado`);
+                // Solo aplicar actualizaciones del mes actual en tiempo real
+                const { start, end } = getMonthDateRange();
+                const updatedAt = new Date(p.new.updated_at);
+                const startDate = new Date(start);
+                const endDate   = new Date(end);
+                if (updatedAt >= startDate && updatedAt <= endDate) {
+                    applyKPIUpdate(p.new.kpi_id, p.new.additional_data, false);
+                    if (onToast) onToast('info', `📊 KPI actualizado`);
+                }
             }).subscribe();
 
         return () => { supabase.removeChannel(channel); };
-    }, [applyKPIUpdate, onToast, kpiData.length === 0]);
+    }, [applyKPIUpdate, onToast, activeCompany, kpiData.length === 0]);
 
     return { kpiData, isLoading, lastSyncTime, applyKPIUpdate };
 };

@@ -101,26 +101,28 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         brand !== 'Global' && brand !== 'TYM' && brand !== 'TAT' && BRAND_TO_ENTITY[brand] === activeCompany
     );
 
-    const [selectedBrand, setSelectedBrand] = useState('all');
+    // Si el usuario tiene marca bloqueada (ej: log_zenu), fijar selectedBrand a su marca
+    const lockedBrand = currentUser?.activeBrand || null;
+    const [selectedBrand, setSelectedBrand] = useState(lockedBrand || 'all');
 
     // Reset or set default sub-area when areaId changes
     React.useEffect(() => {
-        const defaultSubArea = 
-            areaId === 'logistica' ? 'Logística de Entrega' : 
-            areaId === 'comercial' ? 'Gestión de Ventas' : 
+        const defaultSubArea =
+            areaId === 'logistica' ? 'Logística de Entrega' :
+            areaId === 'comercial' ? 'Gestión de Ventas' :
             areaId === 'administrativo' ? 'Control de Inventarios' :
             areaId === 'facturacion' ? 'Operación Facturación' : 'all';
         setActiveSubArea(defaultSubArea);
     }, [areaId]);
 
-    // Reset or set default brand when area or company changes
+    // Si cambia company/area y el brand está bloqueado, respetar; sino reset
     React.useEffect(() => {
-        if (isBrandSpecificArea && brandsForEntity.length > 0) {
-            setSelectedBrand('all');
+        if (lockedBrand) {
+            setSelectedBrand(lockedBrand);
         } else {
             setSelectedBrand('all');
         }
-    }, [areaId, activeCompany, isBrandSpecificArea, brandsForEntity.join(',')]);
+    }, [areaId, activeCompany, lockedBrand]);
 
     const showBrandFilter = isBrandSpecificArea;
 
@@ -480,30 +482,53 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                     padding: '0.4rem',
                     background: '#f8fafc',
                     borderRadius: '16px',
-                    width: 'fit-content'
+                    width: 'fit-content',
+                    alignItems: 'center'
                 }}>
-                    {brandsForEntity.map(brand => (
-                        <button
-                            key={brand}
-                            onClick={() => setSelectedBrand(brand)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.4rem',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '12px',
-                                border: '1px solid #e2e8f0',
-                                fontSize: '0.75rem',
-                                fontWeight: 800,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                background: selectedBrand === brand ? 'var(--brand)' : 'white',
-                                color: selectedBrand === brand ? 'white' : '#64748b'
-                            }}
-                        >
-                            <Package size={12} /> {brand}
-                        </button>
-                    ))}
+                    {/* Si la marca está bloqueada, mostrar badge fijo */}
+                    {lockedBrand ? (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            padding: '0.5rem 1.25rem',
+                            background: 'var(--brand)',
+                            borderRadius: '12px',
+                            color: 'white',
+                            fontSize: '0.8rem',
+                            fontWeight: 900,
+                            letterSpacing: '0.04em'
+                        }}>
+                            <Package size={14} />
+                            {lockedBrand}
+                            <span style={{
+                                fontSize: '0.65rem', opacity: 0.75,
+                                background: 'rgba(255,255,255,0.2)',
+                                padding: '1px 8px', borderRadius: '100px'
+                            }}>Tu proveedor</span>
+                        </div>
+                    ) : (
+                        brandsForEntity.map(brand => (
+                            <button
+                                key={brand}
+                                onClick={() => setSelectedBrand(brand === selectedBrand ? 'all' : brand)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 800,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    background: selectedBrand === brand ? 'var(--brand)' : 'white',
+                                    color: selectedBrand === brand ? 'white' : '#64748b'
+                                }}
+                            >
+                                <Package size={12} /> {brand}
+                            </button>
+                        ))
+                    )}
                 </div>
             )}
 

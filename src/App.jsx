@@ -69,8 +69,10 @@ const AppInner = () => {
   // ── Login/Logout handlers ─────────────────────────────────────────────────
   const onLoginSuccess = (user) => {
     handleLogin(user);
+    // Usar la empresa del usuario; el Gerente puede cambiarla desde el dashboard
     if (user.company) setActiveCompany(user.company);
-    addToast('success', `¡Bienvenido, ${user.name}! 🎉`);
+    const brandLabel = user.activeBrand ? ` · ${user.activeBrand}` : '';
+    addToast('success', `¡Bienvenido, ${user.name}${brandLabel}! 🎉`);
   };
 
   const onLogout = () => {

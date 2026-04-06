@@ -30,6 +30,15 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         setEditMode(mode);
     };
 
+    // Si el usuario tiene marca bloqueada, filtrar por ella; si no, usar todas las marcas de la entidad
+    const lockedBrand = currentUser.activeBrand || null;
+
+    const getEffectiveBrands = (kpi) => {
+        const all = getEntityBrands(kpi, currentUser.company);
+        if (lockedBrand) return all.filter(b => b === lockedBrand);
+        return all;
+    };
+
     // 1. Get filtered data for ONLY the current user's company
     const companyKPIsRaw = filterKPIsByEntity(kpiData, currentUser.company);
 
@@ -50,11 +59,11 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         // Si no tiene desgloses por marca, solo chequear hasData
         if (!k.meta || typeof k.meta !== 'object') return !k.hasData;
 
-        // Si tiene marcas, ver si alguna de la entidad del usuario (excluyendo Polar) falta
-        const entityBrands = getEntityBrands(k, currentUser.company);
-        if (entityBrands.length === 0) return !k.hasData;
+        // Si tiene marcas, ver si la(s) marca(s) efectiva(s) del usuario faltan
+        const effectiveBrands = getEffectiveBrands(k);
+        if (effectiveBrands.length === 0) return !k.hasData;
 
-        return entityBrands.some(brand => {
+        return effectiveBrands.some(brand => {
             const dataKey = `${currentUser.company}-${brand}`;
             const brandData = k.brandValues?.[dataKey];
             return !brandData || brandData.hasData === false;
@@ -95,7 +104,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const criticalCount = pendingKPIs.filter(k => checkIsExpired(getKPIDeadline(k.frecuencia))).length;
     const urgentCount = pendingKPIs.filter(k => checkIsUrgent(getKPIDeadline(k.frecuencia))).length;
 
-    // Global stats - Contar marcas individuales para mayor precisión
+    // Global stats - Contar solo marcas efectivas del usuario
     const getMyStats = () => {
         let total = 0;
         let done = 0;
@@ -104,12 +113,12 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                 total++;
                 if (k.hasData) done++;
             } else {
-                const entityBrands = getEntityBrands(k, currentUser.company);
-                if (entityBrands.length === 0) {
+                const effectiveBrands = getEffectiveBrands(k);
+                if (effectiveBrands.length === 0) {
                     total++;
                     if (k.hasData) done++;
                 } else {
-                    entityBrands.forEach(brand => {
+                    effectiveBrands.forEach(brand => {
                         total++;
                         const dataKey = `${currentUser.company}-${brand}`;
                         if (k.brandValues?.[dataKey]?.hasData) done++;
@@ -137,9 +146,9 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         let pendingBrandsList = [];
 
         if (isMine && kpi.meta && typeof kpi.meta === 'object') {
-            const entityBrands = getEntityBrands(kpi, currentUser.company);
-            if (entityBrands.length > 0) {
-                pendingBrandsList = entityBrands.filter(brand => {
+            const effectiveBrands = getEffectiveBrands(kpi);
+            if (effectiveBrands.length > 0) {
+                pendingBrandsList = effectiveBrands.filter(brand => {
                     const dataKey = `${currentUser.company}-${brand}`;
                     return !kpi.brandValues?.[dataKey]?.hasData;
                 });
@@ -252,10 +261,10 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
 
 
-                {/* Brand Breakdown for Multi-brand KPIs */}
-                {kpi.meta && typeof kpi.meta === 'object' && getEntityBrands(kpi, currentUser.company).length > 0 ? (
+                {/* Brand Breakdown for Multi-brand KPIs - FILTRADO POR MARCA ACTIVA */}
+                {kpi.meta && typeof kpi.meta === 'object' && getEffectiveBrands(kpi).length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                        {getEntityBrands(kpi, currentUser.company)
+                        {getEffectiveBrands(kpi)
                             .map(brand => {
                                 const dataKey = `${currentUser.company}-${brand}`;
                                 const bData = kpi.brandValues?.[dataKey];

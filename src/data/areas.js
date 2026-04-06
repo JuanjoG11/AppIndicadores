@@ -16,9 +16,9 @@ export const areas = [
   },
   {
     id: 'caja',
-    name: 'Validador de Recaudos',
+    name: 'Caja',
     description: 'Control de efectivo y cierres',
-    responsible: 'Validador de Recaudos',
+    responsible: 'Caja',
     color: '#7c3aed'
   },
   {

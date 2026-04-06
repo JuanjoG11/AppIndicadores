@@ -24,14 +24,19 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const userEntity = currentUser?.company || 'TYM';
 
     // 1. Filtrar marcas comerciales
+    // Si el usuario tiene marca bloqueada (ej: fact_alpina), solo mostrar ESA marca
+    const lockedBrand = !isMetaMode ? (currentUser?.activeBrand || null) : null;
     let commercialBrands = [];
     if (hasMultipleMetas) {
         const allBrands = Object.keys(kpi.meta).filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT');
 
         if (isMetaMode) {
             commercialBrands = allBrands;
+        } else if (lockedBrand) {
+            // Usuario con proveedor fijo: solo ve SU marca si existe en este KPI
+            commercialBrands = allBrands.filter(b => b === lockedBrand);
         } else {
-            // Analistas solo ven marcas comerciales comprobadas de su entidad
+            // Analistas sin restricción: ven marcas comerciales de su entidad
             commercialBrands = allBrands.filter(b => BRAND_TO_ENTITY[b] === userEntity);
         }
     }
@@ -45,10 +50,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     };
 
     // 3. Seleccionar por defecto
+    // Si el usuario tiene marca bloqueada, esa es siempre la marca seleccionada
     // Usamos initialBrand si viene de props y es válido para la vista actual
-    const validatedInitialBrand = (initialBrand && initialBrand !== 'all' && (isMetaMode || (hasMultipleMetas ? commercialBrands.includes(initialBrand) : true)))
+    const validatedInitialBrand = lockedBrand ||
+        ((initialBrand && initialBrand !== 'all' && (isMetaMode || (hasMultipleMetas ? commercialBrands.includes(initialBrand) : true)))
         ? initialBrand
-        : null;
+        : null);
 
     // Si no hay marcas comerciales y no es gerente, la marca asignada automáticamente es la propia entidad.
     const defaultBrand = validatedInitialBrand || ((!isMetaMode && !hasCommercialBrands)

@@ -17,12 +17,19 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
     let isReady = kpi.hasData;
     let pendingBrandsList = [];
 
-    if (isMine && kpi.meta && typeof kpi.meta === 'object') {
-        const entityBrands = Object.keys(kpi.meta).filter(b =>
+    const lockedBrand = currentUser?.activeBrand || null;
+    const getEffectiveBrands = (k) => {
+        const all = Object.keys(k.meta || {}).filter(b =>
             (BRAND_TO_ENTITY[b] === currentUser.company || b === currentUser.company) && b !== 'POLAR'
         );
-        if (entityBrands.length > 0) {
-            pendingBrandsList = entityBrands.filter(brand => {
+        if (lockedBrand) return all.filter(b => b === lockedBrand);
+        return all;
+    };
+
+    if (isMine && kpi.meta && typeof kpi.meta === 'object') {
+        const effectiveBrands = getEffectiveBrands(kpi);
+        if (effectiveBrands.length > 0) {
+            pendingBrandsList = effectiveBrands.filter(brand => {
                 const dataKey = `${currentUser.company}-${brand}`;
                 return !kpi.brandValues?.[dataKey]?.hasData;
             });
@@ -152,11 +159,10 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
 
 
 
-            {kpi.meta && typeof kpi.meta === 'object' && Object.keys(kpi.meta).filter(b => (BRAND_TO_ENTITY[b] === currentUser?.company || b === currentUser?.company) && b !== 'POLAR').length > 0 ? (
-                /* MULTI-BRAND DISPLAY */
+            {kpi.meta && typeof kpi.meta === 'object' && getEffectiveBrands(kpi).length > 0 ? (
+                /* MULTI-BRAND DISPLAY - solo marcas efectivas del usuario */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.25rem' }}>
-                    {Object.keys(kpi.meta)
-                        .filter(b => (BRAND_TO_ENTITY[b] === currentUser?.company || b === currentUser?.company) && b !== 'POLAR')
+                    {getEffectiveBrands(kpi)
                         .map(brand => {
                             const bData = kpi.brandValues?.[`${currentUser.company}-${brand}`];
                             const hasData = bData?.hasData;
