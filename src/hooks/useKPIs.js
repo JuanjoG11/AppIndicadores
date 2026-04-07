@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { isSameDay, isSameWeek, isSameMonth, parseISO } from 'date-fns';
 import { kpiDefinitions } from '../data/kpiData';
 import { mockKPIData as initialMockData } from '../data/mockData';
 import { supabase } from '../lib/supabase';
@@ -176,17 +177,33 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const targetMonth = MONTH_NAMES[targetMonthIndex];
             const targetCompany = d.company || 'TYM';
 
-            // Check if it's a historical record by comparing periods explicitly
+            // ─── Lógica de Reinicio Automático por Frecuencia (Día/Semana/Mes) ───
+            const frequency = (kpi.frecuencia || '').toUpperCase();
+            const recordDateObj = parseISO(d.updatedAt || new Date().toISOString());
+            const nowObj = new Date();
+
+            let isFromCurrentPeriod = false;
+            if (frequency.includes('DIARI')) {
+                isFromCurrentPeriod = isSameDay(recordDateObj, nowObj);
+            } else if (frequency.includes('SEMANAL')) {
+                isFromCurrentPeriod = isSameWeek(recordDateObj, nowObj, { weekStartsOn: 1 }); // Semana empieza lunes
+            } else {
+                // Quincenal, Mensual, etc. - Por ahora usamos el mes como estándar
+                isFromCurrentPeriod = isSameMonth(recordDateObj, nowObj);
+            }
+
+            // Un registro es histórico si:
+            // 1. No es del período actual según su frecuencia
+            // 2. O explícitamente pertenece a otro mes (period)
             const isHistoricalUpdate = d.type !== 'META_UPDATE' && (
-                d.period ? d.period !== currentPeriod : 
-                (recordDate.getMonth() !== new Date().getMonth() || recordDate.getFullYear() !== new Date().getFullYear())
+                !isFromCurrentPeriod || (d.period && d.period !== currentPeriod)
             );
 
             const newHistory = kpi.history.map(h => h.month === targetMonth ? { ...h, [targetCompany]: newValue } : h);
 
             let newKpi;
             if (isHistoricalUpdate) {
-                // Use oldKpi to discard all current-month mutations (brandValues, currentValue)
+                // Si es antiguo, solo actualizamos el histórico (barras) pero NO el estado actual (hasData/currentValue)
                 newKpi = {
                     ...oldKpi,
                     history: newHistory
@@ -196,14 +213,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     newKpi.targetMeta = targetMeta;
                 }
             } else {
+                // Si es del período actual (ej: hoy si es diario), actualizamos el valor vivo
                 newKpi = {
                     ...kpi,
                     currentValue: newValue,
                     targetMeta,
                     compliance,
                     semaphore,
-                    hasData: hasAnyData,
-                    additionalData: updatedAdditionalData,
+                    hasData: d.type === 'META_UPDATE' ? kpi.hasData : true,
                     brandValues: { ...brandValues },
                     history: newHistory
                 };

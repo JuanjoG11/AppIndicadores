@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
 import ExecutiveDashboard from './pages/ExecutiveDashboard';
@@ -206,11 +206,11 @@ const AppInner = () => {
 // ─── Root App (provides Toast context + Router) ───────────────────────────────
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <ToastProvider>
         <AppInner />
       </ToastProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

@@ -33,16 +33,13 @@ const users = [
         ]
     },
     {
-        name: "Analista Info",
-        role: "RESPONSABLE ALIMENTACIÓN - LOGÍSTICA BODEGA",
+        name: "Anyi Mosquera",
+        role: "Analista De Información",
         kpis: [
-            { name: "Pérdida de Embalajes", meta: "META: 0 Cant.", bonus: "N/A" },
-            { name: "Índice de Averías", meta: "META: 0.20%", bonus: "N/A" },
-            { name: "Tiempo Picking x Unidad", meta: "META: 8 seg", bonus: "N/A" },
-            { name: "Valor Separado x Hombre", meta: "META: $218M", bonus: "N/A" },
-            { name: "Eficiencia Separación", meta: "META: 100%", bonus: "N/A" },
-            { name: "Impacto Notas x Error", meta: "META: 1.00%", bonus: "N/A" },
-            { name: "Separación de Planillas", meta: "META: 100%", bonus: "N/A" }
+            { name: "Revisión de precios", meta: "META: 100%", bonus: "$75.000" },
+            { name: "Cumplimiento de inventarios", meta: "META: 90%", bonus: "$75.000" },
+            { name: "Revisión de margenes", meta: "META: 100%", bonus: "$75.000" },
+            { name: "Exactitud de inventarios", meta: "META: 99%", bonus: "$75.000" }
         ]
     },
     {
@@ -94,7 +91,6 @@ const users = [
         kpis: [
             { name: "Cartera al Día", meta: "META: 10%", bonus: "$100.000" },
             { name: "Cartera > 30 Días", meta: "META: 5%", bonus: "$100.000" },
-            { name: "Recircularizaciones", meta: "META: 100%", bonus: "N/A" },
             { name: "Relación Cartera vs Ventas", meta: "META: 10%", bonus: "$100.000" }
         ]
     },
