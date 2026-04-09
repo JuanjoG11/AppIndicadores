@@ -92,6 +92,7 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'CRISTIAN',
         formula: 'VALOR FLETES / VENTA TOTAL',
         sustentacion: 'SEMANAL',
         fuente: 'MEKANO'
@@ -440,15 +441,16 @@ export const kpiDefinitions = [
         id: 'arqueos-realizados',
         name: 'Cumplimiento de Arqueos',
         area: 'contabilidad',
-        objetivo: 'Garantizar el control permanente del efectivo',
+        objetivo: 'Garantizar el control permanente del efectivo. Comisión: $100.000',
         meta: {
-            TYM: 8,
-            TAT: 8
+            TYM: 4,
+            TAT: 4
         },
         brands: ['TYM', 'TAT'],
         unit: 'arqueos',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'CRISTIAN',
         formula: 'ARQUEOS REALIZADOS / ARQUEOS PROGRAMADOS (Incluye reporte de Sobras/Faltantes)',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
@@ -466,6 +468,7 @@ export const kpiDefinitions = [
         unit: 'arqueos',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'CRISTIAN',
         formula: 'Número de arqueos con diferencia (Sobra - Faltante)',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD',
@@ -475,7 +478,7 @@ export const kpiDefinitions = [
         id: 'planillas-cerradas',
         name: 'Cierre de Planillas',
         area: 'caja',
-        objetivo: 'Ejecutar el cierre de planillas diario',
+        objetivo: 'Ejecutar el cierre de planillas diario. Comisión: $100.000',
         meta: {
             ALPINA: 100,
             ZENU: 100,
@@ -486,6 +489,7 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'CRISTIAN',
         formula: 'PLANILLAS CERRADAS / PLANILLAS GENERADAS',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
@@ -505,6 +509,7 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'CRISTIAN',
         formula: 'VALOR DE VALES / TOTAL CUADRE DE CAJA',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
@@ -524,7 +529,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'CONTADOR',
+        responsable: 'CARTERA',
         formula: 'TOTAL CARTERA VENCIDA / TOTAL VENTA',
         sustentacion: 'QUINCENAL',
         fuente: 'CONTABILIDAD'
@@ -542,7 +547,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'CONTADOR',
+        responsable: 'CARTERA',
         formula: 'TOTAL MAYOR A 30 / TOTAL CARTERA',
         sustentacion: 'QUINCENAL',
         fuente: 'CONTABILIDAD'
@@ -550,7 +555,7 @@ export const kpiDefinitions = [
 
     {
         id: 'recircularizaciones',
-        name: 'Cumplimiento de Recircularizaciones',
+        name: 'Cumplimiento de Circularizaciones',
         area: 'cartera',
         objetivo: 'Fortalecer el control interno con la cartera a la calle',
         meta: {
@@ -561,7 +566,7 @@ export const kpiDefinitions = [
         },
         unit: 'cantidad',
         frecuencia: 'BIMESTRAL',
-        responsable: 'CONTADOR',
+        responsable: 'CARTERA',
         formula: 'EFECTUADAS / PROGRAMADAS',
         sustentacion: 'BIMESTRAL',
         fuente: 'CONTABILIDAD'
@@ -579,7 +584,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'CONTADOR',
+        responsable: 'CARTERA',
         formula: 'VENTA CREDITO / TOTAL VENTA',
         sustentacion: 'QUINCENAL',
         fuente: 'CONTABILIDAD'
@@ -595,6 +600,7 @@ export const kpiDefinitions = [
         unit: 'días',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: 'DIAS PARA EL REPORTE / TOTAL DIAS AL CIERRE',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
@@ -608,6 +614,7 @@ export const kpiDefinitions = [
         unit: 'cantidad',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: 'AJUSTES POSTERIORES',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
@@ -621,6 +628,7 @@ export const kpiDefinitions = [
         unit: 'cantidad',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: 'AJUSTES REVISOR FISCAL',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
@@ -637,6 +645,7 @@ export const kpiDefinitions = [
         unit: 'veces',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: '360 / (VENTAS CREDITO / ((CXC INICIAL + CXC FINAL) / 2))',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
@@ -653,6 +662,7 @@ export const kpiDefinitions = [
         unit: 'veces',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: '360 / (COMPRAS CREDITO / ((CXP INICIAL + CXP FINAL) / 2))',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
@@ -661,13 +671,28 @@ export const kpiDefinitions = [
         id: 'conciliaciones-bancarias',
         name: 'Cumplimiento de Conciliaciones Bancarias',
         area: 'contabilidad',
-        objetivo: 'Fortalecer el control interno',
-        meta: 2,
+        objetivo: 'Fortalecer el control interno. Comisión: $100.000',
+        meta: 8,
         unit: 'cantidad',
         frecuencia: 'QUINCENAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: 'CONCILIACIONES REALIZADAS / CONCILIACIONES REQUERIDAS',
         sustentacion: 'QUINCENAL',
+        fuente: 'CONTABILIDAD'
+    },
+    {
+        id: 'conciliaciones-diarias',
+        name: 'Verificación de Conciliaciones Diarias',
+        area: 'contabilidad',
+        objetivo: 'Asegurar la cuadratura diaria entre sistema y banco',
+        meta: 100,
+        unit: '%',
+        frecuencia: 'DIARIO',
+        responsable: 'CONTADOR',
+        responsableTYM: 'CRISTIAN',
+        formula: 'CONCILIACIONES EN SISTEMA / CONCILIACIONES EN BANCO',
+        sustentacion: 'DIARIA',
         fuente: 'CONTABILIDAD'
     },
     {
@@ -682,6 +707,7 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'BIMESTRAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: 'ACTIVOS CONCILIADOS / ACTIVOS REGISTRADOS',
         sustentacion: 'BIMENSUAL',
         fuente: 'CONTABILIDAD'
@@ -698,6 +724,7 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: 'MULTAS O SANCIONES / INGRESO',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
@@ -714,6 +741,7 @@ export const kpiDefinitions = [
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'CONTADOR',
+        responsableTYM: 'JULIANA',
         formula: 'IMPUESTOS OPTIMIZADOS / TOTAL IMPUESTOS',
         sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'

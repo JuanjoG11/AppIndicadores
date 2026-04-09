@@ -221,9 +221,9 @@ export const SYSTEM_USERS = [
     {
         username: 'contador_tym',
         password: 'Conta_TYM26',
-        name: 'Contabilidad · TYM',
+        name: 'Cristian Ballesteros · TYM',
         role: 'Analista',
-        cargo: 'CONTADOR',
+        cargo: 'CRISTIAN',
         company: 'TYM',
         activeBrand: null,
         allowedAreas: ['contabilidad', 'caja', 'cartera'],
@@ -231,9 +231,21 @@ export const SYSTEM_USERS = [
         icon: 'Calculator'
     },
     {
+        username: 'juliana_tym',
+        password: 'Juliana_TYM26',
+        name: 'Juliana · TYM',
+        role: 'Analista',
+        cargo: 'JULIANA',
+        company: 'TYM',
+        activeBrand: null,
+        allowedAreas: ['contabilidad', 'caja', 'cartera'],
+        color: '#8b5cf6',
+        icon: 'Calculator'
+    },
+    {
         username: 'contador_tat',
         password: 'Conta_TAT26',
-        name: 'Contabilidad · TAT',
+        name: 'Cristian Ballesteros · TAT',
         role: 'Analista',
         cargo: 'CONTADOR',
         company: 'TAT',

@@ -55,13 +55,11 @@ const users = [
     },
     {
         name: "Karina Taba",
-        role: "TAT - TALENTO HUMANO",
+        role: "Analista de Gestión Humana",
         kpis: [
-            { name: "Rotación de Personal", meta: "META: 5%", bonus: "N/A" },
-            { name: "Índice de Ausentismo", meta: "META: 2.5%", bonus: "N/A" },
+            { name: "Tiempo de cobertura de vacantes", meta: "META: 8", bonus: "$100.000" },
             { name: "Cumplimiento SST", meta: "META: 92%", bonus: "$100.000" },
-            { name: "Actividades Cultura", meta: "META: 90%", bonus: "$100.000" },
-            { name: "Cobertura Vacantes", meta: "META: 8 días", bonus: "$100.000" }
+            { name: "Actividades de cultura", meta: "META: 90%", bonus: "$100.000" }
         ]
     },
     {
@@ -92,6 +90,15 @@ const users = [
             { name: "Cartera al Día", meta: "META: 10%", bonus: "$100.000" },
             { name: "Cartera > 30 Días", meta: "META: 5%", bonus: "$100.000" },
             { name: "Relación Cartera vs Ventas", meta: "META: 10%", bonus: "$100.000" }
+        ]
+    },
+    {
+        name: "Cristian Ballesteros",
+        role: "CONTABILIDAD - RESPONSABLE",
+        kpis: [
+            { name: "Conciliaciones Bancarias", meta: "8/mes", bonus: "$100.000" },
+            { name: "Arqueos de Caja", meta: "4/mes", bonus: "$100.000" },
+            { name: "Cierre de planillas", meta: "100%", bonus: "$100.000" }
         ]
     },
     {
@@ -132,6 +139,33 @@ const users = [
             { name: "Pedidos Facturados", meta: "META: 100%", bonus: "$100.000" },
             { name: "Control Operativo De Facturación", meta: "META: 100%", bonus: "$100.000" },
             { name: "Error sobre Facturación", meta: "META: 99.5%", bonus: "$100.000" }
+        ]
+    },
+    {
+        name: "Daniel Arroyave",
+        role: "AUXILIAR DE CAJA - TAT",
+        kpis: [
+            { name: "Cierre de planillas", meta: "META: 100%", bonus: "$100.000" },
+            { name: "Vales en Cuadres", meta: "META: 0,5%", bonus: "$100.000" },
+            { name: "Indice de Arqueos", meta: "META: 0%", bonus: "$100.000" }
+        ]
+    },
+    {
+        name: "Eliana Gonzalez",
+        role: "AUXILIAR DE CAJA - TYM",
+        kpis: [
+            { name: "Cierre de planillas", meta: "META: 100%", bonus: "$100.000" },
+            { name: "Vales en Cuadres", meta: "META: 0,5%", bonus: "$100.000" },
+            { name: "Indice de Arqueos", meta: "META: 0%", bonus: "$100.000" }
+        ]
+    },
+    {
+        name: "Nataly Molina",
+        role: "AUXILIAR DE CAJA - TYM",
+        kpis: [
+            { name: "Cierre de planillas", meta: "META: 100%", bonus: "$100.000" },
+            { name: "Vales en Cuadres", meta: "META: 0,5%", bonus: "$100.000" },
+            { name: "Indice de Arqueos", meta: "META: 0%", bonus: "$100.000" }
         ]
     }
 ];

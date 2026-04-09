@@ -49,18 +49,20 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const companyKPIsRaw = filterKPIsByEntity(kpiData, currentUser.company);
 
     // Filter helper: check user permissions for authorized areas
-    const myAccessKPIs = companyKPIsRaw.filter(kpi =>
-        (currentUser.authorizedAreas?.includes('all') ||
+    const myAccessKPIs = companyKPIsRaw.filter(kpi => {
+        const effectiveResponsable = currentUser.company === 'TYM' && kpi.responsableTYM ? kpi.responsableTYM : kpi.responsable;
+        return (currentUser.authorizedAreas?.includes('all') ||
             currentUser.authorizedAreas?.includes(kpi.area) ||
             kpi.visibleEnAreas?.some(a => currentUser.authorizedAreas?.includes(a)) ||
-            kpi.responsable === currentUser.cargo) &&
-        kpi.isAutoFeed !== true
-    );
+            effectiveResponsable === currentUser.cargo) &&
+            kpi.isAutoFeed !== true;
+    });
 
     // Split into EXACTLY two lists as requested
     // List 1: "Indicadores por Alimentar" (Mine + Pending Brands)
     const pendingKPIs = myAccessKPIs.filter(k => {
-        if (k.responsable !== currentUser.cargo) return false;
+        const effectiveResponsable = currentUser.company === 'TYM' && k.responsableTYM ? k.responsableTYM : k.responsable;
+        if (effectiveResponsable !== currentUser.cargo) return false;
 
         // Si no tiene desgloses por marca, solo chequear hasData
         if (!k.meta || typeof k.meta !== 'object') return !k.hasData;
@@ -78,7 +80,8 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
     // List 2: "Indicadores de mi Área" (Monitoring + Fully Fed Mine)
     const areaKPIs = myAccessKPIs.filter(k => {
-        const isMine = k.responsable === currentUser.cargo;
+        const effectiveResponsable = currentUser.company === 'TYM' && k.responsableTYM ? k.responsableTYM : k.responsable;
+        const isMine = effectiveResponsable === currentUser.cargo;
         if (!isMine) return true; // Monitoring
         return !pendingKPIs.find(pk => pk.id === k.id);
     });
@@ -114,7 +117,10 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const getMyStats = () => {
         let total = 0;
         let done = 0;
-        myAccessKPIs.filter(k => k.responsable === currentUser.cargo).forEach(k => {
+        myAccessKPIs.filter(k => {
+            const effectiveResponsable = currentUser.company === 'TYM' && k.responsableTYM ? k.responsableTYM : k.responsable;
+            return effectiveResponsable === currentUser.cargo;
+        }).forEach(k => {
             if (!k.meta || typeof k.meta !== 'object') {
                 total++;
                 if (k.hasData) done++;
@@ -147,7 +153,8 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
 
     // Helper to render KPI cards
     const renderKPICard = (kpi, idx, isMonitoring = false) => {
-        const isMine = kpi.responsable === currentUser.cargo;
+        const effectiveResponsable = currentUser.company === 'TYM' && kpi.responsableTYM ? kpi.responsableTYM : kpi.responsable;
+        const isMine = effectiveResponsable === currentUser.cargo;
         let isReady = kpi.hasData;
         let pendingBrandsList = [];
 
