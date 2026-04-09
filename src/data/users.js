@@ -226,7 +226,7 @@ export const SYSTEM_USERS = [
         cargo: 'CRISTIAN',
         company: 'TYM',
         activeBrand: null,
-        allowedAreas: ['contabilidad', 'caja', 'cartera'],
+        allowedAreas: ['contabilidad', 'caja'],
         color: '#f59e0b',
         icon: 'Calculator'
     },
@@ -238,7 +238,7 @@ export const SYSTEM_USERS = [
         cargo: 'JULIANA',
         company: 'TYM',
         activeBrand: null,
-        allowedAreas: ['contabilidad', 'caja', 'cartera'],
+        allowedAreas: ['contabilidad', 'caja'],
         color: '#8b5cf6',
         icon: 'Calculator'
     },

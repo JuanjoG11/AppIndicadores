@@ -66,11 +66,8 @@ const users = [
         name: "María José Franco",
         role: "TYM - TALENTO HUMANO",
         kpis: [
-            { name: "Rotación de Personal", meta: "META: 5%", bonus: "N/A" },
-            { name: "Índice de Ausentismo", meta: "META: 2.5%", bonus: "N/A" },
             { name: "Cumplimiento SST", meta: "META: 92%", bonus: "$100.000" },
-            { name: "Actividades Cultura", meta: "META: 90%", bonus: "$100.000" },
-            { name: "Cobertura Vacantes", meta: "META: 8 días", bonus: "$100.000" }
+            { name: "Actividades de cultura", meta: "META: 90%", bonus: "$100.000" }
         ]
     },
     {
