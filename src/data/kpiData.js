@@ -1199,7 +1199,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'FACTURACION',
+        responsable: 'LOGISTICA',
         formula: 'ERRORES / FACTURAS',
         sustentacion: 'SEMANAL',
         fuente: 'REPORTE DE CALIDAD'
