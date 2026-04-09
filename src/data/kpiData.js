@@ -355,14 +355,14 @@ export const kpiDefinitions = [
     {
         id: 'calificacion-auditoria',
         name: 'Cumplimiento SST',
-        area: 'talento-humano',
+        area: 'sst-cultura',
         objetivo: 'Ejecutar el Sistema de Gestión SST',
         meta: {
             TYM: 90
         },
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'GESTIÓN HUMANA',
+        responsable: 'SST_CULTURA',
         formula: 'Actividades ejecutadas / Actividades programadas',
         sustentacion: 'MENSUAL',
         fuente: 'SYCH'
@@ -410,14 +410,14 @@ export const kpiDefinitions = [
     {
         id: 'actividades-cultura',
         name: 'Actividades de Cultura Organizacional',
-        area: 'talento-humano',
+        area: 'sst-cultura',
         objetivo: 'Fortalecer la cultura organizacional por medio de actividades',
         meta: {
             TYM: 100
         },
         unit: '%',
         frecuencia: 'MENSUAL',
-        responsable: 'GESTIÓN HUMANA',
+        responsable: 'SST_CULTURA',
         formula: 'Actividades ejecutadas / Actividades programadas',
         sustentacion: 'MENSUAL',
         fuente: 'GESTIÓN HUMANA'
@@ -425,14 +425,14 @@ export const kpiDefinitions = [
     {
         id: 'tiempo-contratacion',
         name: 'Tiempo de Cobertura de Vacantes',
-        area: 'talento-humano',
+        area: 'sst-cultura',
         objetivo: 'Reducir el tiempo de respuesta en contrataciones',
         meta: {
             TYM: 8
         },
         unit: 'días',
         frecuencia: 'QUINCENAL',
-        responsable: 'GESTIÓN HUMANA',
+        responsable: 'SST_CULTURA',
         sustentacion: 'QUINCENAL'
     },
 

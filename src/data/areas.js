@@ -15,6 +15,13 @@ export const areas = [
     color: '#dc2626'
   },
   {
+    id: 'sst-cultura',
+    name: 'SST y Cultura',
+    description: 'Seguridad y Salud en el Trabajo y Cultura Organizacional',
+    responsible: 'Analista de SST',
+    color: '#10b981'
+  },
+  {
     id: 'caja',
     name: 'Caja',
     description: 'Control de efectivo y cierres',

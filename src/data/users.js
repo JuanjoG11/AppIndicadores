@@ -214,6 +214,30 @@ export const SYSTEM_USERS = [
         color: '#8b5cf6',
         icon: 'HeartHandshake'
     },
+    {
+        username: 'sst_tym',
+        password: 'SST_TYM2026',
+        name: 'Salud y Cultura · TYM',
+        role: 'Analista',
+        cargo: 'SST_CULTURA',
+        company: 'TYM',
+        activeBrand: null,
+        allowedAreas: ['sst-cultura'],
+        color: '#10b981',
+        icon: 'Shield'
+    },
+    {
+        username: 'sst_tat',
+        password: 'SST_TAT2026',
+        name: 'Salud y Cultura · TAT',
+        role: 'Analista',
+        cargo: 'SST_CULTURA',
+        company: 'TAT',
+        activeBrand: null,
+        allowedAreas: ['sst-cultura'],
+        color: '#10b981',
+        icon: 'Shield'
+    },
 
     // ═══════════════════════════════════════════
     // CONTADOR (sin separación de proveedor)
