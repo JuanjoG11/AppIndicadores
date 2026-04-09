@@ -358,7 +358,8 @@ export const kpiDefinitions = [
         area: 'sst-cultura',
         objetivo: 'Ejecutar el Sistema de Gestión SST',
         meta: {
-            TYM: 90
+            TYM: 90,
+            TAT: 90
         },
         unit: '%',
         frecuencia: 'MENSUAL',
@@ -413,7 +414,8 @@ export const kpiDefinitions = [
         area: 'sst-cultura',
         objetivo: 'Fortalecer la cultura organizacional por medio de actividades',
         meta: {
-            TYM: 100
+            TYM: 100,
+            TAT: 100
         },
         unit: '%',
         frecuencia: 'MENSUAL',
@@ -428,11 +430,13 @@ export const kpiDefinitions = [
         area: 'sst-cultura',
         objetivo: 'Reducir el tiempo de respuesta en contrataciones',
         meta: {
-            TYM: 8
+            TYM: 8,
+            TAT: 8
         },
         unit: 'días',
         frecuencia: 'QUINCENAL',
         responsable: 'SST_CULTURA',
+        formula: 'Días de respuesta en contratación',
         sustentacion: 'QUINCENAL'
     },
 
