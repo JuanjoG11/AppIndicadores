@@ -372,6 +372,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'conciliacionesRequeridas', label: 'Conciliaciones Requeridas', type: 'number', placeholder: 'Eje: 2' },
                 { name: 'conciliacionesRealizadas', label: 'Conciliaciones Realizadas', type: 'number', placeholder: 'Eje: 1' }
             ],
+            'conciliaciones-diarias': [
+                { name: 'conciliacionesSistema', label: 'Conciliaciones en Sistema', type: 'number', placeholder: 'Eje: 10' },
+                { name: 'conciliacionesBanco', label: 'Conciliaciones en Banco', type: 'number', placeholder: 'Eje: 10' }
+            ],
             'activos-conciliados': [
                 { name: 'activosRegistrados', label: 'Activos Registrados', type: 'number', placeholder: 'Eje: 250' },
                 { name: 'activosConciliados', label: 'Activos Conciliados', type: 'number', placeholder: 'Eje: 245' }
@@ -413,7 +417,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         : kpi.meta;
         
     const isInverse = isInverseKPI(kpi.id);
-    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'conciliaciones-diarias'].includes(kpi.id);
     
     // Forzar meta de 100 para indicadores de cumplimiento estricto
     if (isStrict) currentMeta = 100;

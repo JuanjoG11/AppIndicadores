@@ -14,6 +14,16 @@ export const BRAND_TO_ENTITY = {
 export const getBrandEntity = (brand) => BRAND_TO_ENTITY[brand?.toUpperCase()] || null;
 
 /**
+ * Obtiene el responsable adecuado para el KPI según la entidad del usuario
+ */
+export const getKPIResponsable = (kpi, user) => {
+    if (!kpi || !user) return null;
+    if (user.company === 'TYM' && kpi.responsableTYM) return kpi.responsableTYM;
+    if (user.company === 'TAT' && kpi.responsableTAT) return kpi.responsableTAT;
+    return kpi.responsable;
+};
+
+/**
  * Obtiene las marcas de una entidad para un KPI, 
  * excluyendo el nombre de la empresa si existen marcas específicas.
  */

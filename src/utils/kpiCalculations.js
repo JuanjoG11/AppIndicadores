@@ -209,6 +209,9 @@ export const calculateKPIValue = (kpiId, d) => {
       case 'conciliaciones-bancarias':
         newValue = (d.conciliacionesRealizadas / d.conciliacionesRequeridas) * 100;
         break;
+      case 'conciliaciones-diarias':
+        newValue = (d.conciliacionesSistema / (d.conciliacionesBanco || 1)) * 100;
+        break;
       case 'activos-conciliados':
         newValue = (d.activosConciliados / d.activosRegistrados) * 100;
         break;

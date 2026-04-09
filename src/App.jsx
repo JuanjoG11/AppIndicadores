@@ -12,7 +12,7 @@ import { DashboardSkeleton, AnalystSkeleton } from './components/common/Skeleton
 import { ToastProvider, useToast } from './context/ToastContext';
 import { useAuth } from './hooks/useAuth';
 import { useKPIs } from './hooks/useKPIs';
-import { filterKPIsByEntity } from './utils/kpiHelpers';
+import { filterKPIsByEntity, getKPIResponsable } from './utils/kpiHelpers';
 import './index.css';
 import './App.css';
 
@@ -103,7 +103,8 @@ const AppInner = () => {
       return;
     }
 
-    if (!isMetaUpdate && kpi.responsable !== currentUser?.cargo) {
+    const effectiveResponsable = getKPIResponsable(kpi, currentUser);
+    if (!isMetaUpdate && effectiveResponsable !== currentUser?.cargo) {
       addToast('error', `⛔ Sin permiso para: ${kpi.name}`);
       return;
     }
