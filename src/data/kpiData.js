@@ -515,7 +515,7 @@ export const kpiDefinitions = [
         responsable: 'CONTADOR',
         responsableTYM: 'CRISTIAN',
         formula: 'VALOR DE VALES / TOTAL CUADRE DE CAJA',
-        sustentacion: 'SEMANAL',
+        sustentacion: 'VIERNES',
         fuente: 'CONTABILIDAD'
     },
 
@@ -687,16 +687,16 @@ export const kpiDefinitions = [
     },
     {
         id: 'conciliaciones-diarias',
-        name: 'Verificación de Conciliaciones Diarias',
+        name: 'Verificación de Consignaciones',
         area: 'contabilidad',
         objetivo: 'Asegurar la cuadratura diaria entre sistema y banco',
         meta: 100,
         unit: '%',
-        frecuencia: 'DIARIO',
+        frecuencia: 'SEMANAL',
         responsable: 'CONTADOR',
         responsableTYM: 'CRISTIAN',
         formula: 'CONCILIACIONES EN SISTEMA / CONCILIACIONES EN BANCO',
-        sustentacion: 'DIARIA',
+        sustentacion: 'VIERNES',
         fuente: 'CONTABILIDAD'
     },
     {
