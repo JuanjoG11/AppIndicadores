@@ -2,26 +2,6 @@
 export const kpiDefinitions = [
     // ========== LOGÍSTICA DE ENTREGA ==========
     {
-        id: 'pedidos-devueltos',
-        name: 'Índice de Devoluciones',
-        area: 'logistica',
-        subArea: 'Logística de Entrega',
-        objetivo: 'Garantizar el % mas alto de efectividad en la entrega',
-        meta: {
-            ALPINA: 1.80,
-            ZENU: 1.80,
-            FLEISCHMANN: 1.80,
-            UNILEVER: 1.80,
-            FAMILIA: 1.80
-        },
-        unit: '%',
-        frecuencia: 'DIARIO',
-        responsable: 'LOGISTICA',
-        formula: 'PEDIDOS DEVUELTOS / PEDIDOS FACTURADOS',
-        sustentacion: 'SEMANAL',
-        fuente: 'APP DE DEVOLUCIONES'
-    },
-    {
         id: 'promedio-pedidos-auxiliar',
         name: 'Productividad de Auxiliares por Marca',
         area: 'logistica',
@@ -289,26 +269,6 @@ export const kpiDefinitions = [
         formula: 'HORAS EXTRAS / VENTA TOTAL',
         sustentacion: 'SEMANAL',
         fuente: 'SYT / MAN GO'
-    },
-    {
-        id: 'averias-venta',
-        name: 'Índice de Averías',
-        area: 'logistica',
-        subArea: 'Logística de Depósito',
-        objetivo: 'Optimizar la rentabilidad en la Bodega',
-        meta: {
-            ALPINA: 0.20,
-            ZENU: 0.20,
-            FLEISCHMANN: 0.20,
-            UNILEVER: 0.20,
-            FAMILIA: 0.20
-        },
-        unit: '%',
-        frecuencia: 'SEMANAL',
-        responsable: 'LOGISTICA',
-        formula: 'TOTAL AVERIAS / VENTA TOTAL',
-        sustentacion: 'QUINCENAL',
-        fuente: 'SYT'
     },
 
     // ========== TALENTO HUMANO ==========
@@ -1140,6 +1100,47 @@ export const kpiDefinitions = [
         sustentacion: 'ANALISTA DE INVENTARIOS',
         frecuenciaSustentacion: 'SEMANAL',
         fuente: 'ANALISTA DE INFORMACIÓN'
+    },
+    // ========== FACTURACIÓN ==========
+    {
+        id: 'pedidos-devueltos',
+        name: 'Índice de Devoluciones',
+        area: 'facturacion',
+        subArea: 'Operación Facturación',
+        objetivo: 'Garantizar el % mas alto de efectividad en la entrega',
+        meta: {
+            ALPINA: 1.80,
+            ZENU: 1.80,
+            FLEISCHMANN: 1.80,
+            UNILEVER: 1.80,
+            FAMILIA: 1.80
+        },
+        unit: '%',
+        frecuencia: 'DIARIO',
+        responsable: 'FACTURACION',
+        formula: 'PEDIDOS DEVUELTOS / PEDIDOS FACTURADOS',
+        sustentacion: 'SEMANAL',
+        fuente: 'APP DE DEVOLUCIONES'
+    },
+    {
+        id: 'averias-venta',
+        name: 'Índice de Averías',
+        area: 'facturacion',
+        subArea: 'Operación Facturación',
+        objetivo: 'Optimizar la rentabilidad en la Bodega',
+        meta: {
+            ALPINA: 0.20,
+            ZENU: 0.20,
+            FLEISCHMANN: 0.20,
+            UNILEVER: 0.20,
+            FAMILIA: 0.20
+        },
+        unit: '%',
+        frecuencia: 'SEMANAL',
+        responsable: 'FACTURACION',
+        formula: 'TOTAL AVERIAS / VENTA TOTAL',
+        sustentacion: 'QUINCENAL',
+        fuente: 'SYT'
     },
     {
         id: 'pedidos-facturados',

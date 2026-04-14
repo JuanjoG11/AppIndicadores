@@ -12,7 +12,8 @@ import {
     DollarSign,
     Users,
     Activity,
-    Shield as ShieldIcon
+    Shield as ShieldIcon,
+    FileText
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
@@ -119,7 +120,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         'comercial': <TrendingUp size={18} />,
         'cartera': <DollarSign size={18} />,
         'administrativo': <Activity size={18} />,
-        'talento-humano': <Users size={18} />
+        'talento-humano': <Users size={18} />,
+        'facturacion': <FileText size={18} />
     };
 
     // Determinar qué campos necesita el formulario basado en la fórmula

@@ -113,18 +113,27 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                     }}>
                         {isSuccess ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
                     </div>
-                    {canEdit && (
-                        <button
-                            onClick={() => onEdit && onEdit(kpi, 'data', selectedBrand)}
-                            style={{
-                                background: 'transparent', border: 'none',
-                                color: '#94a3b8', cursor: 'pointer',
-                                padding: '0.25rem'
-                            }}
-                        >
-                            <Edit2 size={16} />
-                        </button>
-                    )}
+                    {(() => {
+                        // Allow edit if:
+                        // 1. User is not a Manager (and canEdit prop is true)
+                        // 2. User's cargo matches the KPI's responsible
+                        // 3. Special case for Cristian/Juliana (Contadores) logic if needed
+                        const userCargo = currentUser?.cargo || '';
+                        const isResponsible = kpi.responsable === userCargo || (kpi.responsableTYM && kpi.responsableTYM === userCargo);
+                        
+                        return canEdit && isResponsible && (
+                            <button
+                                onClick={() => onEdit && onEdit(kpi, 'data', selectedBrand)}
+                                style={{
+                                    background: 'transparent', border: 'none',
+                                    color: '#94a3b8', cursor: 'pointer',
+                                    padding: '0.25rem'
+                                }}
+                            >
+                                <Edit2 size={16} />
+                            </button>
+                        );
+                    })()}
                     {isManager && (
                         <button
                             onClick={() => onEdit && onEdit(kpi, 'meta')}
