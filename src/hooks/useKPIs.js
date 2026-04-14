@@ -158,6 +158,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 persistUpdate(kpiId, updatedAdditionalData, newValue, currentUser);
             }
 
+            const recordDateObj = parseISO(d.updatedAt || new Date().toISOString());
+            const nowObj = new Date();
+
             let targetMonthIndex;
             let recordDate;
             if (d.period && d.period.includes('-')) {
@@ -169,9 +172,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 recordDate = new Date(d.updatedAt || new Date());
                 targetMonthIndex = recordDate.getMonth();
                 if (!d.period) {
-                    targetMonthIndex = 2; // Marzo
-                    recordDate = new Date(2026, 2, 1);
-                    d.period = '2026-03';
+                    targetMonthIndex = nowObj.getMonth();
+                    recordDate = nowObj;
+                    d.period = currentPeriod;
                 }
             }
             const targetMonth = MONTH_NAMES[targetMonthIndex];
@@ -179,8 +182,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             // ─── Lógica de Reinicio Automático por Frecuencia (Día/Semana/Mes) ───
             const frequency = (kpi.frecuencia || '').toUpperCase();
-            const recordDateObj = parseISO(d.updatedAt || new Date().toISOString());
-            const nowObj = new Date();
 
             let isFromCurrentPeriod = false;
             if (frequency.includes('DIARI')) {

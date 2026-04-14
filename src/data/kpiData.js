@@ -227,7 +227,11 @@ export const kpiDefinitions = [
         subArea: 'Logística de Depósito',
         objetivo: 'Reducir la perdida de embalajes',
         meta: {
-            ALPINA: 0
+            ALPINA: 0,
+            ZENU: 0,
+            FLEISCHMANN: 0,
+            UNILEVER: 0,
+            FAMILIA: 0
         },
         unit: 'cantidad',
         frecuencia: 'SEMANAL',
@@ -1204,6 +1208,50 @@ export const kpiDefinitions = [
         formula: 'ERRORES / FACTURAS',
         sustentacion: 'SEMANAL',
         fuente: 'REPORTE DE CALIDAD'
+    },
+
+    // ========== SOFTWARE Y TI ==========
+    {
+        id: 'tareas-programadas',
+        name: 'Cumplimiento de Tareas Programadas',
+        area: 'software',
+        subArea: 'Gestión Software y TI',
+        objetivo: 'Garantizar la ejecución de tareas críticas del sistema',
+        meta: 100,
+        unit: '%',
+        frecuencia: 'SEMANAL',
+        responsable: 'SOFTWARE',
+        formula: '(TAREAS EJECUTADAS / TAREAS PROGRAMADAS) * 100',
+        sustentacion: 'REPORTE TI',
+        fuente: 'PLATAFORMA DE GESTIÓN'
+    },
+    {
+        id: 'mantenimiento-equipos',
+        name: 'Mantenimiento Preventivo de Equipos',
+        area: 'software',
+        subArea: 'Gestión Software y TI',
+        objetivo: 'Asegurar la vida útil de los equipos de cómputo',
+        meta: 3,
+        unit: 'mantenimientos',
+        frecuencia: 'MENSUAL',
+        responsable: 'SOFTWARE',
+        formula: 'EQUIPOS MANTENIDOS',
+        sustentacion: 'REPORTE TI',
+        fuente: 'BITÁCORA DE SOPORTE'
+    },
+    {
+        id: 'resolucion-incidencias',
+        name: 'Efectividad en Resolución de Incidencias',
+        area: 'software',
+        subArea: 'Gestión Software y TI',
+        objetivo: 'Evitar la recurrencia de errores técnicos',
+        meta: 95,
+        unit: '%',
+        frecuencia: 'SEMANAL',
+        responsable: 'SOFTWARE',
+        formula: '(TOTAL INCIDENCIAS - INCIDENCIAS RECURRENTES) / TOTAL INCIDENCIAS * 100',
+        sustentacion: 'REPORTE TI',
+        fuente: 'HELPDESK'
     }
 ];
 

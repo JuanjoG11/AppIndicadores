@@ -230,6 +230,20 @@ export const calculateKPIValue = (kpiId, d) => {
       case 'error-facturacion':
         newValue = (parseFloat(d.errores || 0) / (parseFloat(d.facturas || 0) || 1)) * 100;
         break;
+      // SOFTWARE
+      case 'tareas-programadas':
+        newValue = (parseFloat(d.tareasEjecutadas || 0) / (parseFloat(d.tareasProgramadas || 0) || 1)) * 100;
+        break;
+      case 'mantenimiento-equipos':
+        newValue = parseFloat(d.currentValue || 0);
+        break;
+      case 'resolucion-incidencias':
+        {
+           const total = parseFloat(d.totalIncidencias || 0);
+           const recur = parseFloat(d.incidenciasRecurrentes || 0);
+           newValue = total > 0 ? ((total - recur) / total) * 100 : 100;
+        }
+        break;
       default:
         newValue = d.currentValue || 0;
     }

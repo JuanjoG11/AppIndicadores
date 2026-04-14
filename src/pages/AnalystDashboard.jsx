@@ -106,7 +106,14 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const pendingGroups = groupKPIsBySubArea(pendingKPIs);
     const areaGroups = groupKPIsBySubArea(areaKPIs);
 
-    const sortedSubAreas = Object.keys(subAreaPriority).sort((a, b) => subAreaPriority[a] - subAreaPriority[b]);
+    const dynamicSubAreaPriority = (sa, kpis) => {
+        const hasMine = kpis.some(k => k.subArea === sa && getKPIResponsable(k, currentUser) === currentUser.cargo);
+        return hasMine ? 0 : (subAreaPriority[sa] || 99);
+    };
+
+    const sortedSubAreas = Object.keys(areaGroups).sort((a, b) => {
+        return dynamicSubAreaPriority(a, areaKPIs) - dynamicSubAreaPriority(b, areaKPIs);
+    });
 
 
     // Urgency logic for pending
@@ -592,7 +599,13 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                                         {subArea}
                                     </h3>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                                        {kpis.map((kpi, idx) => renderKPICard(kpi, idx, kpi.responsable !== currentUser.cargo))}
+                                        {[...kpis].sort((a, b) => {
+                                            const isMineA = getKPIResponsable(a, currentUser) === currentUser.cargo;
+                                            const isMineB = getKPIResponsable(b, currentUser) === currentUser.cargo;
+                                            if (isMineA && !isMineB) return -1;
+                                            if (!isMineA && isMineB) return 1;
+                                            return 0;
+                                        }).map((kpi, idx) => renderKPICard(kpi, idx, kpi.responsable !== currentUser.cargo))}
                                     </div>
                                 </div>
                             );

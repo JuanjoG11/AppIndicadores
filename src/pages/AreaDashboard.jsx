@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getAreaById } from '../data/areas';
 import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
-import { filterKPIsByEntity } from '../utils/kpiHelpers';
+import { filterKPIsByEntity, getKPIResponsable } from '../utils/kpiHelpers';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline } from '../utils/formatters';
 import {
     ResponsiveContainer,
@@ -44,7 +44,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         areaId === 'logistica' ? 'Logística de Entrega' : 
         areaId === 'comercial' ? 'Gestión de Ventas' : 
         areaId === 'administrativo' ? 'Control de Inventarios' :
-        areaId === 'facturacion' ? 'Operación Facturación' : 'all'
+        areaId === 'facturacion' ? 'Operación Facturación' : 
+        areaId === 'software' ? 'all' : 'all'
     );
     const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
@@ -88,6 +89,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
         ? ['Control de Inventarios', 'Auditoría y Parámetros']
         : areaId === 'facturacion'
         ? ['Operación Facturación']
+        : areaId === 'software'
+        ? ['Gestión Software y TI']
         : [];
 
 
@@ -111,7 +114,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
             areaId === 'logistica' ? 'Logística de Entrega' :
             areaId === 'comercial' ? 'Gestión de Ventas' :
             areaId === 'administrativo' ? 'Control de Inventarios' :
-            areaId === 'facturacion' ? 'Operación Facturación' : 'all';
+            areaId === 'facturacion' ? 'Operación Facturación' : 
+            areaId === 'software' ? 'all' : 'all';
         setActiveSubArea(defaultSubArea);
     }, [areaId]);
 
@@ -163,6 +167,17 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
             return kpi;
         }).filter(kpi => kpi.meta && kpi.meta.hasOwnProperty(selectedBrand));
     }
+
+    // 6. Sort: KPIs the user is responsible for (to load/edit) come first
+    filteredKPIs = [...filteredKPIs].sort((a, b) => {
+        const userCargo = currentUser?.cargo || '';
+        const isRespA = getKPIResponsable(a, currentUser) === userCargo;
+        const isRespB = getKPIResponsable(b, currentUser) === userCargo;
+        
+        if (isRespA && !isRespB) return -1;
+        if (!isRespA && isRespB) return 1;
+        return 0;
+    });
 
 
 
@@ -609,43 +624,56 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
                 {areaId === 'logistica' && (activeSubArea === 'all' || activeSubArea === 'Todas') ? (
-                    ['Logística de Depósito', 'Logística de Picking', 'Logística de Entrega'].map(sub => {
-                        const kpis = filteredKPIs.filter(k => k.subArea === sub);
-                        if (kpis.length === 0) return null;
-                        return (
-                            <React.Fragment key={sub}>
-                                <div style={{
-                                    gridColumn: '1 / -1',
-                                    marginTop: '2rem',
-                                    marginBottom: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.75rem'
-                                }}>
-                                    <div style={{ width: '12px', height: '4px', background: 'var(--brand)', borderRadius: '2px' }}></div>
-                                    <h4 style={{
-                                        margin: 0,
-                                        fontSize: '0.9rem',
-                                        fontWeight: 900,
-                                        color: '#64748b',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.1em'
-                                    }}>{sub}</h4>
-                                </div>
-                                {kpis.map(kpi => (
-                                    <KPIDetailCard
-                                        key={kpi.id}
-                                        kpi={kpi}
-                                        canEdit={canModify}
-                                        onEdit={handleStartEdit}
-                                        currentUser={currentUser}
-                                        activeCompany={activeCompany}
-                                        selectedBrand={selectedBrand}
-                                    />
-                                ))}
-                            </React.Fragment>
-                        );
-                    })
+                    (() => {
+                        const userCargo = currentUser?.cargo || '';
+                        const subs = ['Logística de Depósito', 'Logística de Picking', 'Logística de Entrega'];
+                        // Sort sub-areas: those with editable KPIs first
+                        const sortedSubs = [...subs].sort((a, b) => {
+                            const hasA = filteredKPIs.some(k => k.subArea === a && getKPIResponsable(k, currentUser) === userCargo);
+                            const hasB = filteredKPIs.some(k => k.subArea === b && getKPIResponsable(k, currentUser) === userCargo);
+                            if (hasA && !hasB) return -1;
+                            if (!hasA && hasB) return 1;
+                            return 0;
+                        });
+
+                        return sortedSubs.map(sub => {
+                            const kpis = filteredKPIs.filter(k => k.subArea === sub);
+                            if (kpis.length === 0) return null;
+                            return (
+                                <React.Fragment key={sub}>
+                                    <div style={{
+                                        gridColumn: '1 / -1',
+                                        marginTop: '2rem',
+                                        marginBottom: '1rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.75rem'
+                                    }}>
+                                        <div style={{ width: '12px', height: '4px', background: 'var(--brand)', borderRadius: '2px' }}></div>
+                                        <h4 style={{
+                                            margin: 0,
+                                            fontSize: '0.9rem',
+                                            fontWeight: 900,
+                                            color: '#64748b',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.1em'
+                                        }}>{sub}</h4>
+                                    </div>
+                                    {kpis.map(kpi => (
+                                        <KPIDetailCard
+                                            key={kpi.id}
+                                            kpi={kpi}
+                                            canEdit={canModify}
+                                            onEdit={handleStartEdit}
+                                            currentUser={currentUser}
+                                            activeCompany={activeCompany}
+                                            selectedBrand={selectedBrand}
+                                        />
+                                    ))}
+                                </React.Fragment>
+                            );
+                        });
+                    })()
                 ) : (
                     filteredKPIs.map(kpi => (
                         <KPIDetailCard

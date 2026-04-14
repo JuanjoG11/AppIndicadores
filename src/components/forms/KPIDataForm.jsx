@@ -13,7 +13,8 @@ import {
     Users,
     Activity,
     Shield as ShieldIcon,
-    FileText
+    FileText,
+    Cpu
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
@@ -121,7 +122,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         'cartera': <DollarSign size={18} />,
         'administrativo': <Activity size={18} />,
         'talento-humano': <Users size={18} />,
-        'facturacion': <FileText size={18} />
+        'facturacion': <FileText size={18} />,
+        'software': <Cpu size={18} />
     };
 
     // Determinar qué campos necesita el formulario basado en la fórmula
@@ -401,6 +403,17 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             'error-facturacion': [
                 { name: 'errores', label: 'Errores en Facturación', type: 'number', placeholder: 'Eje: 5' },
                 { name: 'facturas', label: 'Total Facturas', type: 'number', placeholder: 'Eje: 1500' }
+            ],
+            'tareas-programadas': [
+                { name: 'tareasEjecutadas', label: 'Tareas Ejecutadas', type: 'number', placeholder: 'Eje: 10' },
+                { name: 'tareasProgramadas', label: 'Tareas Programadas', type: 'number', placeholder: 'Eje: 10' }
+            ],
+            'mantenimiento-equipos': [
+                { name: 'currentValue', label: 'Equipos Mantenidos', type: 'number', placeholder: 'Eje: 3' }
+            ],
+            'resolucion-incidencias': [
+                { name: 'totalIncidencias', label: 'Total Incidencias', type: 'number', placeholder: 'Eje: 20' },
+                { name: 'incidenciasRecurrentes', label: 'Incidencias Recurrentes', type: 'number', placeholder: 'Eje: 1' }
             ],
         };
 

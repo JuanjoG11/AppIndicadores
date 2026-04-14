@@ -62,6 +62,13 @@ export const areas = [
     description: 'Control de procesos de facturación y notas',
     responsible: 'Facturación',
     color: '#0d9488'
+  },
+  {
+    id: 'software',
+    name: 'Software y TI',
+    description: 'Gestión de sistemas, mantenimiento y soporte técnico',
+    responsible: 'Líder de Software',
+    color: '#4f46e5'
   }
 ];
 

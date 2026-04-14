@@ -362,6 +362,17 @@ export const SYSTEM_USERS = [
         color: '#ec4899',
         icon: 'Target'
     },
+    {
+        username: 'software_ti',
+        password: 'Software2026!',
+        name: 'Líder de Software y TI',
+        role: 'Analista',
+        cargo: 'SOFTWARE',
+        company: 'TYM',
+        allowedAreas: ['software'],
+        color: '#4f46e5',
+        icon: 'Cpu'
+    },
 ];
 
 /**
