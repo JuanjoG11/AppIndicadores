@@ -381,7 +381,7 @@ export const SYSTEM_USERS = [
 export const authenticateUser = (username, password) => {
     const user = SYSTEM_USERS.find(
         u => u.username.toLowerCase() === username.toLowerCase().trim() &&
-             u.password === password
+            u.password === password
     );
     return user || null;
 };
