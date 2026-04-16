@@ -266,39 +266,73 @@ const PresentationView = ({ kpiData, activeCompany, setActiveCompany }) => {
                                 ))}
                             </div>
 
-                            {/* ── SORPRESA: LISTA DE PENDIENTES ── */}
-                            <div style={{ flex: 1, minHeight: 0, padding: '0.75rem', background: 'rgba(0,0,0,0.15)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.4)' }}>
-                                    <ListChecks size={12} />
-                                    <span style={{ fontSize: '0.55rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {/* ── LISTA DE PENDIENTES ── */}
+                            <div style={{ 
+                                flex: 1, 
+                                minHeight: 0, 
+                                padding: '1rem', 
+                                background: 'rgba(0,0,0,0.2)', 
+                                borderRadius: '14px', 
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
+                                    <ListChecks size={14} />
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                                         {area.pct === 100 ? 'Área Finalizada' : 'Pendientes de Carga'}
                                     </span>
                                 </div>
                                 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', overflowY: 'auto', maxHeight: '100px' }}>
+                                <div style={{ 
+                                    flex: 1,
+                                    overflowY: 'auto', 
+                                    paddingRight: '4px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '0.5rem'
+                                }}>
                                     {area.pct === 100 ? (
                                         <div style={{ 
-                                            fontSize: '0.75rem', color: '#34d399', fontWeight: 600, 
-                                            padding: '0.5rem', textAlign: 'center', background: 'rgba(52,211,153,0.05)',
-                                            borderRadius: '8px', border: '1px dashed rgba(52,211,153,0.3)'
+                                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '0.85rem', color: '#10b981', fontWeight: 700, 
+                                            textAlign: 'center', background: 'rgba(16,185,129,0.05)',
+                                            borderRadius: '10px', border: '1px dashed rgba(16,185,129,0.3)',
+                                            padding: '1rem'
                                         }}>
-                                            ¡Excelente trabajo! 🚀
+                                            ¡Operación al 100%! 🚀
                                         </div>
                                     ) : (
-                                        area.pendingNames.slice(0, 4).map((name, pidx) => (
-                                            <div key={pidx} style={{ 
-                                                fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', 
-                                                padding: '0.3rem 0.5rem', background: 'rgba(255,255,255,0.03)',
-                                                borderRadius: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                                            }}>
-                                                • {name}
-                                            </div>
-                                        ))
-                                    )}
-                                    {area.pendingNames.length > 4 && (
-                                        <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', textAlign: 'center' }}>
-                                            y {area.pendingNames.length - 4} más...
-                                        </div>
+                                        <>
+                                            {area.pendingNames.slice(0, isFullscreen ? 6 : 3).map((name, pidx) => (
+                                                <div key={pidx} style={{ 
+                                                    fontSize: '0.72rem', 
+                                                    color: 'rgba(255,255,255,0.7)', 
+                                                    padding: '0.45rem 0.75rem', 
+                                                    background: 'rgba(255,255,255,0.04)',
+                                                    borderRadius: '8px',
+                                                    borderLeft: `3px solid ${area.color}88`,
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    fontWeight: 500
+                                                }}>
+                                                    {name}
+                                                </div>
+                                            ))}
+                                            {area.pendingNames.length > (isFullscreen ? 6 : 3) && (
+                                                <div style={{ 
+                                                    fontSize: '0.65rem', 
+                                                    color: 'rgba(255,255,255,0.35)', 
+                                                    textAlign: 'center',
+                                                    fontWeight: 700,
+                                                    marginTop: '0.2rem',
+                                                    letterSpacing: '0.05em'
+                                                }}>
+                                                    + {area.pendingNames.length - (isFullscreen ? 6 : 3)} INDICADORES MÁS
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </div>
