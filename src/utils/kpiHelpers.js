@@ -52,9 +52,8 @@ export const filterKPIsByEntity = (kpiData, entity) => {
     if (!kpiData) return [];
 
     return kpiData.filter(kpi => {
-        // Include if the KPI has visibleEnAreas (it's cross-area visible)
         if (kpi.visibleEnAreas && Array.isArray(kpi.visibleEnAreas)) {
-            return true; // Will be filtered by area access in the dashboard
+            return true;
         }
         if (kpi.meta && typeof kpi.meta === 'object') {
             const hasEntityBrand = Object.keys(kpi.meta).some(b => BRAND_TO_ENTITY[b] === entity || b === entity);

@@ -198,7 +198,7 @@ export const SYSTEM_USERS = [
         cargo: 'GESTIÓN HUMANA',
         company: 'TYM',
         activeBrand: null,
-        allowedAreas: ['talento-humano'],
+        allowedAreas: ['talento-humano', 'software'],
         color: '#8b5cf6',
         icon: 'HeartHandshake'
     },
@@ -210,7 +210,7 @@ export const SYSTEM_USERS = [
         cargo: 'GESTIÓN HUMANA',
         company: 'TAT',
         activeBrand: null,
-        allowedAreas: ['talento-humano'],
+        allowedAreas: ['talento-humano', 'software'],
         color: '#8b5cf6',
         icon: 'HeartHandshake'
     },

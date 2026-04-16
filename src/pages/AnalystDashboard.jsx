@@ -111,8 +111,9 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         return hasMine ? 0 : (subAreaPriority[sa] || 99);
     };
 
-    const sortedSubAreas = Object.keys(areaGroups).sort((a, b) => {
-        return dynamicSubAreaPriority(a, areaKPIs) - dynamicSubAreaPriority(b, areaKPIs);
+    const allSubAreaKeys = [...new Set([...Object.keys(pendingGroups), ...Object.keys(areaGroups)])];
+    const sortedSubAreas = allSubAreaKeys.sort((a, b) => {
+        return dynamicSubAreaPriority(a, [...pendingKPIs, ...areaKPIs]) - dynamicSubAreaPriority(b, [...pendingKPIs, ...areaKPIs]);
     });
 
 

@@ -78,7 +78,10 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
 
     // 1. Filter data by company FIRST, then by area
     const companyKPIs = filterKPIsByEntity(kpiData, activeCompany || 'TYM');
-    const areaKPIs = companyKPIs.filter(kpi => kpi.area === areaId);
+    const areaKPIs = companyKPIs.filter(kpi => 
+        kpi.area === areaId || 
+        (kpi.visibleEnAreas && kpi.visibleEnAreas.includes(areaId))
+    );
 
     // 2. Sub-areas filter logic (Removed 'Todas' to avoid cluttered charts)
     const subAreas = areaId === 'logistica' 

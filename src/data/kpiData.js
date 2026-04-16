@@ -1217,13 +1217,14 @@ export const kpiDefinitions = [
         area: 'software',
         subArea: 'Gestión Software y TI',
         objetivo: 'Garantizar la ejecución de tareas críticas del sistema',
-        meta: 100,
+        meta: { TYM: 100, TAT: 100 },
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'SOFTWARE',
+        responsable: 'GESTIÓN HUMANA',
         formula: '(TAREAS EJECUTADAS / TAREAS PROGRAMADAS) * 100',
         sustentacion: 'REPORTE TI',
-        fuente: 'PLATAFORMA DE GESTIÓN'
+        fuente: 'PLATAFORMA DE GESTIÓN',
+        visibleEnAreas: ['software', 'talento-humano']
     },
     {
         id: 'mantenimiento-equipos',
@@ -1231,13 +1232,14 @@ export const kpiDefinitions = [
         area: 'software',
         subArea: 'Gestión Software y TI',
         objetivo: 'Asegurar la vida útil de los equipos de cómputo',
-        meta: 3,
+        meta: { TYM: 3, TAT: 3 },
         unit: 'mantenimientos',
         frecuencia: 'MENSUAL',
-        responsable: 'SOFTWARE',
+        responsable: 'GESTIÓN HUMANA',
         formula: 'EQUIPOS MANTENIDOS',
         sustentacion: 'REPORTE TI',
-        fuente: 'BITÁCORA DE SOPORTE'
+        fuente: 'BITÁCORA DE SOPORTE',
+        visibleEnAreas: ['software', 'talento-humano']
     },
     {
         id: 'resolucion-incidencias',
@@ -1245,13 +1247,14 @@ export const kpiDefinitions = [
         area: 'software',
         subArea: 'Gestión Software y TI',
         objetivo: 'Evitar la recurrencia de errores técnicos',
-        meta: 95,
+        meta: { TYM: 95, TAT: 95 },
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'SOFTWARE',
+        responsable: 'GESTIÓN HUMANA',
         formula: '(TOTAL INCIDENCIAS - INCIDENCIAS RECURRENTES) / TOTAL INCIDENCIAS * 100',
         sustentacion: 'REPORTE TI',
-        fuente: 'HELPDESK'
+        fuente: 'HELPDESK',
+        visibleEnAreas: ['software', 'talento-humano']
     }
 ];
 
