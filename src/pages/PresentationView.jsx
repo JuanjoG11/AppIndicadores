@@ -70,20 +70,25 @@ const PresentationView = ({ kpiData, activeCompany, setActiveCompany }) => {
     return (
         <div style={{
             height: '100vh',
+            width: '100vw',
             overflow: 'hidden',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+            background: '#0f172a', // Fondo sólido de seguridad
+            backgroundImage: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
             display: 'flex',
             flexDirection: 'column',
             fontFamily: 'Inter, system-ui, sans-serif',
             color: 'white',
-            overflowX: 'hidden',
+            position: 'fixed', // Forzar que ocupe toda la pantalla real
+            top: 0,
+            left: 0,
+            zIndex: 9999
         }}>
-            {/* Subtle grid overlay */}
+            {/* Sutil malla de fondo */}
             <div style={{
                 position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-                backgroundImage: `linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
-                                  linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)`,
-                backgroundSize: '60px 60px',
+                backgroundImage: `linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px),
+                                  linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px)`,
+                backgroundSize: '80px 80px',
             }} />
 
             {/* Top glow */}
