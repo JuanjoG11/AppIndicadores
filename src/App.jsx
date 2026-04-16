@@ -5,6 +5,7 @@ import TopBar from './components/layout/TopBar';
 import ExecutiveDashboard from './pages/ExecutiveDashboard';
 import AreaDashboard from './pages/AreaDashboard';
 import AnalystDashboard from './pages/AnalystDashboard';
+import PresentationView from './pages/PresentationView';
 import Login from './pages/Login';
 import SettingsModal from './components/layout/SettingsModal';
 import CommandPalette from './components/common/CommandPalette';
@@ -174,6 +175,10 @@ const AppInner = () => {
               <Route
                 path="/mis-indicadores"
                 element={<AnalystDashboard kpiData={kpiData} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} />}
+              />
+              <Route
+                path="/presentacion"
+                element={<PresentationView kpiData={kpiData} activeCompany={activeCompany} setActiveCompany={setActiveCompany} />}
               />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

@@ -7,7 +7,8 @@ import {
     Home,
     LogOut,
     X,
-    Printer
+    Printer,
+    Monitor
 } from 'lucide-react';
 
 const Sidebar = ({ currentUser, onLogout, isOpen, onClose, kpiData = [], activeCompany = 'TYM' }) => {
@@ -93,6 +94,28 @@ const Sidebar = ({ currentUser, onLogout, isOpen, onClose, kpiData = [], activeC
                         <Home size={20} />
                         {currentUser.role === 'Gerente' ? 'Inicio' : 'Mis Indicadores'}
                     </NavLink>
+
+                    {currentUser.role === 'Gerente' && (
+                        <NavLink
+                            to="/presentacion"
+                            style={({ isActive }) => ({
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '1rem',
+                                padding: '0.85rem 1rem',
+                                borderRadius: '12px',
+                                fontSize: '0.95rem',
+                                fontWeight: isActive ? 700 : 500,
+                                color: isActive ? 'white' : 'rgba(255,255,255,0.6)',
+                                background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                                textDecoration: 'none',
+                                transition: 'all 0.2s ease',
+                                marginBottom: '0.5rem',
+                            })}
+                        >
+                            <Monitor size={20} /> Sala de Presentación
+                        </NavLink>
+                    )}
 
                     {currentUser.role === 'Gerente' && (
                         <>
