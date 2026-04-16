@@ -120,23 +120,42 @@ const AppInner = () => {
   }, [kpiData, currentUser, applyKPIUpdate, addToast]);
 
   // ── Render ────────────────────────────────────────────────────────────────
+  // ── Kiosk auto-login for /presentacion route ─────────────────────────────
   if (!currentUser) {
+    const isPresentation = window.location.hash === '#/presentacion' ||
+                           window.location.hash.startsWith('#/presentacion');
+    if (isPresentation) {
+      // Auto-login silencioso con usuario TV
+      const kioskUser = {
+        name: 'Pantalla Corporativa',
+        role: 'Gerente',
+        cargo: 'Gerente',
+        company: 'TYM',
+        activeBrand: null,
+        authorizedAreas: ['all'],
+        isKiosk: true,
+      };
+      handleLogin(kioskUser);
+      return null; // Espera al re-render con el usuario ya cargado
+    }
     return <Login onLogin={onLoginSuccess} />;
   }
 
   return (
     <div style={{ display: 'flex', background: 'var(--bg-app)', minHeight: '100vh', color: 'var(--text-main)' }}>
-      <Sidebar
-        currentUser={currentUser}
-        onLogout={onLogout}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        kpiData={kpiData}
-        activeCompany={activeCompany}
-      />
+      {!currentUser.isKiosk && (
+        <Sidebar
+          currentUser={currentUser}
+          onLogout={onLogout}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          kpiData={kpiData}
+          activeCompany={activeCompany}
+        />
+      )}
 
       <main style={{
-        marginLeft: isSidebarOpen && window.innerWidth > 900 ? '260px' : '0',
+        marginLeft: !currentUser.isKiosk && isSidebarOpen && window.innerWidth > 900 ? '260px' : '0',
         flex: 1,
         minHeight: '100vh',
         display: 'flex',
@@ -144,16 +163,18 @@ const AppInner = () => {
         transition: 'margin-left 0.3s ease',
         width: '100%',
       }}>
-        <TopBar
-          currentUser={currentUser}
-          kpiData={kpiData}
-          activeCompany={activeCompany}
-          onOpenSettings={() => setShowSettings(true)}
-          onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-          onLogout={onLogout}
-          onOpenCommandPalette={() => setShowCommandPalette(true)}
-          lastSyncTime={lastSyncTime}
-        />
+        {!currentUser.isKiosk && (
+          <TopBar
+            currentUser={currentUser}
+            kpiData={kpiData}
+            activeCompany={activeCompany}
+            onOpenSettings={() => setShowSettings(true)}
+            onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            onLogout={onLogout}
+            onOpenCommandPalette={() => setShowCommandPalette(true)}
+            lastSyncTime={lastSyncTime}
+          />
+        )}
 
         <div className="app-container" style={{ padding: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
           {isLoading ? (

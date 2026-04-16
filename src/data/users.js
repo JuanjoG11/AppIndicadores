@@ -373,6 +373,23 @@ export const SYSTEM_USERS = [
         color: '#4f46e5',
         icon: 'Cpu'
     },
+
+    // ═══════════════════════════════════════════
+    // TV / KIOSK - Pantalla corporativa (sin password real, auto-login)
+    // ═══════════════════════════════════════════
+    {
+        username: 'tv_kiosk',
+        password: '__tv_auto__',   // No se expone en ningún formulario
+        name: 'Pantalla Corporativa',
+        role: 'Gerente',           // Acceso total para ver todos los datos
+        cargo: 'Gerente',
+        company: 'TYM',
+        activeBrand: null,
+        allowedAreas: ['all'],
+        color: '#4f46e5',
+        icon: 'Monitor',
+        isKiosk: true              // Bandera para identificar este modo
+    },
 ];
 
 /**

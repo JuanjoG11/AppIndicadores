@@ -7,17 +7,36 @@ import {
 } from 'lucide-react';
 import Logo from '../components/common/Logo';
 
-const TICK_INTERVAL = 30000; // refresh clock every 30s
+const TICK_INTERVAL = 30000;       // clock refresh every 30s
+const AUTO_RELOAD_MS = 10 * 60 * 1000; // full page reload every 10 min
 
 const PresentationView = ({ kpiData, activeCompany, setActiveCompany }) => {
     const [now, setNow] = useState(new Date());
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [animateIn, setAnimateIn] = useState(false);
+    const [secondsToReload, setSecondsToReload] = useState(AUTO_RELOAD_MS / 1000);
 
     useEffect(() => {
         setAnimateIn(true);
-        const timer = setInterval(() => setNow(new Date()), TICK_INTERVAL);
-        return () => clearInterval(timer);
+
+        // Clock tick every 30s
+        const clockTimer = setInterval(() => setNow(new Date()), TICK_INTERVAL);
+
+        // Countdown every second
+        const countdownTimer = setInterval(() => {
+            setSecondsToReload(prev => {
+                if (prev <= 1) {
+                    window.location.reload();
+                    return AUTO_RELOAD_MS / 1000;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => {
+            clearInterval(clockTimer);
+            clearInterval(countdownTimer);
+        };
     }, []);
 
     const toggleFullscreen = () => {
@@ -340,9 +359,17 @@ const PresentationView = ({ kpiData, activeCompany, setActiveCompany }) => {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 background: 'rgba(15,23,42,0.5)',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.25)', fontSize: '0.7rem', fontWeight: 700 }}>
-                    <RefreshCw size={12} />
-                    Datos en tiempo real · Actualización automática cada 30 segundos
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', fontWeight: 700 }}>
+                    <RefreshCw size={12} style={{ animation: secondsToReload <= 10 ? 'spin 1s linear infinite' : 'none' }} />
+                    Datos en tiempo real · Próxima actualización en{' '}
+                    <span style={{
+                        color: secondsToReload <= 30 ? '#fbbf24' : 'rgba(255,255,255,0.5)',
+                        fontVariantNumeric: 'tabular-nums',
+                        minWidth: '38px',
+                        display: 'inline-block'
+                    }}>
+                        {Math.floor(secondsToReload / 60)}:{String(secondsToReload % 60).padStart(2, '0')}
+                    </span>
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.7rem', fontWeight: 700 }}>
                     ZENTRA BI © 2026
