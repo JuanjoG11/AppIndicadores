@@ -269,12 +269,12 @@ export const SYSTEM_USERS = [
     {
         username: 'contador_tat',
         password: 'Conta_TAT26',
-        name: 'Cristian Ballesteros · TAT',
+        name: 'Alexandra Vanegas · TAT',
         role: 'Analista',
         cargo: 'CONTADOR',
         company: 'TAT',
         activeBrand: null,
-        allowedAreas: ['contabilidad', 'caja', 'cartera'],
+        allowedAreas: ['contabilidad', 'caja'],
         color: '#f59e0b',
         icon: 'Calculator'
     },
