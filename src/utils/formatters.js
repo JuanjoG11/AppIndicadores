@@ -103,6 +103,7 @@ export const formatDateTime = (dateStr) => {
 export const getKPIDeadline = (frequency) => {
     const today = new Date();
     const now = new Date();
+    const day = now.getDate();
 
     const cleanFrequency = frequency?.toUpperCase();
     switch (cleanFrequency) {
@@ -112,11 +113,23 @@ export const getKPIDeadline = (frequency) => {
             return EOD;
         case 'SEMANAL':
             // Próximo viernes a las 17:00
+            // Si es sábado o domingo, podríamos mostrar el viernes pasado como gracia,
+            // pero por ahora mantenemos el próximo viernes según flujo semanal.
             const nextFriday = new Date();
             nextFriday.setDate(today.getDate() + (5 + 7 - today.getDay()) % 7);
             nextFriday.setHours(17, 0, 0, 0);
             return nextFriday;
         case 'QUINCENAL':
+            // Grace period: hasta el día 3 del mes para el cierre anterior, 
+            // y hasta el 18 para la primera quincena.
+            if (day <= 3) {
+                // Último día del mes pasado
+                return new Date(today.getFullYear(), today.getMonth(), 0, 23, 59);
+            }
+            if (day >= 16 && day <= 18) {
+                // Día 15 del mes actual (primera quincena)
+                return new Date(today.getFullYear(), today.getMonth(), 15, 23, 59);
+            }
             // Día 15 o último día del mes
             const mid = new Date(today.getFullYear(), today.getMonth(), 15, 23, 59);
             if (now > mid) {
@@ -124,6 +137,10 @@ export const getKPIDeadline = (frequency) => {
             }
             return mid;
         case 'MENSUAL':
+            // Grace period: hasta el día 3 del mes siguiente para reportar el mes anterior
+            if (day <= 3) {
+                return new Date(today.getFullYear(), today.getMonth(), 0, 23, 59);
+            }
             // Último día del mes corriente
             return new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59);
         case 'BIMESTRAL':

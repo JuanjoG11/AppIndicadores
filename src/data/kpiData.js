@@ -70,11 +70,11 @@ export const kpiDefinitions = [
             FAMILIA: 4.2
         },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'QUINCENAL',
         responsable: 'CONTADOR',
         responsableTYM: 'CRISTIAN',
         formula: 'VALOR FLETES / VENTA TOTAL',
-        sustentacion: 'SEMANAL',
+        sustentacion: 'QUINCENAL',
         fuente: 'MEKANO'
     },
     {

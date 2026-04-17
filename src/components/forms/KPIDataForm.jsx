@@ -488,6 +488,14 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 setSaveSuccess(false);
                 setSuccessMessage('');
             }, 3000);
+        } else {
+            // Confirmation for regular data entry
+            setSuccessMessage(`¡Datos guardados para ${formData.brand}! Puedes cerrar esta ventana.`);
+            setSaveSuccess(true);
+            setTimeout(() => {
+                setSaveSuccess(false);
+                setSuccessMessage('');
+            }, 3000);
         }
     };
 

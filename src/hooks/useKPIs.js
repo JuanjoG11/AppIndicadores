@@ -29,8 +29,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     // ── Período mensual actual (YYYY-MM) para reseteо automático ──────────────
     const getCurrentPeriod = () => {
         const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const day = now.getDate();
+        
+        let targetDate = now;
+        // Gracia de 3 días para reportar el mes anterior
+        if (day <= 3) {
+            targetDate = new Date(now.getFullYear(), now.getMonth(), 0);
+        }
+
+        const y = targetDate.getFullYear();
+        const m = String(targetDate.getMonth() + 1).padStart(2, '0');
         return `${y}-${m}`;
     };
     const currentPeriod = getCurrentPeriod();
@@ -76,6 +84,38 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             };
 
             const d = updatedAdditionalData;
+            const recordDateObj = parseISO(d.updatedAt || new Date().toISOString());
+            const nowObj = new Date();
+            
+            // ─── Lógica de Periodo Actual ───
+            const frequency = (kpi.frecuencia || '').toUpperCase();
+            let isFromCurrentPeriod = false;
+            const dayOfRecord = recordDateObj.getDate();
+            const monthOfRecord = recordDateObj.getMonth();
+            const yearOfRecord = recordDateObj.getFullYear();
+            const nowDay = nowObj.getDate();
+            const nowMonth = nowObj.getMonth();
+            const nowYear = nowObj.getFullYear();
+
+            if (frequency.includes('DIARI')) {
+                isFromCurrentPeriod = isSameDay(recordDateObj, nowObj);
+            } else if (frequency.includes('SEMANAL')) {
+                isFromCurrentPeriod = isSameWeek(recordDateObj, nowObj, { weekStartsOn: 1 });
+            } else if (frequency.includes('QUINCENAL')) {
+                const isGraceQ1 = (nowDay >= 16 && nowDay <= 18) && (dayOfRecord === 15) && (nowMonth === monthOfRecord) && (nowYear === yearOfRecord);
+                const lastDayPrevMonth = new Date(nowYear, nowMonth, 0).getDate();
+                const isGraceQ2 = (nowDay <= 3) && (dayOfRecord >= lastDayPrevMonth - 1) && 
+                                 ((nowMonth === 0 ? 11 : nowMonth - 1) === monthOfRecord);
+                isFromCurrentPeriod = isSameMonth(recordDateObj, nowObj) || isGraceQ1 || isGraceQ2;
+            } else {
+                const isGraceMensual = (nowDay <= 3) && 
+                                      ((nowMonth === 0 ? 11 : nowMonth - 1) === monthOfRecord) &&
+                                      (nowMonth === 0 ? nowYear - 1 : nowYear) === yearOfRecord;
+                isFromCurrentPeriod = isSameMonth(recordDateObj, nowObj) || isGraceMensual;
+            }
+
+            const isHistoricalUpdate = d.type !== 'META_UPDATE' && !isManualUpdate && !isFromCurrentPeriod;
+
             let newValue = kpi.currentValue;
             let targetMeta = kpi.targetMeta;
 
@@ -98,7 +138,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
                     kpi.meta = { ...currentMeta, [currentCompany]: d.newMeta };
                 } else {
-                    // Solo permitimos actualizar metas de marcas que existen en la definición original del código
                     const staticDef = kpiDefinitions.find(s => s.id === kpiId);
                     const originalHasBrand = staticDef && staticDef.meta && typeof staticDef.meta === 'object' && staticDef.meta.hasOwnProperty(scope);
 
@@ -109,7 +148,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 }
             }
 
-            // Resolver targetMeta basándose en la meta actual (priorizando la marca específica)
+            // Resolver targetMeta basándose en la meta actual
             if (kpi.meta && typeof kpi.meta === 'object') {
                 targetMeta = kpi.meta[currentBrand] || kpi.meta[currentCompany] || kpi.meta.global ||
                     kpi.meta[Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === currentCompany)] || 0;
@@ -123,10 +162,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             if (typeof targetMeta === 'number' && targetMeta !== 0) {
                 const isInverse = isInverseKPI(kpiId);
                 compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
-                
-                // Si es inverso y el resultado es 0, el cumplimiento es 100% (o más según lógica, pero 100% es seguro)
                 if (isInverse && newValue === 0) compliance = 100;
-
                 compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
                 
                 const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
@@ -144,83 +180,46 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 semaphore = compliance >= 95 ? 'green' : 'red';
             }
 
+            // Actualizar desglose por marca (Solo marcamos 'hasData' si es el periodo reportable/actual)
             brandValues[dataKey] = {
                 ...brandValues[dataKey],
-                currentValue: newValue,
+                currentValue: isHistoricalUpdate ? (brandValues[dataKey]?.currentValue || 0) : newValue,
                 meta: targetMeta,
-                compliance,
-                semaphore,
-                additionalData: updatedAdditionalData,
+                compliance: isHistoricalUpdate ? (brandValues[dataKey]?.compliance || 0) : compliance,
+                semaphore: isHistoricalUpdate ? (brandValues[dataKey]?.semaphore || 'gray') : semaphore,
+                additionalData: d,
                 company: currentCompany,
                 brand: currentBrand,
-                hasData: d.type === 'META_UPDATE' ? (brandValues[dataKey]?.hasData) : true
+                hasData: (d.type === 'META_UPDATE') 
+                    ? (brandValues[dataKey]?.hasData) 
+                    : (isHistoricalUpdate ? (brandValues[dataKey]?.hasData || false) : true)
             };
 
-            const hasAnyData = !kpi.meta || typeof kpi.meta !== 'object'
-                ? (d.type === 'META_UPDATE' ? kpi.hasData : true)
-                : Object.keys(brandValues).filter(k => k.startsWith(`${currentCompany}-`)).some(k => brandValues[k].hasData);
-
-            if (shouldPersist && !suppressPersist.current) {
-                persistUpdate(kpiId, updatedAdditionalData, newValue, currentUser);
-            }
-
-            const recordDateObj = parseISO(d.updatedAt || new Date().toISOString());
-            const nowObj = new Date();
-
-            let targetMonthIndex;
-            let recordDate;
+            // Cálculo del mes para el histórico
+            const MONTH_NAMES = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            let targetMonthIndex = recordDateObj.getMonth();
             if (d.period && d.period.includes('-')) {
-                const [yyyy, mm] = d.period.split('-');
-                targetMonthIndex = parseInt(mm, 10) - 1;
-                recordDate = new Date(parseInt(yyyy, 10), targetMonthIndex, 1);
-            } else {
-                // If there's no period (legacy test data), force it to be March 2026
-                recordDate = new Date(d.updatedAt || new Date());
-                targetMonthIndex = recordDate.getMonth();
-                if (!d.period) {
-                    targetMonthIndex = nowObj.getMonth();
-                    recordDate = nowObj;
-                    d.period = currentPeriod;
-                }
+                const parts = d.period.split('-');
+                if (parts.length >= 2) targetMonthIndex = parseInt(parts[1], 10) - 1;
             }
             const targetMonth = MONTH_NAMES[targetMonthIndex];
-            const targetCompany = d.company || 'TYM';
-
-            // ─── Lógica de Reinicio Automático por Frecuencia (Día/Semana/Mes) ───
-            const frequency = (kpi.frecuencia || '').toUpperCase();
-
-            let isFromCurrentPeriod = false;
-            if (frequency.includes('DIARI')) {
-                isFromCurrentPeriod = isSameDay(recordDateObj, nowObj);
-            } else if (frequency.includes('SEMANAL')) {
-                isFromCurrentPeriod = isSameWeek(recordDateObj, nowObj, { weekStartsOn: 1 }); // Semana empieza lunes
-            } else {
-                // Quincenal, Mensual, etc. - Por ahora usamos el mes como estándar
-                isFromCurrentPeriod = isSameMonth(recordDateObj, nowObj);
-            }
-
-            // Un registro es histórico si:
-            // 1. No es del período actual según su frecuencia
-            // 2. O explícitamente pertenece a otro mes (period)
-            const isHistoricalUpdate = d.type !== 'META_UPDATE' && (
-                !isFromCurrentPeriod || (d.period && d.period !== currentPeriod)
-            );
+            const targetCompany = currentCompany;
 
             const newHistory = kpi.history.map(h => h.month === targetMonth ? { ...h, [targetCompany]: newValue } : h);
 
             let newKpi;
             if (isHistoricalUpdate) {
-                // Si es antiguo, solo actualizamos el histórico (barras) pero NO el estado actual (hasData/currentValue)
+                // Registro histórico: no cambia el estado 'visto' de la barra actual
                 newKpi = {
                     ...oldKpi,
+                    brandValues: { ...brandValues },
                     history: newHistory
                 };
-                if (d.type === 'META_UPDATE') {
-                    newKpi.meta = kpi.meta;
-                    newKpi.targetMeta = targetMeta;
-                }
             } else {
-                // Si es del período actual (ej: hoy si es diario), actualizamos el valor vivo
+                // Registro actual: actualiza el valor principal y marca como cargado
                 newKpi = {
                     ...kpi,
                     currentValue: newValue,
@@ -233,20 +232,25 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 };
             }
 
-            const newDataList = [...prevData];
-            newDataList[index] = newKpi;
-            return newDataList;
+            if (shouldPersist && !suppressPersist.current) {
+                persistUpdate(kpiId, updatedAdditionalData, newValue, currentUser);
+            }
+
+            const newDataFull = [...prevData];
+            newDataFull[index] = newKpi;
+            return newDataFull;
         });
-    }, [activeCompany, currentUser, isInverseKPI, calculateKPIValue]);
+    }, [activeCompany, currentUser, isInverseKPI, calculateKPIValue, currentPeriod]);
 
     const persistUpdate = async (kpiId, additionalData, value, user) => {
         try {
             const period = getCurrentPeriod();
-            const persistBrand = additionalData?.brand || (Array.isArray(user?.activeBrand) ? null : user?.activeBrand) || null;
+            const persistBrand = additionalData?.brand || (Array.isArray(user?.activeBrand) ? user.activeBrand[0] : user?.activeBrand) || 'Global';
             
             const payload = {
                 company_id: user?.company || 'TYM',
                 kpi_id: kpiId,
+                period: period,
                 additional_data: { 
                     ...additionalData, 
                     brand: persistBrand,
