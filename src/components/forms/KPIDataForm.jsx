@@ -72,15 +72,19 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             ? userEntity
             : (commercialBrands.find(isBrandPending) || commercialBrands[0] || userEntity));
 
-    // Obtener datos iniciales específicos de la marca si existen
+    // Obtener datos iniciales específicos de la marca si existen y son del periodo actual
     const getInitialBrandData = (brandName) => {
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
-        // Si no hay brandValues, intentamos con additionalData global si la marca coincide
-        if (kpi.brandValues?.[dataKey]?.additionalData) {
-            return kpi.brandValues[dataKey].additionalData;
-        }
-        if (kpi.additionalData?.brand === brandName) {
-            return kpi.additionalData;
+        const currentPeriod = new Date().toISOString().substring(0, 7); // YYYY-MM
+        
+        const data = kpi.brandValues?.[dataKey]?.additionalData || 
+                    (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
+
+        if (data) {
+            // Solo pre-cargar si el periodo coincide o si no tiene periodo (para evitar basura de meses pasados)
+            if (!data.period || data.period === currentPeriod) {
+                return data;
+            }
         }
         return {};
     };

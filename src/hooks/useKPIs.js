@@ -63,10 +63,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const existingBrandData = brandValues[dataKey]?.additionalData || 
                                     (kpi.additionalData?.brand === currentBrand ? kpi.additionalData : {});
 
+            // Determinar si es una actualización manual (desde UI) o remota (desde Supabase)
+            const isManualUpdate = !newData.updatedAt;
+
             const updatedAdditionalData = {
                 ...existingBrandData,
                 ...newData,
-                updatedAt: newData.updatedAt || new Date().toISOString()
+                updatedAt: newData.updatedAt || new Date().toISOString(),
+                // Si es manual, forzamos el periodo actual para evitar heredar periodos viejos (ej: de Marzo)
+                // que calificarían el registro como histórico injustamente.
+                period: isManualUpdate ? currentPeriod : (newData.period || existingBrandData.period || currentPeriod)
             };
 
             const d = updatedAdditionalData;
