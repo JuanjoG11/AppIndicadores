@@ -250,7 +250,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const payload = {
                 company_id: user?.company || 'TYM',
                 kpi_id: kpiId,
-                period: period,
                 additional_data: { 
                     ...additionalData, 
                     brand: persistBrand,
