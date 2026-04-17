@@ -22,13 +22,16 @@ import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDa
 import { Clock, Calendar } from 'lucide-react';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
-    const [editingKPI, setEditingKPI] = useState(null);
+    const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
 
     const handleStartEdit = (kpi, mode = 'data') => {
-        setEditingKPI(kpi);
+        setEditingKPIId(kpi.id);
         setEditMode(mode);
     };
+
+    // Obtenemos el objeto fresco de los props para que el modal se actualice al guardar
+    const editingKPI = editingKPIId ? kpiData.find(k => k.id === editingKPIId) : null;
 
     // Si el usuario tiene marca bloqueada, filtrar por ella; si no, usar todas las marcas de la entidad
     const lockedBrand = currentUser.activeBrand || null;
@@ -155,7 +158,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
     const handleSaveKPI = (kpiId, data) => {
         if (onUpdateKPI) onUpdateKPI(kpiId, data);
         if (data.type !== 'META_UPDATE') {
-            setEditingKPI(null);
+            setEditingKPIId(null);
         }
     };
 
@@ -629,7 +632,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                     kpi={editingKPI}
                     currentUser={currentUser}
                     onSave={handleSaveKPI}
-                    onCancel={() => setEditingKPI(null)}
+                    onCancel={() => setEditingKPIId(null)}
                     mode={editMode}
                 />
             )}
