@@ -27,8 +27,8 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
                     <h2 style={{ margin: 0, fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: 800, color: 'var(--text-main)' }}>
                         Tablero de Control Gerencial
                     </h2>
-                    <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                        Supervisión estratégica unificada
+                    <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        Supervisión estratégica unificada • <span style={{ color: 'var(--brand)', fontWeight: 800 }}>PERIODO: ABRIL 2026</span>
                     </p>
                 </div>
 

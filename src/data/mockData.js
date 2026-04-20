@@ -157,12 +157,15 @@ export const calculateAreaScore = (data, areaId) => {
     const allAreaKPIs = data.filter(kpi => kpi.area === areaId);
     if (allAreaKPIs.length === 0) return null;
 
-    // Sumamos el cumplimiento de los que tienen datos (los que no tienen suman 0%)
-    const totalCompliance = allAreaKPIs.reduce((sum, kpi) =>
-        sum + (kpi.hasData ? (kpi.compliance || 0) : 0), 0
+    const kpisConDatos = allAreaKPIs.filter(kpi => kpi.hasData);
+    if (kpisConDatos.length === 0) return null; // Sin datos = null (no mostrar 0)
+
+    // Numerador: suma del cumplimiento de los cargados
+    // Denominador: TOTAL de KPIs del área (los pendientes pesan 0%)
+    const totalCompliance = kpisConDatos.reduce((sum, kpi) =>
+        sum + (kpi.compliance || 0), 0
     );
 
-    // El divisor es el total de indicadores existentes para esa área
     const score = Math.round(totalCompliance / allAreaKPIs.length);
     return Math.min(score, 100);
 };
@@ -170,12 +173,15 @@ export const calculateAreaScore = (data, areaId) => {
 export const calculateOverallScore = (data) => {
     if (data.length === 0) return null;
 
-    // Sumamos cumplimiento de lo cargado (lo pendiente pesa 0%)
-    const totalCompliance = data.reduce((sum, kpi) =>
-        sum + (kpi.hasData ? (kpi.compliance || 0) : 0), 0
+    const kpisConDatos = data.filter(kpi => kpi.hasData);
+    if (kpisConDatos.length === 0) return null;
+
+    // Numerador: suma del cumplimiento de los cargados
+    // Denominador: TOTAL de KPIs (los pendientes pesan 0%)
+    const totalCompliance = kpisConDatos.reduce((sum, kpi) =>
+        sum + (kpi.compliance || 0), 0
     );
 
-    // El divisor es el total de indicadores de la entidad seleccionada
     const score = Math.round(totalCompliance / data.length);
     return Math.min(score, 100);
 };

@@ -428,7 +428,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                             Hola, {currentUser.name}
                         </h1>
                         <p style={{ opacity: 0.8, fontSize: '1.1rem', fontWeight: 500 }}>
-                            {currentUser.company === 'TYM' ? 'TIENDAS Y MARCAS' : 'TAT DISTRIBUCIONES'}
+                            {currentUser.company === 'TYM' ? 'TIENDAS Y MARCAS' : 'TAT DISTRIBUCIONES'} • <span style={{ color: 'var(--brand-light)' }}>PERIODO: ABRIL 2026</span>
                         </p>
                     </div>
 

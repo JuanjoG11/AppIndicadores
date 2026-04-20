@@ -90,11 +90,11 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         }
 
         // Gracia Quincenal: 
-        // Si estamos entre el 1 y el 3, reportamos Q2 del mes pasado.
-        // Si estamos entre el 16 y el 18, reportamos Q1 de este mes.
+        // Si estamos entre el 1 y el 5, reportamos Q2 del mes pasado.
+        // Si estamos entre el 16 y el 20, reportamos Q1 de este mes.
         if (freq.includes('QUINCENAL')) {
-            if (day <= 3) return getPeriodIndex(subMonths(now, 1), 'QUINCENAL').replace('Q1', 'Q2');
-            if (day >= 16 && day <= 18) return `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-Q1`;
+            if (day <= 5) return getPeriodIndex(subMonths(now, 1), 'QUINCENAL').replace('Q1', 'Q2');
+            if (day >= 16 && day <= 20) return `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-Q1`;
         }
         
         // Gracia Semanal: Primeros 2 días de la semana permiten cargar la anterior
@@ -109,7 +109,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     /**
      * Aplica actualizaciones locales al estado.
      */
-    const applyKPIUpdate = useCallback((kpiId, newData, shouldPersist = true) => {
+    const applyKPIUpdate = useCallback((kpiId, newData, shouldPersist = true, forceHistorical = false) => {
         setKpiData(prevData => {
             const index = prevData.findIndex(k => k.id === kpiId);
             if (index === -1) return prevData;
@@ -137,8 +137,13 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             }
             
             const currentReportablePeriod = getReportablePeriod(frequency);
+            const today = new Date();
+            const actualCurrentPeriod = getPeriodIndex(today, frequency);
 
-            const isFromCurrentPeriod = recordPeriodIndex === currentReportablePeriod;
+            // Solo se considera "periodo actual" si coincide con el periodo reportable Y no es carga histórica forzada
+            const isFromCurrentPeriod = !forceHistorical && (
+                recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod
+            );
             
             // Enriquecer datos con el periodo calculado si falta
             const updatedAdditionalData = {
@@ -212,19 +217,20 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 semaphore = compliance >= 95 ? 'green' : 'red';
             }
 
-            // Actualizar desglose por marca
+            // Actualizar desglose por marca (SOLO si es del periodo actual o si no había datos)
+            const oldBrandData = brandValues[dataKey] || {};
             brandValues[dataKey] = {
-                ...brandValues[dataKey],
-                currentValue: newValue,
+                ...oldBrandData,
+                currentValue: isFromCurrentPeriod ? newValue : (oldBrandData.currentValue || 0),
                 meta: targetMeta,
-                compliance: compliance,
-                semaphore: semaphore,
-                additionalData: d,
+                compliance: isFromCurrentPeriod ? compliance : (oldBrandData.compliance || 0),
+                semaphore: isFromCurrentPeriod ? semaphore : (oldBrandData.semaphore || 'gray'),
+                additionalData: isFromCurrentPeriod ? d : (oldBrandData.additionalData || d),
                 company: currentCompany,
                 brand: currentBrand,
                 hasData: (d.type === 'META_UPDATE') 
-                    ? (brandValues[dataKey]?.hasData) 
-                    : (isFromCurrentPeriod ? true : (brandValues[dataKey]?.hasData || false))
+                    ? (oldBrandData.hasData) 
+                    : (isFromCurrentPeriod ? true : (oldBrandData.hasData || false))
             };
 
             // Cálculo del mes para el histórico
@@ -235,14 +241,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const targetMonth = MONTH_NAMES[recordDateObj.getMonth()];
             const targetCompany = currentCompany;
 
-            const newHistory = kpi.history.map(h => h.month === targetMonth ? { ...h, [targetCompany]: newValue } : h);
+            const newHistory = d.type === 'META_UPDATE' 
+                ? kpi.history 
+                : kpi.history.map(h => h.month === targetMonth ? { ...h, [targetCompany]: newValue } : h);
 
             const newKpi = {
                 ...kpi,
-                currentValue: isFromCurrentPeriod ? newValue : (kpi.currentValue || newValue),
+                currentValue: isFromCurrentPeriod ? newValue : (kpi.currentValue || 0),
                 targetMeta,
-                compliance: isFromCurrentPeriod ? compliance : (kpi.compliance || compliance),
-                semaphore: isFromCurrentPeriod ? semaphore : (kpi.semaphore || semaphore),
+                compliance: isFromCurrentPeriod ? compliance : (kpi.compliance || 0),
+                semaphore: isFromCurrentPeriod ? semaphore : (kpi.semaphore || 'gray'),
                 hasData: d.type === 'META_UPDATE' ? kpi.hasData : (isFromCurrentPeriod ? true : kpi.hasData),
                 brandValues: { ...brandValues },
                 history: newHistory
@@ -362,9 +370,31 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                  if (data) {
                     setRawUpdates(data);
                     suppressPersist.current = true;
-                    data.forEach(upd => {
-                        applyKPIUpdate(upd.kpi_id, { ...upd.additional_data, updatedAt: upd.updated_at, period: upd.period || upd.additional_data?.period }, false);
+
+                    // Inicio del mes actual (Abril 1)
+                    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+                    // PASADA 1: Registros históricos (meses anteriores) → solo actualizan gráficas/historial
+                    // forceHistorical=true asegura que NO marquen hasData en el tablero principal
+                    data.filter(upd => upd.updated_at < currentMonthStart).forEach(upd => {
+                        applyKPIUpdate(
+                            upd.kpi_id,
+                            { ...upd.additional_data, updatedAt: upd.updated_at, period: upd.period || upd.additional_data?.period },
+                            false,
+                            true  // forceHistorical
+                        );
                     });
+
+                    // PASADA 2: Registros del mes actual (Abril) → actualizan el tablero normalmente
+                    data.filter(upd => upd.updated_at >= currentMonthStart).forEach(upd => {
+                        applyKPIUpdate(
+                            upd.kpi_id,
+                            { ...upd.additional_data, updatedAt: upd.updated_at, period: upd.period || upd.additional_data?.period },
+                            false,
+                            false  // no forceHistorical
+                        );
+                    });
+
                     suppressPersist.current = false;
                     setLastSyncTime(new Date());
                 }

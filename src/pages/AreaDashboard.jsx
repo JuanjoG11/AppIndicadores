@@ -231,7 +231,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
     };
 
     const totalComplianceSum = kpisWithData.reduce((sum, kpi) => sum + (kpi.compliance || 0), 0);
-    const groupCompliance = kpisWithData.length > 0 ? Math.round(totalComplianceSum / kpisWithData.length) : 0;
+    // Denominador = TOTAL de KPIs del área (los pendientes cuentan como 0%)
+    const groupCompliance = filteredKPIs.length > 0 ? Math.round(totalComplianceSum / filteredKPIs.length) : 0;
 
     return (
         <div style={{ padding: 'clamp(1rem, 5vw, 2rem) clamp(1rem, 5vw, 3rem)', background: 'var(--bg-app)', minHeight: 'calc(100vh - 64px)' }}>
@@ -263,7 +264,9 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                             <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1 }}>
                                 {area.name}
                             </h1>
-                            <p style={{ color: '#64748b', fontSize: '1rem', marginTop: '0.5rem' }}>{area.description}</p>
+                            <p style={{ color: '#64748b', fontSize: '1rem', marginTop: '0.5rem', fontWeight: 500 }}>
+                                {area.description} • <span style={{ color: 'var(--brand)', fontWeight: 800 }}>PERIODO: ABRIL 2026</span>
+                            </p>
                         </div>
                     </div>
                 </div>

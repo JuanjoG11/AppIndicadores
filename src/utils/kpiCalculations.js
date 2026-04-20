@@ -245,7 +245,7 @@ export const calculateKPIValue = (kpiId, d) => {
         }
         break;
       default:
-        newValue = d.currentValue || 0;
+        newValue = d.value !== undefined ? d.value : (d.currentValue !== undefined ? d.currentValue : 0);
     }
   } catch (e) {
     console.error(`Error calculating KPI ${kpiId}:`, e);

@@ -81,8 +81,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                     (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
 
         if (data) {
-            // Solo pre-cargar si el periodo coincide o si no tiene periodo (para evitar basura de meses pasados)
-            if (!data.period || data.period === currentPeriod) {
+            // Solo pre-cargar si el periodo coincide (mismo mes)
+            // Usamos startWith para que coincidan '2026-04-Q1' con '2026-04'
+            if (!data.period || data.period.startsWith(currentPeriod)) {
                 return data;
             }
         }

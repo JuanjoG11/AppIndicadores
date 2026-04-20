@@ -146,9 +146,18 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [] }) => {
         });
     }, [months, heatmapTYM, heatmapTAT]);
 
-    const lastMonth = months[months.length - 1];
-    const tymLast = tymOverall.find(m => m.month === lastMonth)?.score ?? null;
-    const tatLast = tatOverall.find(m => m.month === lastMonth)?.score ?? null;
+    // Determinar el último mes que tiene datos reales (para no mostrar Abril si está vacío)
+    const lastMonthWithData = useMemo(() => {
+        const availableMonths = [...months].reverse();
+        return availableMonths.find(m => {
+            const tymIdx = tymOverall.find(o => o.month === m);
+            const tatIdx = tatOverall.find(o => o.month === m);
+            return (tymIdx && tymIdx.score !== null) || (tatIdx && tatIdx.score !== null);
+        }) || months[months.length - 1];
+    }, [months, tymOverall, tatOverall]);
+
+    const tymLast = tymOverall.find(m => m.month === lastMonthWithData)?.score ?? null;
+    const tatLast = tatOverall.find(m => m.month === lastMonthWithData)?.score ?? null;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -168,7 +177,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [] }) => {
                             <p style={{ margin: '0.25rem 0 0', fontSize: '2rem', fontWeight: 900, color: co.score !== null ? semColor(co.score) : '#cbd5e1' }}>
                                 {co.score !== null ? `${co.score}%` : '0%'}
                             </p>
-                            <p style={{ margin: '0.1rem 0 0', fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>{co.score !== null ? `${lastMonth} 2026` : 'PENDIENTE DE CARGA'}</p>
+                            <p style={{ margin: '0.1rem 0 0', fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>{co.score !== null ? `${lastMonthWithData} 2026` : 'PENDIENTE DE CARGA'}</p>
                         </div>
                         <div style={{
                             width: 60, height: 60, borderRadius: '50%',

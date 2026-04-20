@@ -274,7 +274,7 @@ export const SYSTEM_USERS = [
         cargo: 'CONTADOR',
         company: 'TAT',
         activeBrand: null,
-        allowedAreas: ['contabilidad', 'caja'],
+        allowedAreas: ['contabilidad', 'caja', 'cartera'],
         color: '#f59e0b',
         icon: 'Calculator'
     },
