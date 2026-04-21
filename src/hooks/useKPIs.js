@@ -124,14 +124,35 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const brandValues = kpi.brandValues || {};
 
             // ─── Lógica de Periodo ───
-            const recordDateObj = parseISO(newData.updatedAt || newData.timestamp || new Date().toISOString());
-            const isManualUpdate = !newData.updatedAt; // Manuales vienen sin updatedAt de DB
-            
+            // Aseguramos que la fecha sea un objeto Date válido
+            let recordDateObj;
+            const rawDate = newData.updatedAt || newData.timestamp || new Date().toISOString();
+            if (rawDate instanceof Date) {
+                recordDateObj = rawDate;
+            } else {
+                try {
+                    recordDateObj = typeof rawDate === 'string' ? parseISO(rawDate) : new Date(rawDate);
+                } catch (e) {
+                    recordDateObj = new Date();
+                }
+            }
+
+            if (isNaN(recordDateObj.getTime())) recordDateObj = new Date();
+
+            const isManualUpdate = !newData.updatedAt; 
+
             // Calculamos el índice del periodo de este registro
-            // Si el registro ya trae un periodo explícito, lo respetamos (prioridad)
+            // Si es manual, recalculamos siempre el periodo para HOY (para que no se quede pegado en ayer)
+            // Si viene de DB (isManualUpdate = false), respetamos el periodo guardado.
+            let recordPeriodIndex;
+            if (isManualUpdate) {
+                recordPeriodIndex = getPeriodIndex(recordDateObj, frequency);
+            } else {
+                recordPeriodIndex = (newData.period || getPeriodIndex(recordDateObj, frequency)).toString();
+            }
+
             // COMPATIBILIDAD: Si el periodo guardado es solo YYYY-MM (7 chars) pero el KPI es Semanal/Quincenal,
             // forzamos el cálculo granular basado en el timestamp para no perder la marca de "Listo".
-            let recordPeriodIndex = newData.period || getPeriodIndex(recordDateObj, frequency);
             if (recordPeriodIndex.length === 7 && frequency !== 'MENSUAL') {
                 recordPeriodIndex = getPeriodIndex(recordDateObj, frequency);
             }
@@ -142,7 +163,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             // Periodos comparativos
             const isStrictCurrent = recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod;
-            const isFromCurrentMonth = recordPeriodIndex.startsWith(currentPeriod);
+            const isFromCurrentMonth = typeof recordPeriodIndex === 'string' && recordPeriodIndex.startsWith(currentPeriod);
 
             // Para el tablero principal: Mostramos el dato si es del periodo reportable o del mes actual (para que no desaparezca)
             // Para el estado de carga (hasData): Solo si es estrictamente del periodo reportable (hoy para diarios)
@@ -273,7 +294,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     const persistUpdate = async (kpiId, additionalData, value, user) => {
         try {
             const persistBrand = additionalData?.brand || (Array.isArray(user?.activeBrand) ? user.activeBrand[0] : user?.activeBrand) || 'Global';
-            const persistPeriod = additionalData?.period || getCurrentPeriod();
+            
+            // Si el KPI es diario/semanal, el fallback no puede ser solo el mes (getCurrentPeriod)
+            const frequency = kpiData.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL';
+            const persistPeriod = additionalData?.period || getPeriodIndex(new Date(), frequency);
             
             // USAR activeCompany (pasada al hook) para asegurar que se guarda en la empresa que se está visualizando
             const payload = {
