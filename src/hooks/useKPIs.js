@@ -140,10 +140,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const today = new Date();
             const actualCurrentPeriod = getPeriodIndex(today, frequency);
 
-            // Solo se considera "periodo actual" si coincide con el periodo reportable Y no es carga histórica forzada
-            const isFromCurrentPeriod = !forceHistorical && (
-                recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod
-            );
+            // Periodos comparativos
+            const isStrictCurrent = recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod;
+            const isFromCurrentMonth = recordPeriodIndex.startsWith(currentPeriod);
+
+            // Para el tablero principal: Mostramos el dato si es del periodo reportable o del mes actual (para que no desaparezca)
+            // Para el estado de carga (hasData): Solo si es estrictamente del periodo reportable (hoy para diarios)
+            const isFromCurrentPeriod = !forceHistorical && isStrictCurrent;
+            const shouldShowInDashboard = !forceHistorical && (isStrictCurrent || (frequency.includes('DIARI') && isFromCurrentMonth));
             
             // Enriquecer datos con el periodo calculado si falta
             const updatedAdditionalData = {
@@ -221,14 +225,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const oldBrandData = brandValues[dataKey] || {};
             brandValues[dataKey] = {
                 ...oldBrandData,
-                currentValue: isFromCurrentPeriod ? newValue : (oldBrandData.currentValue || 0),
+                currentValue: shouldShowInDashboard ? newValue : (oldBrandData.currentValue || 0),
                 meta: targetMeta,
-                compliance: isFromCurrentPeriod ? compliance : (oldBrandData.compliance || 0),
-                semaphore: isFromCurrentPeriod ? semaphore : (oldBrandData.semaphore || 'gray'),
-                additionalData: isFromCurrentPeriod ? d : (oldBrandData.additionalData || d),
-                company: currentCompany,
-                brand: currentBrand,
-                hasData: (d.type === 'META_UPDATE') 
+                compliance: shouldShowInDashboard ? compliance : (oldBrandData.compliance || 0),
+                semaphore: shouldShowInDashboard ? semaphore : (oldBrandData.semaphore || 'gray'),
+                additionalData: shouldShowInDashboard ? d : (oldBrandData.additionalData || d),
+                hasData: isManualUpdate 
+                    ? true 
+                    : (d.type === 'META_UPDATE') 
                     ? (oldBrandData.hasData) 
                     : (isFromCurrentPeriod ? true : (oldBrandData.hasData || false))
             };
@@ -247,11 +251,11 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             const newKpi = {
                 ...kpi,
-                currentValue: isFromCurrentPeriod ? newValue : (kpi.currentValue || 0),
-                targetMeta,
-                compliance: isFromCurrentPeriod ? compliance : (kpi.compliance || 0),
-                semaphore: isFromCurrentPeriod ? semaphore : (kpi.semaphore || 'gray'),
-                hasData: d.type === 'META_UPDATE' ? kpi.hasData : (isFromCurrentPeriod ? true : kpi.hasData),
+                currentValue: shouldShowInDashboard ? newValue : (kpi.currentValue || 0),
+                compliance: shouldShowInDashboard ? compliance : (kpi.compliance || 0),
+                semaphore: shouldShowInDashboard ? semaphore : (kpi.semaphore || 'gray'),
+                hasData: kpi.hasData || isFromCurrentPeriod || isManualUpdate,
+                additionalData: shouldShowInDashboard ? d : (kpi.additionalData || d),
                 brandValues: { ...brandValues },
                 history: newHistory
             };
@@ -271,8 +275,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const persistBrand = additionalData?.brand || (Array.isArray(user?.activeBrand) ? user.activeBrand[0] : user?.activeBrand) || 'Global';
             const persistPeriod = additionalData?.period || getCurrentPeriod();
             
+            // USAR activeCompany (pasada al hook) para asegurar que se guarda en la empresa que se está visualizando
             const payload = {
-                company_id: user?.company || 'TYM',
+                company_id: activeCompany || user?.company || 'TYM',
                 kpi_id: kpiId,
                 additional_data: { 
                     ...additionalData, 

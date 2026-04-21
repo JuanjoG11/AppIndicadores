@@ -476,8 +476,9 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [] }) => {
                                 const filtered = [...rawUpdates].reverse().filter(log => {
                                     const kpi = kpiData.find(k => k.id === log.kpi_id);
                                     const matchesArea = logAreaFilter === 'all' || kpi?.area === logAreaFilter;
-                                    const itemPeriod = log.period || log.additional_data?.period || (log.updated_at ? log.updated_at.substring(0, 7) : null);
-                                    const matchesMonth = logMonthFilter === 'all' || itemPeriod === logMonthFilter;
+                                    const itemPeriodFull = log.period || log.additional_data?.period || (log.updated_at ? log.updated_at.substring(0, 10) : null);
+                                    const itemPeriodMonth = itemPeriodFull ? itemPeriodFull.substring(0, 7) : null;
+                                    const matchesMonth = logMonthFilter === 'all' || itemPeriodMonth === logMonthFilter;
                                     const matchesSearch = !searchQuery || (kpi?.name || log.kpi_id).toLowerCase().includes(searchQuery);
                                     return matchesArea && matchesMonth && matchesSearch;
                                 });

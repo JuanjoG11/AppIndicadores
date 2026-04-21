@@ -466,11 +466,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id'];
             if (skipKeys.includes(key)) return;
 
-            if (typeof cleanedData[key] === 'string' && cleanedData[key] !== '') {
-                // Remove dots (thousands separators)
-                const val = cleanedData[key].replace(/\./g, '').replace(',', '.');
-                if (!isNaN(parseFloat(val)) && /^-?\d+(\.\d+)?$/.test(val)) {
-                   cleanedData[key] = parseFloat(val);
+            if (typeof cleanedData[key] === 'string' && cleanedData[key].trim() !== '') {
+                // Remove all spaces and dots (thousands), replace comma with dot (decimal)
+                const rawVal = cleanedData[key].trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+                const parsed = parseFloat(rawVal);
+                
+                if (!isNaN(parsed)) {
+                   cleanedData[key] = parsed;
                 }
             }
         });
