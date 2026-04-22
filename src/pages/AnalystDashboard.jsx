@@ -39,11 +39,12 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
     const getEffectiveBrands = (kpi) => {
         const all = getEntityBrands(kpi, currentUser.company);
         if (lockedBrand) {
-            // Handle single brand or array of brands
+            // Handle single brand or array of brands robustly
             if (Array.isArray(lockedBrand)) {
-                return all.filter(b => lockedBrand.includes(b));
+                const normalizedLocks = lockedBrand.map(l => l?.trim().toUpperCase());
+                return all.filter(b => normalizedLocks.includes(b?.trim().toUpperCase()));
             }
-            return all.filter(b => b === lockedBrand);
+            return all.filter(b => b?.trim().toUpperCase() === lockedBrand?.trim().toUpperCase());
         }
         return all;
     };

@@ -38,9 +38,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         } else if (lockedBrand) {
             // Usuario con proveedor fijo: solo ve SU marca si existe en este KPI
             if (Array.isArray(lockedBrand)) {
-                commercialBrands = allBrands.filter(b => lockedBrand.includes(b));
+                const normLocks = lockedBrand.map(l => l?.trim().toUpperCase());
+                commercialBrands = allBrands.filter(b => normLocks.includes(b?.trim().toUpperCase()));
             } else {
-                commercialBrands = allBrands.filter(b => b === lockedBrand);
+                commercialBrands = allBrands.filter(b => b?.trim().toUpperCase() === lockedBrand?.trim().toUpperCase());
             }
         } else {
             // Analistas sin restricción: ven marcas comerciales de su entidad
@@ -127,6 +128,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const lastInput = useRef(null);
     const lastSelectionStart = useRef(null);
     const lastValueLength = useRef(0);
+    const drafts = useRef({});
+
+    useEffect(() => {
+        if (formData.brand) {
+            drafts.current[formData.brand] = formData;
+        }
+    }, [formData]);
 
     useLayoutEffect(() => {
         if (lastInput.current && lastSelectionStart.current !== null) {
@@ -135,8 +143,6 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             const diff = newLength - lastValueLength.current;
             const newPos = Math.max(0, lastSelectionStart.current + diff);
             input.setSelectionRange(newPos, newPos);
-            // No reseteamos inmediatamente para permitir renders sucesivos si fuera necesario
-            // lastInput.current = null; // Quitamos esto para que sea más robusto
         }
     }, [formData]);
 
@@ -484,42 +490,57 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const cleanedData = { ...formData };
-        // Ensure numbers are really numbers before saving
-        // And strip separators, but EXCLUDE non-numeric fields
-        Object.keys(cleanedData).forEach(key => {
-            const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id'];
-            if (skipKeys.includes(key)) return;
 
-            if (typeof cleanedData[key] === 'string' && cleanedData[key].trim() !== '') {
-                // Remove all spaces and dots (thousands), replace comma with dot (decimal)
-                const rawVal = cleanedData[key].trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-                const parsed = parseFloat(rawVal);
-                
-                if (!isNaN(parsed)) {
-                   cleanedData[key] = parsed;
+        // Aseguramos de que el actual se guarde en borradores
+        drafts.current[formData.brand] = formData;
+
+        let savedBrands = [];
+
+        Object.keys(drafts.current).forEach(brandKey => {
+            const dataForBrand = drafts.current[brandKey];
+            const cleanedData = { ...dataForBrand };
+            
+            // Ensure numbers are really numbers before saving
+            // And strip separators, but EXCLUDE non-numeric fields
+            Object.keys(cleanedData).forEach(key => {
+                const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id'];
+                if (skipKeys.includes(key)) return;
+
+                if (typeof cleanedData[key] === 'string' && cleanedData[key].trim() !== '') {
+                    // Remove all spaces and dots (thousands), replace comma with dot (decimal)
+                    const rawVal = cleanedData[key].trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+                    const parsed = parseFloat(rawVal);
+                    
+                    if (!isNaN(parsed)) {
+                       cleanedData[key] = parsed;
+                    }
                 }
-            }
+            });
+
+            const dataToSave = isMetaMode
+                ? { ...cleanedData, type: 'META_UPDATE' }
+                : { ...cleanedData, type: 'DATA_UPDATE' };
+
+            onSave(kpi.id, dataToSave);
+            savedBrands.push(brandKey);
         });
 
-        const dataToSave = isMetaMode
-            ? { ...cleanedData, type: 'META_UPDATE' }
-            : { ...cleanedData, type: 'DATA_UPDATE' };
-
-        onSave(kpi.id, dataToSave);
+        const msgString = savedBrands.length > 1 ? 'todos los proveedores modificados' : formData.brand;
 
         if (isMetaMode) {
-            setSuccessMessage(`¡Meta actualizada para ${formData.brand}! Puedes seguir con las otras.`);
+            setSuccessMessage(`¡Meta actualizada para ${msgString}! Puedes cerrar esta ventana.`);
             setSaveSuccess(true);
             setFormData(prev => ({ ...prev, newMeta: '' }));
+            drafts.current = {}; // Limpiamos para futuras ediciones
             setTimeout(() => {
                 setSaveSuccess(false);
                 setSuccessMessage('');
             }, 3000);
         } else {
             // Confirmation for regular data entry
-            setSuccessMessage(`¡Datos guardados para ${formData.brand}! Puedes cerrar esta ventana.`);
+            setSuccessMessage(`¡Datos guardados para ${msgString}! Puedes cerrar esta ventana.`);
             setSaveSuccess(true);
+            drafts.current = {}; // Limpiamos para futuras ediciones
             setTimeout(() => {
                 setSaveSuccess(false);
                 setSuccessMessage('');
@@ -549,7 +570,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             }
 
             if (fieldName === 'brand') {
-                const brandData = getInitialBrandData(value);
+                const brandData = drafts.current[value] || getInitialBrandData(value);
                 const newCompany = (value === 'TYM' || value === 'TAT') ? value : (BRAND_TO_ENTITY[value] || userEntity);
                 
                 if (isMetaMode) {

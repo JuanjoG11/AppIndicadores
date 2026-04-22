@@ -117,7 +117,7 @@ export const SYSTEM_USERS = [
         role: 'Analista',
         cargo: 'FACTURACION',
         company: 'TYM',
-        activeBrand: 'ZENU',
+        activeBrand: ['ZENU', 'FLEISCHMANN'],
         allowedAreas: ['facturacion'],
         color: '#06b6d4',
         icon: 'ClipboardList'
