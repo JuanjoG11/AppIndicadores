@@ -366,75 +366,7 @@ const Login = ({ onLogin }) => {
                         </button>
                     </form>
 
-                    {/* Hint panel - collapsible */}
-                    <details style={{ marginTop: '2rem' }}>
-                        <summary style={{
-                            cursor: 'pointer',
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            color: 'rgba(255,255,255,0.25)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.12em',
-                            listStyle: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            userSelect: 'none'
-                        }}>
-                            <span style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-                            Ver usuarios de ejemplo
-                            <span style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-                        </summary>
-                        <div style={{
-                            marginTop: '1rem',
-                            padding: '1rem',
-                            background: 'rgba(255,255,255,0.03)',
-                            borderRadius: '14px',
-                            border: '1px solid rgba(255,255,255,0.06)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '0.6rem'
-                        }}>
-                            {[
-                                { u: 'gerente', p: 'Zentra2026!', label: '👑 Gerencia General' },
-                                { u: 'log_alpina', p: 'Log_Alpina26', label: '🚛 Logística · Alpina (TYM)' },
-                                { u: 'log_zenu', p: 'Log_Zenu26', label: '🚛 Logística · Zenú (TYM)' },
-                                { u: 'log_unilever', p: 'Log_Unilever26', label: '🚛 Logística · Unilever (TAT)' },
-                                { u: 'fact_alpina', p: 'Fact_Alpina26', label: '📋 Facturación · Alpina (TYM)' },
-                                { u: 'fact_zenu', p: 'Fact_Zenu26', label: '📋 Facturación · Zenú (TYM)' },
-                                { u: 'fact_tym', p: 'Fact_TYM2026', label: '📋 Facturación · Zenú + Fleischmann (TYM)' },
-                                {u: 'fact_tat', p: 'Fact_TAT2026', label: '📋 Facturación · Unilever + Familia (TAT)'},
-                                {u: 'rrhh_tym', p: 'RRHH_TYM26', label: '👥 Gestión Humana (TYM)'},
-                                { u: 'contador_tym', p: 'Conta_TYM26', label: '🧮 Contabilidad (TYM)' },
-                            ].map(({ u, p, label }) => (
-                                <button
-                                    key={u}
-                                    type="button"
-                                    onClick={() => { setUsername(u); setPassword(p); setError(''); }}
-                                    style={{
-                                        background: 'none', border: 'none',
-                                        padding: '0.5rem 0.75rem',
-                                        borderRadius: '10px',
-                                        textAlign: 'left',
-                                        cursor: 'pointer',
-                                        color: 'rgba(255,255,255,0.4)',
-                                        fontSize: '0.75rem',
-                                        fontWeight: 600,
-                                        transition: 'all 0.2s',
-                                        fontFamily: 'inherit',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}
-                                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
-                                    onMouseOut={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
-                                >
-                                    <span>{label}</span>
-                                    <span style={{ fontSize: '0.65rem', opacity: 0.6, fontFamily: 'monospace' }}>{u}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </details>
+
                 </div>
 
                 {/* Footer */}

@@ -47,7 +47,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
     return (
         <div 
             className="card premium-shadow animate-slide-up" 
-            onClick={() => onViewHistory && onViewHistory(kpi)}
+            onClick={() => isManager && onViewHistory && onViewHistory(kpi)}
             style={{
                 padding: '1.5rem',
                 borderRadius: '24px',
@@ -59,11 +59,13 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                 transition: 'all 0.3s ease',
                 position: 'relative',
                 overflow: 'hidden',
-                cursor: onViewHistory ? 'pointer' : 'default'
+                cursor: isManager && onViewHistory ? 'pointer' : 'default'
             }}
             onMouseOver={e => {
-                if (onViewHistory) e.currentTarget.style.transform = 'translateY(-4px)';
-                if (onViewHistory) e.currentTarget.style.borderColor = 'var(--brand)';
+                if (isManager && onViewHistory) {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.borderColor = 'var(--brand)';
+                }
             }}
             onMouseOut={e => {
                 e.currentTarget.style.transform = 'translateY(0)';

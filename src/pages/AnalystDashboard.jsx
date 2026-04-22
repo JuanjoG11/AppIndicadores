@@ -188,7 +188,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
             <div 
                 key={kpi.id} 
                 className="card premium-shadow fade-in" 
-                onClick={() => onViewHistory && onViewHistory(kpi)}
+                onClick={() => currentUser?.role === 'Gerente' && onViewHistory && onViewHistory(kpi)}
                 style={{
                     padding: '1.75rem',
                     borderRadius: '24px',
@@ -197,11 +197,13 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                     opacity: isMonitoring && !kpi.hasData ? 0.7 : 1,
                     transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                     animationDelay: `${idx * 0.05}s`,
-                    cursor: onViewHistory ? 'pointer' : 'default'
+                    cursor: currentUser?.role === 'Gerente' && onViewHistory ? 'pointer' : 'default'
                 }}
                 onMouseOver={e => {
-                    if (onViewHistory) e.currentTarget.style.transform = 'translateY(-4px)';
-                    if (onViewHistory) e.currentTarget.style.borderColor = 'var(--brand)';
+                    if (currentUser?.role === 'Gerente' && onViewHistory) {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.borderColor = 'var(--brand)';
+                    }
                 }}
                 onMouseOut={e => {
                     e.currentTarget.style.transform = 'translateY(0)';
