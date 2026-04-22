@@ -103,7 +103,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
-const ExecutiveHistory = ({ kpiData, rawUpdates = [] }) => {
+const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory }) => {
     const [tab, setTab] = useState('overview'); // 'overview' | 'areas' | 'log'
     const [selectedArea, setSelectedArea] = useState('logistica');
     const [logAreaFilter, setLogAreaFilter] = useState('all');
@@ -381,11 +381,19 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [] }) => {
                         </p>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem' }}>
                             {kpiData.filter(k => k.area === selectedArea).map(kpi => (
-                                <div key={kpi.id} style={{
-                                    padding: '0.75rem 1rem', borderRadius: '10px',
-                                    background: kpi.hasData ? `${semColor(kpi.compliance)}10` : '#f8fafc',
-                                    border: `1px solid ${kpi.hasData ? semColor(kpi.compliance) + '30' : '#e2e8f0'}`
-                                }}>
+                                <div 
+                                    key={kpi.id} 
+                                    onClick={() => onViewHistory && onViewHistory(kpi)}
+                                    style={{
+                                        padding: '0.75rem 1rem', 
+                                        borderRadius: '10px',
+                                        background: kpi.hasData ? `${semColor(kpi.compliance)}10` : '#f8fafc',
+                                        border: `1px solid ${kpi.hasData ? semColor(kpi.compliance) + '30' : '#e2e8f0'}`,
+                                        cursor: onViewHistory ? 'pointer' : 'default',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    className="kpi-mini-card"
+                                >
                                     <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b', fontWeight: 600, lineHeight: 1.3 }}>{kpi.name}</p>
                                     {kpi.hasData ? (
                                         <p style={{ margin: '0.4rem 0 0', fontWeight: 900, fontSize: '1.1rem', color: semColor(kpi.compliance) }}>

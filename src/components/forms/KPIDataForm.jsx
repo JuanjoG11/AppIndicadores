@@ -14,7 +14,8 @@ import {
     Activity,
     Shield as ShieldIcon,
     FileText,
-    Cpu
+    Cpu,
+    Calendar
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
@@ -96,11 +97,30 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     };
 
     // Inicializar con datos previos si existen
-    const [formData, setFormData] = useState({
-        brand: defaultBrand,
-        company: userEntity, // Auto-assign company
-        newFrecuencia: kpi.frecuencia,
-        ...getInitialBrandData(defaultBrand)
+    const [formData, setFormData] = useState(() => {
+        const d = new Date();
+        let defaultPeriod = d.toISOString().split('T')[0]; // Default Day
+        
+        if (kpi.frecuencia === 'SEMANAL') {
+            const date = new Date();
+            const oneJan = new Date(date.getFullYear(), 0, 1);
+            const numberOfDays = Math.floor((date - oneJan) / (24 * 60 * 60 * 1000));
+            const week = Math.ceil((date.getDay() + 1 + numberOfDays) / 7);
+            defaultPeriod = `${date.getFullYear()}-W${week}`;
+        } else if (kpi.frecuencia === 'QUINCENAL') {
+            const quincena = d.getDate() <= 15 ? 'Q1' : 'Q2';
+            defaultPeriod = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${quincena}`;
+        } else if (kpi.frecuencia === 'MENSUAL') {
+            defaultPeriod = d.toISOString().substring(0, 7);
+        }
+
+        return {
+            brand: defaultBrand,
+            company: userEntity,
+            period: defaultPeriod,
+            newFrecuencia: kpi.frecuencia,
+            ...getInitialBrandData(defaultBrand)
+        };
     });
 
     // Refs para mantener la posición del cursor en campos con formato
@@ -736,6 +756,87 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                         </div>
                                     )}
                                 </div>
+                            </div>
+                        )}
+                        
+                        {/* PERIOD SELECTION - NEW & ESSENTIAL */}
+                        {!isMetaMode && (
+                            <div style={{ marginBottom: '2.5rem' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1rem', color: '#1e293b' }}>
+                                    <Calendar size={16} color="var(--brand)" />
+                                    PERIODO DE CARGA ({kpi.frecuencia})
+                                </label>
+                                
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    {kpi.frecuencia === 'DIARIO' && (
+                                        <input 
+                                            type="date"
+                                            value={formData.period}
+                                            onChange={(e) => handleChange('period', e.target.value)}
+                                            style={{
+                                                padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                background: '#f8fafc'
+                                            }}
+                                        />
+                                    )}
+
+                                    {kpi.frecuencia === 'SEMANAL' && (
+                                        <select 
+                                            value={formData.period}
+                                            onChange={(e) => handleChange('period', e.target.value)}
+                                            style={{
+                                                padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                minWidth: '220px', background: '#f8fafc', cursor: 'pointer'
+                                            }}
+                                        >
+                                            {[...Array(52)].map((_, i) => (
+                                                <option key={i+1} value={`${new Date().getFullYear()}-W${i+1}`}>
+                                                    Semana {i+1} ({new Date().getFullYear()})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+
+                                    {kpi.frecuencia === 'QUINCENAL' && (
+                                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                            {['Q1', 'Q2'].map(q => {
+                                                const quincenaKey = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${q}`;
+                                                const isActive = formData.period === quincenaKey;
+                                                return (
+                                                    <button
+                                                        key={q}
+                                                        type="button"
+                                                        onClick={() => handleChange('period', quincenaKey)}
+                                                        style={{
+                                                            padding: '0.75rem 1.5rem', borderRadius: '14px', fontSize: '0.9rem', fontWeight: 800,
+                                                            border: isActive ? '2px solid var(--brand)' : '2px solid #e2e8f0',
+                                                            background: isActive ? 'var(--brand-bg)' : 'white',
+                                                            color: isActive ? 'var(--brand)' : '#64748b',
+                                                            cursor: 'pointer', transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        {q === 'Q1' ? '1ra Quincena' : '2da Quincena'}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {kpi.frecuencia === 'MENSUAL' && (
+                                        <div style={{ 
+                                            padding: '0.85rem 1.5rem', background: '#f8fafc', 
+                                            borderRadius: '14px', border: '2px solid #e2e8f0',
+                                            fontSize: '0.95rem', fontWeight: 800, color: '#1e293b'
+                                        }}>
+                                            {new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
+                                <p style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.6rem', fontWeight: 600 }}>
+                                    Indica a qué fecha o periodo corresponden los datos que estás ingresando.
+                                </p>
                             </div>
                         )}
 

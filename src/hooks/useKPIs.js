@@ -266,16 +266,61 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const targetMonth = MONTH_NAMES[recordDateObj.getMonth()];
             const targetCompany = currentCompany;
 
-            const newHistory = d.type === 'META_UPDATE' 
-                ? kpi.history 
-                : kpi.history.map(h => h.month === targetMonth ? { ...h, [targetCompany]: newValue } : h);
+            // ── CONSOLIDACIÓN DE VALORES (Para métricas con múltiples marcas) ──
+            let finalValue = shouldShowInDashboard ? newValue : (kpi.currentValue || 0);
+            let finalCompliance = shouldShowInDashboard ? compliance : (kpi.compliance || 0);
+            let finalSemaphore = shouldShowInDashboard ? semaphore : (kpi.semaphore || 'gray');
+            let finalHasData = kpi.hasData || isFromCurrentPeriod || isManualUpdate;
+
+            if (kpi.meta && typeof kpi.meta === 'object') {
+                const brandsForThisCompany = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
+                
+                if (brandsForThisCompany.length > 0) {
+                    let sumVal = 0;
+                    let sumComp = 0;
+                    let count = 0;
+
+                    brandsForThisCompany.forEach(key => {
+                        const bData = brandValues[key];
+                        if (bData && bData.hasData) {
+                            sumVal += bData.currentValue;
+                            sumComp += bData.compliance;
+                            count++;
+                        }
+                    });
+
+                    if (count > 0) {
+                        finalValue = sumVal / count;
+                        finalCompliance = Math.round(sumComp / count);
+                        
+                        // Recalcular semáforo consolidado
+                        const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
+                        const greenThreshold = isStrict ? 100 : 95;
+                        const yellowThreshold = isStrict ? 100 : 85;
+
+                        if (finalCompliance >= greenThreshold) finalSemaphore = 'green';
+                        else if (finalCompliance >= yellowThreshold) finalSemaphore = 'yellow';
+                        else finalSemaphore = 'red';
+                        
+                        finalHasData = true;
+                    }
+                }
+            }
+
+            // ── ACTUALIZACIÓN DEL HISTORIAL ──
+            const newHistory = (kpi.history || []).map(h => {
+                if (h.month === targetMonth && h.year === recordDateObj.getFullYear()) {
+                    return { ...h, [targetCompany]: finalValue };
+                }
+                return h;
+            });
 
             const newKpi = {
                 ...kpi,
-                currentValue: shouldShowInDashboard ? newValue : (kpi.currentValue || 0),
-                compliance: shouldShowInDashboard ? compliance : (kpi.compliance || 0),
-                semaphore: shouldShowInDashboard ? semaphore : (kpi.semaphore || 'gray'),
-                hasData: kpi.hasData || isFromCurrentPeriod || isManualUpdate,
+                currentValue: parseFloat(finalValue.toFixed(2)),
+                compliance: finalCompliance,
+                semaphore: finalSemaphore,
+                hasData: finalHasData,
                 additionalData: shouldShowInDashboard ? d : (kpi.additionalData || d),
                 brandValues: { ...brandValues },
                 history: newHistory

@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 
-const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => {
+const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onViewHistory }) => {
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
@@ -674,6 +674,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                                             currentUser={currentUser}
                                             activeCompany={activeCompany}
                                             selectedBrand={selectedBrand}
+                                            onViewHistory={onViewHistory}
                                         />
                                     ))}
                                 </React.Fragment>
@@ -690,6 +691,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI }) => 
                             currentUser={currentUser}
                             activeCompany={activeCompany}
                             selectedBrand={selectedBrand}
+                            onViewHistory={onViewHistory}
                         />
                     ))
                 )}

@@ -5,7 +5,7 @@ import ExecutiveHistory from '../components/dashboard/ExecutiveHistory';
 import { filterKPIsByEntity } from '../utils/kpiHelpers';
 import { LayoutGrid, TrendingUp } from 'lucide-react';
 
-const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany }) => {
+const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory }) => {
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'trend'
 
     // Filter KPIs based on selected entity using the utility
@@ -124,7 +124,7 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
                 </div>
             ) : (
                 <div className="fade-in">
-                    <ExecutiveHistory kpiData={kpiData} rawUpdates={rawUpdates} />
+                    <ExecutiveHistory kpiData={kpiData} rawUpdates={rawUpdates} onViewHistory={onViewHistory} />
 
                     <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <h4 style={{ margin: 0, fontWeight: 700, color: 'var(--text-main)' }}>Detalle Histórico por Área</h4>

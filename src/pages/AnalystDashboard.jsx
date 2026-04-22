@@ -21,7 +21,7 @@ import { isInverseKPI } from '../utils/kpiCalculations';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
 
-const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
+const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) => {
     const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
 
@@ -185,15 +185,29 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
         const isExpired = checkIsExpired(deadline) && !isReady;
 
         return (
-            <div key={kpi.id} className="card premium-shadow fade-in" style={{
-                padding: '1.75rem',
-                borderRadius: '24px',
-                background: 'white',
-                border: isReady ? '1px solid #e2e8f0' : '2px dashed #cbd5e1',
-                opacity: isMonitoring && !kpi.hasData ? 0.7 : 1,
-                transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                animationDelay: `${idx * 0.05}s`
-            }}>
+            <div 
+                key={kpi.id} 
+                className="card premium-shadow fade-in" 
+                onClick={() => onViewHistory && onViewHistory(kpi)}
+                style={{
+                    padding: '1.75rem',
+                    borderRadius: '24px',
+                    background: 'white',
+                    border: isReady ? '1px solid #e2e8f0' : '2px dashed #cbd5e1',
+                    opacity: isMonitoring && !kpi.hasData ? 0.7 : 1,
+                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    animationDelay: `${idx * 0.05}s`,
+                    cursor: onViewHistory ? 'pointer' : 'default'
+                }}
+                onMouseOver={e => {
+                    if (onViewHistory) e.currentTarget.style.transform = 'translateY(-4px)';
+                    if (onViewHistory) e.currentTarget.style.borderColor = 'var(--brand)';
+                }}
+                onMouseOut={e => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.borderColor = isReady ? '#e2e8f0' : '#cbd5e1';
+                }}
+            >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                         <div style={{
@@ -232,7 +246,10 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI }) => {
                     {isMine ? (
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button
-                                onClick={() => handleStartEdit(kpi, 'data')}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStartEdit(kpi, 'data');
+                                }}
                                 style={{
                                     background: isReady ? 'var(--bg-app)' : 'var(--brand)',
                                     color: isReady ? 'var(--text-main)' : 'white',

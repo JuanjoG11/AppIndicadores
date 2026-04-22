@@ -18,7 +18,7 @@ import {
 import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
 import { isInverseKPI } from '../../utils/kpiCalculations';
 
-const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selectedBrand }) => {
+const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selectedBrand, onViewHistory }) => {
 
     // Simplificado para usar valores consolidados o marca específica
     const isBrandFocus = selectedBrand && selectedBrand !== 'all';
@@ -45,18 +45,31 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
 
 
     return (
-        <div className="card premium-shadow animate-slide-up" style={{
-            padding: '1.5rem',
-            borderRadius: '24px',
-            background: 'white',
-            border: '1px solid #f1f5f9',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            transition: 'transform 0.3s ease',
-            position: 'relative',
-            overflow: 'hidden'
-        }}>
+        <div 
+            className="card premium-shadow animate-slide-up" 
+            onClick={() => onViewHistory && onViewHistory(kpi)}
+            style={{
+                padding: '1.5rem',
+                borderRadius: '24px',
+                background: 'white',
+                border: '1px solid #f1f5f9',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                transition: 'all 0.3s ease',
+                position: 'relative',
+                overflow: 'hidden',
+                cursor: onViewHistory ? 'pointer' : 'default'
+            }}
+            onMouseOver={e => {
+                if (onViewHistory) e.currentTarget.style.transform = 'translateY(-4px)';
+                if (onViewHistory) e.currentTarget.style.borderColor = 'var(--brand)';
+            }}
+            onMouseOut={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = '#f1f5f9';
+            }}
+        >
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
@@ -123,7 +136,10 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                         
                         return canEdit && isResponsible && (
                             <button
-                                onClick={() => onEdit && onEdit(kpi, 'data', selectedBrand)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit && onEdit(kpi, 'data', selectedBrand);
+                                }}
                                 style={{
                                     background: 'transparent', border: 'none',
                                     color: '#94a3b8', cursor: 'pointer',
@@ -136,7 +152,10 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                     })()}
                     {isManager && (
                         <button
-                            onClick={() => onEdit && onEdit(kpi, 'meta')}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit && onEdit(kpi, 'meta');
+                            }}
                             style={{
                                 background: 'transparent', border: 'none',
                                 color: 'var(--brand)', cursor: 'pointer',

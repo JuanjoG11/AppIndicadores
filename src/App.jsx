@@ -8,6 +8,7 @@ import AnalystDashboard from './pages/AnalystDashboard';
 import PresentationView from './pages/PresentationView';
 import Login from './pages/Login';
 import SettingsModal from './components/layout/SettingsModal';
+import KPIHistoryModal from './components/dashboard/KPIHistoryModal';
 import CommandPalette from './components/common/CommandPalette';
 import { DashboardSkeleton, AnalystSkeleton } from './components/common/SkeletonLoader';
 import { ToastProvider, useToast } from './context/ToastContext';
@@ -83,6 +84,8 @@ const AppInner = () => {
     addToast('info', 'Sesión cerrada correctamente');
   };
 
+  const [selectedKPIHistory, setSelectedKPIHistory] = useState(null);
+
   // ── KPI Update handler (with permission checks) ───────────────────────────
   const handleUpdateKPI = useCallback((id, data) => {
     if (!data || typeof data !== 'object') {
@@ -118,6 +121,10 @@ const AppInner = () => {
       addToast('success', `📊 Indicador actualizado: ${kpi.name}`);
     }
   }, [kpiData, currentUser, applyKPIUpdate, addToast]);
+
+  const handleViewHistory = (kpi) => {
+    setSelectedKPIHistory(kpi);
+  };
 
   // ── Render ────────────────────────────────────────────────────────────────
   // ── Kiosk auto-login for /presentacion route ─────────────────────────────
@@ -185,17 +192,17 @@ const AppInner = () => {
                 path="/"
                 element={
                   currentUser.role === 'Gerente'
-                    ? <ExecutiveDashboard kpiData={kpiData} rawUpdates={rawUpdates} activeCompany={activeCompany} setActiveCompany={setActiveCompany} />
+                    ? <ExecutiveDashboard kpiData={kpiData} rawUpdates={rawUpdates} activeCompany={activeCompany} setActiveCompany={setActiveCompany} onViewHistory={handleViewHistory} />
                     : <Navigate to="/mis-indicadores" />
                 }
               />
               <Route
                 path="/area/:areaId"
-                element={<AreaDashboard kpiData={kpiData} activeCompany={activeCompany} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} />}
+                element={<AreaDashboard kpiData={kpiData} activeCompany={activeCompany} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} onViewHistory={handleViewHistory} />}
               />
               <Route
                 path="/mis-indicadores"
-                element={<AnalystDashboard kpiData={kpiData} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} />}
+                element={<AnalystDashboard kpiData={kpiData} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} onViewHistory={handleViewHistory} />}
               />
               <Route
                 path="/presentacion"
@@ -206,6 +213,16 @@ const AppInner = () => {
           )}
         </div>
       </main>
+
+      {/* KPI Detail & History Modal */}
+      {selectedKPIHistory && (
+        <KPIHistoryModal
+          kpi={selectedKPIHistory}
+          rawUpdates={rawUpdates}
+          activeCompany={activeCompany}
+          onClose={() => setSelectedKPIHistory(null)}
+        />
+      )}
 
       {/* Settings Modal (Gerente only) */}
       {showSettings && currentUser?.role === 'Gerente' && (
@@ -227,6 +244,7 @@ const AppInner = () => {
         currentUser={currentUser}
       />
     </div>
+
   );
 };
 
