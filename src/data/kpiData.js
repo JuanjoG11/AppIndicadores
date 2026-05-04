@@ -213,7 +213,7 @@ export const kpiDefinitions = [
             ALPINA: 1,
             FLEISCHMANN: 1
         },
-        unit: 'valor',
+        unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'HORAS EXTRAS / VENTA TOTAL',
@@ -273,7 +273,7 @@ export const kpiDefinitions = [
             ZENU: 1,
             FLEISCHMANN: 1
         },
-        unit: 'valor',
+        unit: '%',
         frecuencia: 'QUINCENAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'HORAS EXTRAS / VENTA TOTAL',

@@ -2,8 +2,24 @@
  * Centralized logic for KPI calculations
  */
 
-export const calculateKPIValue = (kpiId, d) => {
-  if (!d) return 0;
+export const calculateKPIValue = (kpiId, rawData) => {
+  if (!rawData) return 0;
+
+  // Limpiamos los datos para que el cálculo use números reales (JS usa punto para decimal)
+  // En Colombia usamos punto para miles y coma para decimales.
+  const d = {};
+  Object.keys(rawData).forEach(key => {
+    const val = rawData[key];
+    if (typeof val === 'string' && val.trim() !== '') {
+      // Eliminamos puntos de miles y convertimos coma a punto decimal
+      let clean = val.trim().replace(/\./g, '');
+      clean = clean.replace(/,/g, '.');
+      const num = parseFloat(clean);
+      d[key] = isNaN(num) ? 0 : num;
+    } else {
+      d[key] = val;
+    }
+  });
 
   let newValue = 0;
 

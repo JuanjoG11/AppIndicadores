@@ -577,17 +577,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 const isNumericSource = /^[0-9.,\s]*$/.test(value);
                 
                 if (isNumericSource && fieldName !== 'brand' && fieldName !== 'newFrecuencia' && fieldName !== 'detalleFaltante') {
-                    // Limpiamos puntos de miles para guardar el valor "puro"
-                    // Si hay más de un punto, asumimos que son separadores de miles
-                    let clean = value.replace(/[^0-9,.]/g, '');
-                    if ((clean.match(/\./g) || []).length > 1) {
-                        clean = clean.replace(/\./g, '');
-                    }
-                    // Si hay coma y punto, el punto es de miles
-                    if (clean.includes(',') && clean.includes('.')) {
-                        clean = clean.replace(/\./g, '');
-                    }
-                    parsedValue = clean;
+                    // Norma Colombiana: Punto (.) es mil, Coma (,) es decimal.
+                    // Para el estado, guardamos el número "limpio". 
+                    // El punto lo eliminamos siempre (es estético de miles).
+                    // La coma la convertimos a punto internamente para cálculos.
+                    let raw = value.replace(/\./g, ''); 
+                    parsedValue = raw;
                 }
             }
 
@@ -911,9 +906,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                         required
                                         value={(() => {
                                             if (formData.newMeta == null || formData.newMeta === '') return '';
-                                            const str = formData.newMeta.toString();
-                                            if (str.includes(',') || (str.includes('.') && (str.match(/\./g) || []).length === 1)) return str;
-                                            return str.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                                            const str = formData.newMeta.toString().replace(/\./g, '');
+                                            const [int, dec] = str.split(',');
+                                            const formattedInt = int.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                                            return dec !== undefined ? `${formattedInt},${dec}` : formattedInt;
                                         })()}
                                         onChange={(e) => handleChange('newMeta', e.target.value, e)}
                                         placeholder={`Eje: ${currentMeta}`}
@@ -977,12 +973,11 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                                 value={(() => {
                                                     const val = formData[field.name];
                                                     if (field.type !== 'number' || val == null || val === '') return val ?? '';
-                                                    const str = val.toString();
-                                                    // Si es decimal (tiene una coma o un solo punto), no aplicamos miles automáticos aquí 
-                                                    // para no interferir con la escritura del usuario
-                                                    if (str.includes(',') || (str.includes('.') && (str.match(/\./g) || []).length === 1)) return str;
-                                                    // Si es entero, aplicamos miles
-                                                    return str.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                                                    // Limpiamos cualquier punto previo para re-formatear
+                                                    const str = val.toString().replace(/\./g, '');
+                                                    const [int, dec] = str.split(',');
+                                                    const formattedInt = int.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                                                    return dec !== undefined ? `${formattedInt},${dec}` : formattedInt;
                                                 })()}
                                                 onChange={(e) => handleChange(field.name, e.target.value, e)}
                                                 autoComplete="off"
