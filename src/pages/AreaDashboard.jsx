@@ -98,7 +98,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
 
 
     // 3. Brand filter logic for specific areas
-    const brandAreas = ['logistica', 'comercial', 'cartera'];
+    const brandAreas = ['logistica', 'comercial', 'cartera', 'talento-humano', 'facturacion', 'administrativo', 'caja'];
     const isBrandSpecificArea = brandAreas.includes(areaId);
 
     const brandsForEntity = [...new Set(areaKPIs.flatMap(kpi =>

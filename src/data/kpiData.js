@@ -45,6 +45,7 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la Rentabilidad en el proceso de entrega',
         meta: {
             ALPINA: 3.4,
+            ZENU: 3.4,
             FLEISCHMANN: 3.4,
             UNILEVER: 3.4,
             FAMILIA: 3.4
@@ -191,6 +192,7 @@ export const kpiDefinitions = [
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
+            ZENU: 1,
             FLEISCHMANN: 1,
             UNILEVER: 1,
             FAMILIA: 1
@@ -209,7 +211,9 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
-            ALPINA: 1
+            ALPINA: 1,
+            ZENU: 1,
+            FLEISCHMANN: 1
         },
         unit: 'valor',
         frecuencia: 'SEMANAL',
@@ -248,6 +252,8 @@ export const kpiDefinitions = [
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             ALPINA: 0.4,
+            ZENU: 0.4,
+            FLEISCHMANN: 0.4,
             UNILEVER: 0.4,
             FAMILIA: 0.4
         },
@@ -265,7 +271,9 @@ export const kpiDefinitions = [
         subArea: 'Logística de Depósito',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
-            ALPINA: 1
+            ALPINA: 1,
+            ZENU: 1,
+            FLEISCHMANN: 1
         },
         unit: 'valor',
         frecuencia: 'QUINCENAL',
