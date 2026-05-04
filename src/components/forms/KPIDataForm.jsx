@@ -868,13 +868,27 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                     )}
 
                                     {kpi.frecuencia === 'MENSUAL' && (
-                                        <div style={{ 
-                                            padding: '0.85rem 1.5rem', background: '#f8fafc', 
-                                            borderRadius: '14px', border: '2px solid #e2e8f0',
-                                            fontSize: '0.95rem', fontWeight: 800, color: '#1e293b'
-                                        }}>
-                                            {new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
-                                        </div>
+                                        <select 
+                                            value={formData.period}
+                                            onChange={(e) => handleChange('period', e.target.value)}
+                                            style={{
+                                                padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                minWidth: '220px', background: '#f8fafc', cursor: 'pointer'
+                                            }}
+                                        >
+                                            {(() => {
+                                                const months = [];
+                                                const d = new Date();
+                                                for (let i = 0; i < 6; i++) {
+                                                    const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+                                                    const label = m.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+                                                    const value = m.toISOString().substring(0, 7);
+                                                    months.push(<option key={value} value={value}>{label}</option>);
+                                                }
+                                                return months;
+                                            })()}
+                                        </select>
                                     )}
                                 </div>
                                 <p style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.6rem', fontWeight: 600 }}>

@@ -124,23 +124,28 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const brandValues = kpi.brandValues || {};
 
             // ─── Lógica de Periodo ───
-            // Aseguramos que la fecha sea un objeto Date válido
             let recordDateObj;
-            const rawDate = newData.updatedAt || newData.timestamp || new Date().toISOString();
-            if (rawDate instanceof Date) {
-                recordDateObj = rawDate;
+            const isManualUpdate = !newData.updatedAt;
+
+            // Si es una carga manual mensual y se especificó un periodo (ej. mes vencido)
+            // forzamos que la fecha del registro sea en ese mes para el historial.
+            if (isManualUpdate && frequency === 'MENSUAL' && newData.period && newData.period.length === 7) {
+                const [year, month] = newData.period.split('-').map(Number);
+                recordDateObj = new Date(year, month - 1, 15); // Día 15 para estar seguros
             } else {
-                try {
-                    recordDateObj = typeof rawDate === 'string' ? parseISO(rawDate) : new Date(rawDate);
-                } catch (e) {
-                    recordDateObj = new Date();
+                const rawDate = newData.updatedAt || newData.timestamp || new Date().toISOString();
+                if (rawDate instanceof Date) {
+                    recordDateObj = rawDate;
+                } else {
+                    try {
+                        recordDateObj = typeof rawDate === 'string' ? parseISO(rawDate) : new Date(rawDate);
+                    } catch (e) {
+                        recordDateObj = new Date();
+                    }
                 }
             }
 
             if (isNaN(recordDateObj.getTime())) recordDateObj = new Date();
-
-            const isManualUpdate = !newData.updatedAt; 
-
             // Calculamos el índice del periodo de este registro
             // Si es manual, recalculamos siempre el periodo para HOY (para que no se quede pegado en ayer)
             // Si viene de DB (isManualUpdate = false), respetamos el periodo guardado.

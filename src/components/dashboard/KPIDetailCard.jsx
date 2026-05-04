@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatKPIValue, formatDateTime, formatDeadline, getKPIDeadline, checkIsUrgent, checkIsExpired } from '../../utils/formatters';
+import { formatKPIValue, formatDateTime, formatDeadline, formatPeriod, getKPIDeadline, checkIsUrgent, checkIsExpired } from '../../utils/formatters';
 import { ResponsiveContainer, Area, AreaChart, Tooltip } from 'recharts';
 import {
     Edit2,
@@ -370,7 +370,11 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                             {isManager ? '★ ÚLTIMA ACT.' : 'ÚLTIMA ACTUALIZACIÓN'}
                         </div>
                         <div style={{ fontSize: '0.7rem', fontWeight: 800, color: isManager ? 'var(--brand)' : '#334155' }}>
-                            {formatDateTime(isBrandFocus ? kpi.brandValues?.[`${entity}-${selectedBrand}`]?.additionalData?.updatedAt : kpi.additionalData?.updatedAt)}
+                            {(() => {
+                                const data = isBrandFocus ? kpi.brandValues?.[`${entity}-${selectedBrand}`]?.additionalData : kpi.additionalData;
+                                if (!data?.updatedAt) return 'Nunca';
+                                return `${formatDateTime(data.updatedAt)} ${data.period ? `(${formatPeriod(data.period)})` : ''}`;
+                            })()}
                         </div>
                     </div>
                 </div>

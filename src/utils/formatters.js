@@ -182,3 +182,25 @@ export const formatDeadline = (date) => {
         minute: '2-digit'
     }).format(date);
 };
+export const formatPeriod = (periodStr) => {
+    if (!periodStr) return '';
+    // YYYY-MM
+    if (/^\d{4}-\d{2}$/.test(periodStr)) {
+        const [year, month] = periodStr.split('-');
+        const date = new Date(year, month - 1, 1);
+        return date.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+    }
+    // YYYY-MM-QX (Quincenal)
+    if (/^\d{4}-\d{2}-Q[12]$/.test(periodStr)) {
+        const [year, month, q] = periodStr.split('-');
+        const date = new Date(year, month - 1, 1);
+        const monthName = date.toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+        return `${q === 'Q1' ? '1RA' : '2DA'} QUINCENA ${monthName} ${year}`;
+    }
+    // YYYY-WXX (Semanal)
+    if (/^\d{4}-W\d{1,2}$/.test(periodStr)) {
+        const [year, week] = periodStr.split('-W');
+        return `SEMANA ${week} DE ${year}`;
+    }
+    return periodStr;
+};
