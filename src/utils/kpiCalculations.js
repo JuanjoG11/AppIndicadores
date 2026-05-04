@@ -35,8 +35,7 @@ export const calculateKPIValue = (kpiId, d) => {
         break;
       case 'devoluciones-mal-estado':
       case 'devoluciones-mal-estado-comercial':
-        newValue = (d.valorDevolucion || d.devolucionMalEstado / d.ventaTotal) * 100;
-        if (d.devolucionMalEstado && d.ventaTotal) newValue = (d.devolucionMalEstado / d.ventaTotal) * 100;
+        newValue = ((d.valorDevolucion || d.devolucionMalEstado || 0) / (d.ventaTotal || 1)) * 100;
         break;
       case 'devoluciones-buen-estado':
         newValue = (d.devolucionBuenEstado / d.ventaTotal) * 100;
@@ -81,9 +80,8 @@ export const calculateKPIValue = (kpiId, d) => {
         newValue = (d.carteraVencida / d.totalCartera) * 100;
         break;
       case 'cartera-no-vencida':
-        // Some forms use different fields, we prefer d.carteraNoVencida if available
-        if (d.carteraNoVencida) newValue = (d.carteraNoVencida / d.carteraTotal) * 100;
-        else newValue = (d.totalCarteraVencida / d.totalVenta) * 100;
+        // Seguir la fórmula de kpiData.js: TOTAL CARTERA VENCIDA / TOTAL VENTA
+        newValue = ((d.carteraNoVencida || d.totalCarteraVencida || 0) / (d.carteraTotal || d.totalVenta || 1)) * 100;
         break;
       case 'cartera-11-30':
         if (d.cartera1130) newValue = (d.cartera1130 / d.carteraTotal) * 100;
@@ -112,6 +110,9 @@ export const calculateKPIValue = (kpiId, d) => {
         break;
       case 'mermas':
         newValue = (d.valorMermas / d.inventarioTotal) * 100;
+        break;
+      case 'recircularizaciones':
+        newValue = (d.efectuadas / (d.programadas || 1)) * 100;
         break;
 
       case 'revision-margenes':
@@ -252,7 +253,8 @@ export const calculateKPIValue = (kpiId, d) => {
     return 0;
   }
 
-  return parseFloat(Number(newValue || 0).toFixed(2));
+  const result = parseFloat(Number(newValue || 0).toFixed(2));
+  return isFinite(result) ? result : 0;
 };
 
 export const isInverseKPI = (kpiId) => {

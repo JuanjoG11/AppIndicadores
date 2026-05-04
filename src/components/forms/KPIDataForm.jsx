@@ -507,9 +507,23 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 if (skipKeys.includes(key)) return;
 
                 if (typeof cleanedData[key] === 'string' && cleanedData[key].trim() !== '') {
-                    // Remove all spaces and dots (thousands), replace comma with dot (decimal)
-                    const rawVal = cleanedData[key].trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-                    const parsed = parseFloat(rawVal);
+                    // Robust parsing: handle both dot and comma as decimals
+                    let valStr = cleanedData[key].trim().replace(/\s/g, '');
+                    
+                    // If it has both, assume . is thousand and , is decimal (es-CO)
+                    if (valStr.includes(',') && valStr.includes('.')) {
+                        valStr = valStr.replace(/\./g, '').replace(',', '.');
+                    } else if (valStr.includes(',')) {
+                        // Only comma: it's the decimal separator
+                        valStr = valStr.replace(',', '.');
+                    }
+                    // If it only has a dot, we keep it as decimal separator (standard web format)
+                    // unless it's clearly a thousands separator (e.g. multiple dots)
+                    else if ((valStr.match(/\./g) || []).length > 1) {
+                        valStr = valStr.replace(/\./g, '');
+                    }
+
+                    const parsed = parseFloat(valStr);
                     
                     if (!isNaN(parsed)) {
                        cleanedData[key] = parsed;
@@ -563,9 +577,17 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 const isNumericSource = /^[0-9.,\s]*$/.test(value);
                 
                 if (isNumericSource && fieldName !== 'brand' && fieldName !== 'newFrecuencia' && fieldName !== 'detalleFaltante') {
-                    // Guardamos el raw value (limpio de puntos de miles)
-                    const cleanValue = value.replace(/[^0-9,]/g, ''); 
-                    parsedValue = cleanValue;
+                    // Limpiamos puntos de miles para guardar el valor "puro"
+                    // Si hay más de un punto, asumimos que son separadores de miles
+                    let clean = value.replace(/[^0-9,.]/g, '');
+                    if ((clean.match(/\./g) || []).length > 1) {
+                        clean = clean.replace(/\./g, '');
+                    }
+                    // Si hay coma y punto, el punto es de miles
+                    if (clean.includes(',') && clean.includes('.')) {
+                        clean = clean.replace(/\./g, '');
+                    }
+                    parsedValue = clean;
                 }
             }
 
@@ -873,7 +895,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                         type="text"
                                         inputMode="decimal"
                                         required
-                                        value={formData.newMeta != null && formData.newMeta !== '' ? formData.newMeta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+                                        value={(() => {
+                                            if (formData.newMeta == null || formData.newMeta === '') return '';
+                                            const str = formData.newMeta.toString();
+                                            if (str.includes(',') || (str.includes('.') && (str.match(/\./g) || []).length === 1)) return str;
+                                            return str.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                                        })()}
                                         onChange={(e) => handleChange('newMeta', e.target.value, e)}
                                         placeholder={`Eje: ${currentMeta}`}
                                         style={{
@@ -933,7 +960,16 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                                 type={field.type === 'number' ? 'text' : field.type}
                                                 inputMode={field.type === 'number' ? 'decimal' : undefined}
                                                 required
-                                                value={field.type === 'number' && formData[field.name] != null ? formData[field.name].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : (formData[field.name] ?? '')}
+                                                value={(() => {
+                                                    const val = formData[field.name];
+                                                    if (field.type !== 'number' || val == null || val === '') return val ?? '';
+                                                    const str = val.toString();
+                                                    // Si es decimal (tiene una coma o un solo punto), no aplicamos miles automáticos aquí 
+                                                    // para no interferir con la escritura del usuario
+                                                    if (str.includes(',') || (str.includes('.') && (str.match(/\./g) || []).length === 1)) return str;
+                                                    // Si es entero, aplicamos miles
+                                                    return str.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                                                })()}
                                                 onChange={(e) => handleChange(field.name, e.target.value, e)}
                                                 autoComplete="off"
                                                 style={{

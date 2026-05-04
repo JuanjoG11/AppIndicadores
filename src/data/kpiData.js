@@ -154,7 +154,6 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar el % mas bajo de notas por error de venta',
         meta: {
             ALPINA: 1,
-            ZENU: 1,
             FLEISCHMANN: 1,
             UNILEVER: 1,
             FAMILIA: 1
@@ -173,6 +172,7 @@ export const kpiDefinitions = [
         subArea: 'Logística de Picking',
         objetivo: 'Garantizar la eficiencia del turno de separacion',
         meta: {
+            ALPINA: 100,
             FLEISCHMANN: 100,
             UNILEVER: 100,
             FAMILIA: 100
@@ -192,7 +192,6 @@ export const kpiDefinitions = [
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
-            ZENU: 1,
             FLEISCHMANN: 1,
             UNILEVER: 1,
             FAMILIA: 1
@@ -212,7 +211,6 @@ export const kpiDefinitions = [
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
-            ZENU: 1,
             FLEISCHMANN: 1
         },
         unit: 'valor',
@@ -499,6 +497,7 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
             ALPINA: 10,
+            ZENU: 10,
             FLEISCHMANN: 10,
             UNILEVER: 10,
             FAMILIA: 10
@@ -517,6 +516,7 @@ export const kpiDefinitions = [
         objetivo: 'Mejorar la rotación de cartera con los clientes',
         meta: {
             ALPINA: 5,
+            ZENU: 5,
             FLEISCHMANN: 5,
             UNILEVER: 5,
             FAMILIA: 5
@@ -536,6 +536,7 @@ export const kpiDefinitions = [
         objetivo: 'Fortalecer el control interno con la cartera a la calle',
         meta: {
             ALPINA: 2,
+            ZENU: 2,
             FLEISCHMANN: 2,
             UNILEVER: 2,
             FAMILIA: 2
@@ -554,6 +555,7 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar los Flujos de las compañías',
         meta: {
             ALPINA: 10,
+            ZENU: 10,
             FLEISCHMANN: 10,
             FAMILIA: 20,
             UNILEVER: 20
@@ -841,6 +843,7 @@ export const kpiDefinitions = [
         objetivo: 'Optimizar el recaudo inmediato',
         meta: {
             ALPINA: 10,
+            ZENU: 10,
             FAMILIA: 12,
             UNILEVER: 10,
             FLEISCHMANN: 8
@@ -969,6 +972,7 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar el control físico de existencias',
         meta: {
             ALPINA: 2,
+            ZENU: 2,
             FLEISCHMANN: 2,
             UNILEVER: 2,
             FAMILIA: 2
@@ -990,6 +994,7 @@ export const kpiDefinitions = [
         objetivo: 'Asegurar la exactitud de los registros contables',
         meta: {
             ALPINA: 100,
+            ZENU: 100,
             FLEISCHMANN: 100,
             UNILEVER: 100,
             FAMILIA: 100
@@ -1011,7 +1016,7 @@ export const kpiDefinitions = [
         objetivo: 'Minimizar pedidos no servidos por falta de stock',
         meta: {
             ALPINA: 0,
-
+            ZENU: 0,
             FLEISCHMANN: 0,
             UNILEVER: 0,
             FAMILIA: 0
