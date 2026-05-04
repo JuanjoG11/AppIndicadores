@@ -276,6 +276,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             let finalCompliance = shouldShowInDashboard ? compliance : (kpi.compliance || 0);
             let finalSemaphore = shouldShowInDashboard ? semaphore : (kpi.semaphore || 'gray');
             let finalHasData = kpi.hasData || isFromCurrentPeriod || isManualUpdate;
+            let historyValue = newValue; // Para el historial, usamos el valor que se está cargando
 
             if (kpi.meta && typeof kpi.meta === 'object') {
                 const brandsForThisCompany = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
@@ -295,17 +296,24 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     });
 
                     if (count > 0) {
-                        finalValue = sumVal / count;
-                        finalCompliance = Math.round(sumComp / count);
+                        const calculatedFinalValue = sumVal / count;
                         
-                        // Recalcular semáforo consolidado
-                        const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
-                        const greenThreshold = isStrict ? 100 : 95;
-                        const yellowThreshold = isStrict ? 100 : 85;
+                        // Si se muestra en dashboard, actualizamos los finales consolidados
+                        if (shouldShowInDashboard) {
+                            finalValue = calculatedFinalValue;
+                            finalCompliance = Math.round(sumComp / count);
+                            
+                            // Recalcular semáforo consolidado
+                            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
+                            const greenThreshold = isStrict ? 100 : 95;
+                            const yellowThreshold = isStrict ? 100 : 85;
 
-                        if (finalCompliance >= greenThreshold) finalSemaphore = 'green';
-                        else if (finalCompliance >= yellowThreshold) finalSemaphore = 'yellow';
-                        else finalSemaphore = 'red';
+                            if (finalCompliance >= greenThreshold) finalSemaphore = 'green';
+                            else if (finalCompliance >= yellowThreshold) finalSemaphore = 'yellow';
+                            else finalSemaphore = 'red';
+                            
+                            historyValue = finalValue;
+                        }
                         
                         finalHasData = true;
                     }
@@ -315,7 +323,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             // ── ACTUALIZACIÓN DEL HISTORIAL ──
             const newHistory = (kpi.history || []).map(h => {
                 if (h.month === targetMonth && h.year === recordDateObj.getFullYear()) {
-                    return { ...h, [targetCompany]: finalValue };
+                    return { ...h, [targetCompany]: historyValue };
                 }
                 return h;
             });
@@ -433,15 +441,19 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
                 console.log(`📅 Cargando datos históricos desde ${startOfYear} hasta ${end}`);
 
-                // Fetch data for the current company from the start of the year
-                const { data, error } = await supabase
+                let query = supabase
                     .from('kpi_updates')
                     .select('*')
-                    .eq('company_id', activeCompany)
                     .gte('updated_at', startOfYear)
                     .lte('updated_at', end)
                     .order('updated_at', { ascending: true });
+
+                // Solo filtramos si no es el rol de Gerente, para que el Gerente pueda ver la comparativa completa
+                if (currentUser?.role !== 'Gerente') {
+                    query = query.eq('company_id', activeCompany);
+                }
                 
+                const { data, error } = await query;
                 if (error) {
                     console.error("❌ Supabase fetch error:", error);
                 }
@@ -485,13 +497,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
         if (kpiData.length > 0) fetchInitialData();
 
+        const postgresFilter = currentUser?.role === 'Gerente' 
+            ? { event: 'INSERT', schema: 'public', table: 'kpi_updates' }
+            : { event: 'INSERT', schema: 'public', table: 'kpi_updates', filter: `company_id=eq.${activeCompany}` };
+
         const channel = supabase.channel(`realtime-kpi-sync-${activeCompany}-${currentPeriod}`)
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'kpi_updates',
-                filter: `company_id=eq.${activeCompany}`
-            }, (p) => {
+            .on('postgres_changes', postgresFilter, (p) => {
                 // Solo aplicar actualizaciones del mes actual en tiempo real
                 setRawUpdates(prev => [...prev, p.new]);
                 const { start, end } = getMonthDateRange();
