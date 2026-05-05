@@ -170,10 +170,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const isStrictCurrent = recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod;
             const isFromCurrentMonth = typeof recordPeriodIndex === 'string' && recordPeriodIndex.startsWith(currentPeriod);
 
-            // Para el tablero principal: Mostramos el dato si es del periodo reportable o del mes actual (para que no desaparezca)
             // Para el estado de carga (hasData): Solo si es estrictamente del periodo reportable (hoy para diarios)
             const isFromCurrentPeriod = !forceHistorical && isStrictCurrent;
-            const shouldShowInDashboard = !forceHistorical && (isStrictCurrent || (frequency.includes('DIARI') && isFromCurrentMonth));
+            // Para el tablero: si es una acción manual (el usuario presionó Guardar) SIEMPRE mostramos,
+            // sin importar el período — el analista sabe qué mes está cargando.
+            // Para cargas automáticas desde DB al inicio, solo mostramos si es del período actual.
+            const shouldShowInDashboard = !forceHistorical && (
+                isManualUpdate ||           // ← carga manual: siempre visible
+                isStrictCurrent ||
+                (frequency.includes('DIARI') && isFromCurrentMonth)
+            );
             
             // Enriquecer datos con el periodo calculado si falta
             const updatedAdditionalData = {
