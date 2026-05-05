@@ -226,12 +226,22 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             // Cálculo de Semáforo y Cumplimiento
             let semaphore = 'gray';
             let compliance = 0;
-            if (typeof targetMeta === 'number' && targetMeta !== 0) {
+
+            if (typeof targetMeta === 'number') {
                 const isInverse = isInverseKPI(kpiId);
-                compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
-                if (isInverse && newValue === 0) compliance = 100;
-                compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
-                
+
+                if (targetMeta === 0 && newValue === 0) {
+                    // Meta 0 + valor 0 → perfecto para inversos (embalajes, quiebres, mermas…)
+                    compliance = isInverse ? 100 : 0;
+                } else if (targetMeta === 0 && newValue > 0) {
+                    // Meta 0 pero hay un valor → malo para inversos
+                    compliance = isInverse ? 0 : 100;
+                } else {
+                    compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
+                    if (isInverse && newValue === 0) compliance = 100;
+                    compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
+                }
+
                 const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
                 const greenThreshold = isStrict ? 100 : 95;
                 const yellowThreshold = isStrict ? 100 : 85;
@@ -239,12 +249,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 if (compliance >= greenThreshold) semaphore = 'green';
                 else if (compliance >= yellowThreshold) semaphore = 'yellow';
                 else semaphore = 'red';
-            } else if (targetMeta === 0 && newValue === 0) {
-                compliance = isInverseKPI(kpiId) ? 100 : 100;
-                semaphore = 'green';
-            } else if (targetMeta === 0 && newValue > 0) {
-                compliance = isInverseKPI(kpiId) ? 0 : 100;
-                semaphore = compliance >= 95 ? 'green' : 'red';
             }
 
             // Actualizar desglose por marca (SOLO si es del periodo actual o si no había datos)

@@ -78,7 +78,11 @@ export const generateMockData = () => {
         if (hasData && currentValue !== null && typeof targetMeta === 'number') {
             const isInverse = isInverseKPI(kpi.id);
 
-            if (isInverse) {
+            if (targetMeta === 0 && currentValue === 0) {
+                compliance = isInverse ? 100 : 0;
+            } else if (targetMeta === 0 && currentValue > 0) {
+                compliance = isInverse ? 0 : 100;
+            } else if (isInverse) {
                 compliance = (targetMeta / currentValue) * 100;
             } else {
                 compliance = (currentValue / targetMeta) * 100;
@@ -106,7 +110,7 @@ export const generateMockData = () => {
         const allMetaBrands = (kpi.meta && typeof kpi.meta === 'object') ? Object.keys(kpi.meta) : [];
 
         // Marcas para TYM y TAT + Scopes globales
-        const tymBrands = ['ALPINA', 'ZENU', 'FLEISCHMANN'];
+        const tymBrands = ['ALPINA', 'FLEISCHMANN'];
         const tatBrands = ['UNILEVER', 'FAMILIA'];
         const globalScopes = ['Global', 'TYM', 'TAT'];
 
@@ -117,13 +121,18 @@ export const generateMockData = () => {
             const entityOfBrand = BRAND_TO_ENTITY[brand];
             const dataKey = `${entityOfBrand}-${brand}`;
 
-            // Variación ligera por marca deshabilitada para producción (inicia en 0)
+            // Inicia en 0 — compliance se calcula correctamente con meta=0
             const brandVal = 0;
-            const brandTarget = kpi.meta[brand] || targetMeta;
+            const brandTarget = kpi.meta[brand] !== undefined ? kpi.meta[brand] : targetMeta;
 
-            let brandCompliance = null;
-            if (brandVal !== null) {
-                brandCompliance = isInverseKPI(kpi.id) ? (brandTarget / brandVal) * 100 : (brandVal / brandTarget) * 100;
+            let brandCompliance = 0;
+            const isInv = isInverseKPI(kpi.id);
+            if (brandTarget === 0) {
+                brandCompliance = isInv ? 100 : 0; // meta 0 + valor 0 → perfecto para inversos
+            } else {
+                brandCompliance = isInv
+                    ? (brandTarget / (brandVal || 1)) * 100
+                    : (brandVal / brandTarget) * 100;
             }
 
             brandValues[dataKey] = {

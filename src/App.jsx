@@ -102,15 +102,24 @@ const AppInner = () => {
     const isMetaUpdate = data.type === 'META_UPDATE';
     const isManager = currentUser?.role === 'Gerente';
 
+    // Solo gerentes pueden cambiar metas
     if (isMetaUpdate && !isManager) {
       addToast('error', '🔒 Solo gerentes pueden actualizar metas');
       return;
     }
 
-    const effectiveResponsable = getKPIResponsable(kpi, currentUser);
-    if (!isMetaUpdate && effectiveResponsable !== currentUser?.cargo) {
-      addToast('error', `⛔ Sin permiso para: ${kpi.name}`);
-      return;
+    // Para carga de datos: verificar que el área del KPI está en las áreas autorizadas del usuario
+    if (!isMetaUpdate && !isManager) {
+      const userAreas = currentUser?.allowedAreas || [];
+      const hasAreaAccess = userAreas.includes('all') || userAreas.includes(kpi.area);
+      // Fallback: permitir si el cargo coincide con el responsable (para casos especiales)
+      const effectiveResponsable = getKPIResponsable(kpi, currentUser);
+      const hasCargoAccess = effectiveResponsable === currentUser?.cargo;
+
+      if (!hasAreaAccess && !hasCargoAccess) {
+        addToast('error', `⛔ Sin permiso para: ${kpi.name}`);
+        return;
+      }
     }
 
     applyKPIUpdate(id, data, true);
@@ -118,7 +127,7 @@ const AppInner = () => {
     if (isMetaUpdate) {
       addToast('success', `✅ Meta actualizada: ${kpi.name}`);
     } else {
-      addToast('success', `📊 Indicador actualizado: ${kpi.name}`);
+      addToast('success', `📊 Indicador guardado: ${kpi.name}`);
     }
   }, [kpiData, currentUser, applyKPIUpdate, addToast]);
 

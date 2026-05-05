@@ -230,7 +230,6 @@ export const kpiDefinitions = [
         objetivo: 'Reducir la perdida de embalajes',
         meta: {
             ALPINA: 0,
-            ZENU: 0,
             FLEISCHMANN: 0,
             UNILEVER: 0,
             FAMILIA: 0
@@ -250,7 +249,6 @@ export const kpiDefinitions = [
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             ALPINA: 0.4,
-            ZENU: 0.4,
             UNILEVER: 0.4,
             FAMILIA: 0.4
         },
@@ -269,7 +267,6 @@ export const kpiDefinitions = [
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             ALPINA: 1,
-            ZENU: 1,
             FLEISCHMANN: 1
         },
         unit: '%',

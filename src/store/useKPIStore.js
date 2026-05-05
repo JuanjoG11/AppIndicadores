@@ -100,11 +100,22 @@ const useKPIStore = create((set, get) => ({
                     let semaphore = kpi.semaphore;
                     let compliance = kpi.compliance;
 
-                    if (typeof targetMeta === 'number' && targetMeta !== 0) {
+                    if (typeof targetMeta === 'number') {
                         const isInverse = isInverseKPI(kpiId);
-                        compliance = isInverse ? (targetMeta / newValue) * 100 : (newValue / targetMeta) * 100;
-                        compliance = Math.min(Math.round(compliance), 100);
-                        if (newValue === 0 && isInverse) compliance = 100;
+
+                        if (targetMeta === 0 && newValue === 0) {
+                            // Meta 0, resultado 0 → perfecto para inversos (ej. embalajes, quiebres)
+                            compliance = isInverse ? 100 : 0;
+                        } else if (targetMeta === 0 && newValue > 0) {
+                            // Meta 0 pero hay un valor → malo para inversos
+                            compliance = isInverse ? 0 : 100;
+                        } else {
+                            compliance = isInverse
+                                ? (targetMeta / newValue) * 100
+                                : (newValue / targetMeta) * 100;
+                            compliance = Math.min(Math.round(compliance || 0), 100);
+                            if (newValue === 0 && isInverse) compliance = 100;
+                        }
 
                         if (compliance >= 95) semaphore = 'green';
                         else if (compliance >= 85) semaphore = 'yellow';
@@ -114,6 +125,7 @@ const useKPIStore = create((set, get) => ({
                     brandValues[dataKey] = {
                         ...brandValues[dataKey],
                         value: newValue,
+                        currentValue: newValue,   // ← clave que lee filterKPIsByEntity
                         meta: targetMeta,
                         compliance,
                         semaphore,
