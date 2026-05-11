@@ -693,3 +693,13 @@ input[type=number] {
     transform: scale(1);
   }
 }
+
+.btn-bitacora:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
+  background: var(--brand) !important;
+}
+
+.btn-bitacora:active {
+  transform: translateY(0);
+}

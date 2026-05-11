@@ -3,6 +3,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, BarChart, Bar, Cell, Legend
 } from 'recharts';
+import { ChevronRight, BarChart3, AlertTriangle, Target, Search, Filter } from 'lucide-react';
 import { areas } from '../../data/areas';
 
 // Aggregate compliance by area for a given company
@@ -103,10 +104,14 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
-const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory }) => {
-    const [tab, setTab] = useState('overview'); // 'overview' | 'areas' | 'log'
+const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, onTabChange }) => {
+    const [internalTab, setInternalTab] = useState('overview');
+    const tab = activeTab || internalTab;
+    const setTab = onTabChange || setInternalTab;
+
     const [selectedArea, setSelectedArea] = useState('logistica');
     const [logAreaFilter, setLogAreaFilter] = useState('all');
+    const [logCompanyFilter, setLogCompanyFilter] = useState('all');
     const [logMonthFilter, setLogMonthFilter] = useState(new Date().toISOString().substring(0, 7)); // YYYY-MM
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -409,21 +414,24 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory }) => {
                 </div>
             )}
             {tab === 'log' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} className="fade-in">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} className="fade-in">
                     {/* FILTERS FOR LOG */}
                     <div style={{ 
-                        display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'center',
-                        background: 'white', padding: '1.25rem 1.5rem', borderRadius: '16px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+                        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem',
+                        background: 'white', padding: '1.25rem', borderRadius: '16px',
+                        boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-soft)'
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>📦 Área</label>
+                            <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <Filter size={12} /> Filtrar Área
+                            </label>
                             <select 
                                 value={logAreaFilter} 
                                 onChange={(e) => setLogAreaFilter(e.target.value)}
                                 style={{ 
-                                    padding: '0.6rem 2.5rem 0.6rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', 
-                                    background: '#f8fafc', fontWeight: 700, color: '#1e293b', fontSize: '0.85rem'
+                                    padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid var(--border-soft)', 
+                                    background: 'var(--bg-soft)', fontWeight: 700, color: 'var(--text-main)', fontSize: '0.85rem',
+                                    outline: 'none', cursor: 'pointer'
                                 }}
                             >
                                 <option value="all">Todas las Áreas</option>
@@ -432,178 +440,265 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory }) => {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>📅 Período (Mes)</label>
+                            <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🏢 Empresa</label>
+                            <select 
+                                value={logCompanyFilter} 
+                                onChange={(e) => setLogCompanyFilter(e.target.value)}
+                                style={{ 
+                                    padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid var(--border-soft)', 
+                                    background: 'var(--bg-soft)', fontWeight: 700, color: 'var(--text-main)', fontSize: '0.85rem',
+                                    outline: 'none', cursor: 'pointer'
+                                }}
+                            >
+                                <option value="all">Todas</option>
+                                <option value="TYM">Tiendas y Marcas (TYM)</option>
+                                <option value="TAT">TAT Distribuciones</option>
+                            </select>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📅 Período Mensual</label>
                             <select 
                                 value={logMonthFilter} 
                                 onChange={(e) => setLogMonthFilter(e.target.value)}
                                 style={{ 
-                                    padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', 
-                                    background: '#f8fafc', fontWeight: 700, color: '#1e293b', fontSize: '0.85rem'
+                                    padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid var(--border-soft)', 
+                                    background: 'var(--bg-soft)', fontWeight: 700, color: 'var(--text-main)', fontSize: '0.85rem',
+                                    outline: 'none', cursor: 'pointer'
                                 }}
                             >
-                                <option value="all">Ver Historico Completo</option>
+                                <option value="all">Histórico Completo</option>
                                 {['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'].map(m => (
                                     <option key={m} value={m}>{m}</option>
                                 ))}
                             </select>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flexGrow: 1 }}>
-                            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>🔍 Buscar Indicador</label>
-                            <input 
-                                type="text"
-                                placeholder="Escribe el nombre del KPI..."
-                                onChange={(e) => {
-                                    const search = e.target.value.toLowerCase();
-                                    // I'll filter rawUpdates inside the map, so I don't need another state here
-                                    // But let's add one for clarity
-                                    setSearchQuery(search);
-                                }}
-                                style={{ 
-                                    padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', 
-                                    background: '#f8fafc', fontWeight: 500, color: '#1e293b', fontSize: '0.85rem', width: '100%'
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <div>
-                                <p style={{ margin: 0, fontWeight: 800, color: '#0f172a', fontSize: '1.1rem' }}>
-                                    Bitácora Cronológica de Carga
-                                </p>
-                                <p style={{ margin: '0.2rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-                                    Listado detallado de todas las actividades registradas
-                                </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', gridColumn: 'span 1' }}>
+                            <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <Search size={12} /> Buscar por Nombre
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <input 
+                                    type="text"
+                                    placeholder="Nombre del indicador..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+                                    style={{ 
+                                        padding: '0.6rem 1rem 0.6rem 2.2rem', borderRadius: '10px', border: '1px solid var(--border-soft)', 
+                                        background: 'var(--bg-soft)', fontWeight: 600, color: 'var(--text-main)', fontSize: '0.85rem', width: '100%',
+                                        outline: 'none'
+                                    }}
+                                />
+                                <Search size={14} color="var(--text-light)" style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)' }} />
                             </div>
                         </div>
+                    </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {(() => {
-                                const filtered = [...rawUpdates].reverse().filter(log => {
-                                    const kpi = kpiData.find(k => k.id === log.kpi_id);
-                                    const matchesArea = logAreaFilter === 'all' || kpi?.area === logAreaFilter;
-                                    const itemPeriodFull = (log.period || log.additional_data?.period || (log.updated_at ? (typeof log.updated_at === 'string' ? log.updated_at.substring(0, 10) : new Date(log.updated_at).toISOString().substring(0, 10)) : null));
-                                    const itemPeriodMonth = (itemPeriodFull && typeof itemPeriodFull === 'string') ? itemPeriodFull.substring(0, 7) : null;
-                                    const matchesMonth = logMonthFilter === 'all' || itemPeriodMonth === logMonthFilter;
-                                    const matchesSearch = !searchQuery || (kpi?.name || log.kpi_id).toLowerCase().includes(searchQuery);
-                                    return matchesArea && matchesMonth && matchesSearch;
-                                });
+                    {/* ACTIVITY SUMMARY STATS */}
+                    {(() => {
+                        const filtered = [...rawUpdates].reverse().filter(log => {
+                            const kpi = kpiData.find(k => k.id === log.kpi_id);
+                            const matchesArea = logAreaFilter === 'all' || kpi?.area === logAreaFilter;
+                            const matchesCompany = logCompanyFilter === 'all' || log.company_id === logCompanyFilter;
+                            const itemPeriodFull = (log.period || log.additional_data?.period || (log.updated_at ? (typeof log.updated_at === 'string' ? log.updated_at.substring(0, 10) : new Date(log.updated_at).toISOString().substring(0, 10)) : null));
+                            const itemPeriodMonth = (itemPeriodFull && typeof itemPeriodFull === 'string') ? itemPeriodFull.substring(0, 7) : null;
+                            const matchesMonth = logMonthFilter === 'all' || itemPeriodMonth === logMonthFilter;
+                            const matchesSearch = !searchQuery || (kpi?.name || log.kpi_id).toLowerCase().includes(searchQuery);
+                            return matchesArea && matchesCompany && matchesMonth && matchesSearch;
+                        });
 
-                                if (filtered.length === 0) {
-                                    return (
-                                        <div style={{ textAlign: 'center', padding: '4rem 2rem', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
-                                            <p style={{ color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>No hay registros que coincidan con los filtros seleccionados.</p>
-                                        </div>
-                                    );
-                                }
+                        const missingCount = filtered.filter(l => l.additional_data?.faltanteInventario).length;
+                        const metaCount = filtered.filter(l => l.additional_data?.type === 'META_UPDATE').length;
 
-                                // Group by day
-                                const groups = {};
-                                filtered.forEach(log => {
-                                    const day = new Date(log.updated_at || log.created_at).toLocaleDateString('es-CO', { 
-                                        weekday: 'long', day: 'numeric', month: 'long' 
-                                    });
-                                    if (!groups[day]) groups[day] = [];
-                                    groups[day].push(log);
-                                });
-
-                                return Object.keys(groups).map((day, gi) => (
-                                    <div key={gi} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                        <h5 style={{ 
-                                            margin: gi === 0 ? '0 0 0.5rem' : '1.5rem 0 0.5rem', 
-                                            fontSize: '0.8rem', fontWeight: 800, color: 'var(--brand)', 
-                                            textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: '0.5rem'
+                        return (
+                            <>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                                    {[
+                                        { label: 'Cargas Totales', value: filtered.length, icon: <BarChart3 size={20} />, color: 'var(--brand)' },
+                                        { label: 'Alertas de Faltante', value: missingCount, icon: <AlertTriangle size={20} />, color: 'var(--danger)', animate: missingCount > 0 },
+                                        { label: 'Cambios en Meta', value: metaCount, icon: <Target size={20} />, color: 'var(--warning)' }
+                                    ].map((s, i) => (
+                                        <div key={i} style={{ 
+                                            background: 'white', padding: '1rem', borderRadius: '16px', 
+                                            border: `1px solid ${s.color}15`, boxShadow: 'var(--shadow-sm)',
+                                            display: 'flex', alignItems: 'center', gap: '1rem'
                                         }}>
-                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
-                                            {day}
-                                        </h5>
-                                        <div style={{ overflowX: 'auto', background: '#fcfcfc', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                                                <thead>
-                                                    <tr style={{ background: '#f1f5f940', textAlign: 'left' }}>
-                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem' }}>Hora</th>
-                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem' }}>Indicador / Área</th>
-                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem', textAlign: 'center' }}>Marca</th>
-                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem', textAlign: 'right' }}>Valor</th>
-                                                        <th style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.75rem', textAlign: 'center' }}>Responsable</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {groups[day].map((log, li) => {
-                                                        const kpi = kpiData.find(k => k.id === log.kpi_id);
-                                                        const date = new Date(log.updated_at || log.created_at);
-                                                        const brand = log.brand || log.additional_data?.brand || 'Global';
-                                                        const isMeta = log.additional_data?.type === 'META_UPDATE';
-                                                        
-                                                        return (
-                                                            <tr key={li} style={{ borderTop: '1px solid #f1f5f9' }}>
-                                                                <td style={{ padding: '0.8rem 1rem', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                                                    {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                                                                </td>
-                                                                <td style={{ padding: '0.8rem 1rem' }}>
-                                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                                        <span style={{ color: '#1e293b', fontWeight: 800 }}>{kpi?.name || log.kpi_id}</span>
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                            <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 700 }}>
-                                                                                {kpi?.area || 'General'}
-                                                                            </span>
-                                                                            {log.additional_data?.faltanteInventario && (
+                                            <div style={{ 
+                                                width: '40px', height: '40px', borderRadius: '12px', background: `${s.color}10`,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color
+                                            }} className={s.animate ? 'pulse-danger' : ''}>
+                                                {s.icon}
+                                            </div>
+                                            <div>
+                                                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase' }}>{s.label}</p>
+                                                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-main)' }}>{s.value}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={{ 
+                                    background: 'white', borderRadius: '20px', padding: '2rem', 
+                                    boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-soft)',
+                                    minHeight: '400px'
+                                }}>
+                                    <div style={{ marginBottom: '2rem' }}>
+                                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-main)' }}>Flujo de Actividad</h3>
+                                        <p style={{ margin: '0.25rem 0 0', color: 'var(--text-light)', fontSize: '0.85rem' }}>Registro cronológico de actualizaciones y reportes</p>
+                                    </div>
+
+                                    {filtered.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--bg-soft)', borderRadius: '16px', border: '2px dashed var(--border-soft)' }}>
+                                            <Search size={48} color="var(--text-light)" style={{ marginBottom: '1rem' }} />
+                                            <p style={{ color: 'var(--text-light)', fontWeight: 600 }}>No se encontraron registros con los filtros actuales.</p>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                            {(() => {
+                                                // Group by day
+                                                const groups = {};
+                                                filtered.forEach(log => {
+                                                    const dateObj = new Date(log.updated_at || log.created_at);
+                                                    const day = dateObj.toLocaleDateString('es-CO', { 
+                                                        weekday: 'long', day: 'numeric', month: 'long' 
+                                                    });
+                                                    if (!groups[day]) groups[day] = [];
+                                                    groups[day].push(log);
+                                                });
+
+                                                return Object.keys(groups).map((day, gi) => (
+                                                    <div key={gi} style={{ position: 'relative', paddingLeft: '1.5rem', marginBottom: '1rem' }}>
+                                                        {/* Sticky Day Header */}
+                                                        <div style={{ 
+                                                            position: 'sticky', top: '0', zIndex: 10, background: 'white', 
+                                                            padding: '0.5rem 0', margin: '0.5rem 0 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' 
+                                                        }}>
+                                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--brand)', boxShadow: '0 0 0 4px var(--brand-bg)' }} />
+                                                            <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: 'var(--brand)', textTransform: 'capitalize' }}>{day}</h4>
+                                                            <div style={{ flexGrow: 1, height: '1px', background: 'linear-gradient(to right, var(--border-soft), transparent)' }} />
+                                                        </div>
+
+                                                        {/* Activity Vertical Line */}
+                                                        <div style={{ position: 'absolute', left: '20px', top: '30px', bottom: '0', width: '2px', background: 'var(--bg-soft)' }} />
+
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                            {groups[day].map((log, li) => {
+                                                                const kpi = kpiData.find(k => k.id === log.kpi_id);
+                                                                const date = new Date(log.updated_at || log.created_at);
+                                                                const brand = log.brand || log.additional_data?.brand || 'Global';
+                                                                const isMeta = log.additional_data?.type === 'META_UPDATE';
+                                                                const isFaltante = log.additional_data?.faltanteInventario;
+                                                                const areaObj = areas.find(a => a.id === kpi?.area);
+
+                                                                const isInverse = kpi?.id.includes('devueltos') || kpi?.id.includes('gasto') || 
+                                                                                kpi?.id.includes('horas-extras') || kpi?.id.includes('mal-estado') ||
+                                                                                kpi?.id.includes('vencida') || kpi?.id === 'segundos-unidad-separada' ||
+                                                                                kpi?.id === 'notas-errores-venta' || kpi?.id.includes('nomina') ||
+                                                                                kpi?.id === 'rotacion-personal' || kpi?.id === 'ausentismo';
+
+                                                                const meta = (kpi?.meta && typeof kpi.meta === 'object')
+                                                                    ? (kpi.meta[log.company_id] || Object.values(kpi.meta)[0])
+                                                                    : kpi?.meta;
+                                                                
+                                                                const compliance = meta && !isMeta ? (isInverse ? (meta / log.value) * 100 : (log.value / meta) * 100) : null;
+                                                                const statusColor = compliance === null ? 'var(--text-light)' : compliance >= 95 ? 'var(--success)' : 'var(--danger)';
+                                                                
+                                                                return (
+                                                                    <div key={li} style={{ 
+                                                                        display: 'grid', gridTemplateColumns: '100px 1fr auto auto', gap: '1rem', alignItems: 'center',
+                                                                        padding: '1rem', borderRadius: '12px', 
+                                                                        background: isFaltante ? 'var(--danger-bg)' : 'var(--bg-soft)',
+                                                                        border: `1px solid ${isFaltante ? 'var(--danger)30' : 'var(--border-soft)'}`,
+                                                                        transition: 'all 0.2s ease',
+                                                                        position: 'relative',
+                                                                        cursor: 'pointer'
+                                                                    }} 
+                                                                    className="activity-row"
+                                                                    onClick={() => onViewHistory && kpi && onViewHistory(kpi)}
+                                                                    >
+                                                                        {/* TIME */}
+                                                                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-light)' }}>
+                                                                            {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                                        </div>
+
+                                                                        {/* CONTENT */}
+                                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                                                <span style={{ color: 'var(--text-main)', fontWeight: 800, fontSize: '0.95rem' }}>{kpi?.name || log.kpi_id}</span>
                                                                                 <span style={{ 
-                                                                                    fontSize: '0.65rem', background: '#fef2f2', color: '#ef4444', 
-                                                                                    border: '1px solid #fee2e2', borderRadius: '4px', padding: '1px 5px',
-                                                                                    fontWeight: 800, textTransform: 'uppercase'
+                                                                                    fontSize: '0.65rem', background: `${areaObj?.color || 'var(--brand)'}15`, 
+                                                                                    color: areaObj?.color || 'var(--brand)', padding: '2px 8px', borderRadius: '6px', fontWeight: 800, textTransform: 'uppercase' 
                                                                                 }}>
-                                                                                    Faltante
+                                                                                    {areaObj?.name || 'General'}
                                                                                 </span>
+                                                                                {isMeta && <span style={{ fontSize: '0.65rem', background: 'var(--warning-bg)', color: 'var(--warning)', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>META</span>}
+                                                                                {isFaltante && <span style={{ fontSize: '0.65rem', background: 'var(--danger)', color: 'white', padding: '2px 8px', borderRadius: '6px', fontWeight: 900, animation: 'pulse-danger 2s infinite' }}>FALTANTE</span>}
+                                                                            </div>
+                                                                            
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600 }}>
+                                                                                    Sede: <span style={{ color: 'var(--text-muted)' }}>{log.company_id}</span>
+                                                                                </span>
+                                                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600 }}>
+                                                                                    Marca: <span style={{ color: 'var(--brand)', fontWeight: 800 }}>{brand}</span>
+                                                                                </span>
+                                                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600 }}>
+                                                                                    Responsable: <span style={{ color: 'var(--text-muted)' }}>{log.cargo || 'Audit'}</span>
+                                                                                </span>
+                                                                            </div>
+
+                                                                            {log.additional_data?.detalleFaltante && (
+                                                                                <div style={{ 
+                                                                                    marginTop: '0.4rem', padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.5)', 
+                                                                                    borderRadius: '8px', borderLeft: '3px solid var(--danger)', fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--danger)'
+                                                                                }}>
+                                                                                    "{log.additional_data.detalleFaltante}"
+                                                                                </div>
                                                                             )}
                                                                         </div>
-                                                                        {log.additional_data?.detalleFaltante && (
-                                                                            <span style={{ 
-                                                                                fontSize: '0.75rem', color: '#b91c1c', marginTop: '0.2rem', 
-                                                                                fontStyle: 'italic', maxWidth: '300px' 
+
+                                                                        {/* VALUE */}
+                                                                        <div style={{ textAlign: 'right', minWidth: '90px' }}>
+                                                                            <div style={{ 
+                                                                                display: 'inline-flex', flexDirection: 'column', alignItems: 'center', 
+                                                                                padding: '0.5rem 0.75rem', background: 'white', borderRadius: '12px', 
+                                                                                boxShadow: 'var(--shadow-sm)', border: `1px solid ${statusColor}40`
                                                                             }}>
-                                                                                "{log.additional_data.detalleFaltante}"
-                                                                            </span>
-                                                                        )}
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                                                    {!isMeta && <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor }} />}
+                                                                                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: isFaltante ? 'var(--danger)' : 'var(--text-main)' }}>
+                                                                                        {log.value}{kpi?.unit === '%' ? '%' : ''}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <span style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase' }}>{isMeta ? 'Nueva Meta' : 'Valor'}</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* ACTION */}
+                                                                        <div style={{ paddingLeft: '0.5rem' }}>
+                                                                            <div style={{ 
+                                                                                width: '32px', height: '32px', borderRadius: '50%', background: 'white', 
+                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-soft)',
+                                                                                color: 'var(--text-light)'
+                                                                            }}>
+                                                                                <ChevronRight size={18} />
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                </td>
-                                                                <td style={{ textAlign: 'center', padding: '0.8rem 1rem' }}>
-                                                                    <span style={{ 
-                                                                        padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 900,
-                                                                        background: brand === 'Global' ? '#f1f5f9' : '#3b82f615',
-                                                                        color: brand === 'Global' ? '#64748b' : '#3b82f6',
-                                                                        border: `1px solid ${brand === 'Global' ? '#e2e8f0' : '#3b82f620'}`
-                                                                    }}>
-                                                                        {brand}
-                                                                    </span>
-                                                                </td>
-                                                                <td style={{ textAlign: 'right', padding: '0.8rem 1rem' }}>
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                                        <span style={{ fontWeight: 900, color: '#1e293b', fontSize: '1rem' }}>
-                                                                            {log.value}{kpi?.unit === '%' ? '%' : ''}
-                                                                        </span>
-                                                                        {isMeta && <span style={{ fontSize: '0.65rem', color: 'var(--brand)', fontWeight: 800 }}>META</span>}
-                                                                    </div>
-                                                                </td>
-                                                                <td style={{ textAlign: 'center', padding: '0.8rem 1rem' }}>
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                                                        <span style={{ fontWeight: 800, color: '#1e293b', fontSize: '0.75rem' }}>{log.cargo || 'Audit'}</span>
-                                                                        <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 600 }}>{log.company_id}</span>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ));
+                                            })()}
                                         </div>
-                                    </div>
-                                ));
-                            })()}
-                        </div>
-                    </div>
+                                    )}
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
             )}
         </div>
