@@ -4,6 +4,7 @@ import { getAreaById } from '../data/areas';
 import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, getKPIResponsable } from '../utils/kpiHelpers';
+import { calculateAreaScore } from '../data/mockData';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline } from '../utils/formatters';
 import {
     ResponsiveContainer,
@@ -35,8 +36,9 @@ import {
     X as XIcon
 } from 'lucide-react';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
+import { isInverseKPI } from '../utils/kpiCalculations';
 
-const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onViewHistory }) => {
+const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onViewHistory, selectedMonth }) => {
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
@@ -50,6 +52,81 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
     const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
     const [isChartExpanded, setIsChartExpanded] = useState(false);
+
+    // Filter by Entity first
+    const baseCompanyKPIs = React.useMemo(() => 
+        filterKPIsByEntity(kpiData, activeCompany || 'TYM'),
+    [kpiData, activeCompany]);
+
+    // Project KPIs to selected month
+    const projectedKPIs = React.useMemo(() => {
+        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
+        
+        return baseCompanyKPIs.map(kpi => {
+            // Find history entry for selected month
+            const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
+            let val = historyEntry ? historyEntry[activeCompany] : null;
+
+            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo
+            const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
+            if ((val === null || val === undefined) && selectedMonth === currentMonthName) {
+                if (kpi.hasData) {
+                    return kpi; // Usar el objeto base que ya tiene los datos de Mayo
+                }
+            }
+
+            if (val === null || val === undefined) {
+                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray' };
+            }
+
+            // Recalculate based on history value
+            const targetMeta = (kpi.meta && typeof kpi.meta === 'object')
+                ? (kpi.meta[activeCompany] || Object.values(kpi.meta)[0])
+                : kpi.meta;
+
+            const isInverse = isInverseKPI(kpi.id);
+            let compliance = 0;
+            if (targetMeta === 0) {
+                compliance = isInverse ? (val === 0 ? 100 : 0) : (val > 0 ? 100 : 0);
+            } else {
+                compliance = isInverse ? (targetMeta / val) * 100 : (val / targetMeta) * 100;
+                if (isInverse && val === 0) compliance = 100;
+            }
+            compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
+
+            let semaphore = 'red';
+            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+            if (compliance >= (isStrict ? 100 : 95)) semaphore = 'green';
+            else if (compliance >= (isStrict ? 100 : 85)) semaphore = 'yellow';
+
+            // Reconstruir brandValues proyectados para que las cards muestren el desglose histórico
+            const projectedBrandValues = {};
+            if (kpi.meta && typeof kpi.meta === 'object') {
+                Object.keys(kpi.meta).forEach(brand => {
+                    const brandKey = `${activeCompany}-${brand.toUpperCase()}`;
+                    const brandVal = historyEntry ? historyEntry[brandKey] : null;
+                    
+                    if (brandVal !== null && brandVal !== undefined) {
+                        projectedBrandValues[brandKey] = {
+                            currentValue: brandVal,
+                            compliance: Math.round(historyEntry[`${brandKey}-COMP`] || 0),
+                            semaphore: historyEntry[`${brandKey}-SEM`] || 'gray',
+                            hasData: true
+                        };
+                    }
+                });
+            }
+
+            return {
+                ...kpi,
+                currentValue: val,
+                compliance,
+                semaphore,
+                hasData: true,
+                brandValues: projectedBrandValues
+            };
+        });
+    }, [baseCompanyKPIs, selectedMonth, activeCompany]);
 
     // Devolvemos el KPI actual del prop basado en el ID para que siempre esté fresco
     const editingKPI = editingKPIId ? kpiData.find(k => k.id === editingKPIId) : null;
@@ -76,9 +153,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
         );
     }
 
-    // 1. Filter data by company FIRST, then by area
-    const companyKPIs = filterKPIsByEntity(kpiData, activeCompany || 'TYM');
-    const areaKPIs = companyKPIs.filter(kpi => 
+    // Filter by area
+    const areaKPIs = projectedKPIs.filter(kpi => 
         kpi.area === areaId || 
         (kpi.visibleEnAreas && kpi.visibleEnAreas.includes(areaId))
     );
@@ -144,6 +220,12 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
     if (isBrandSpecificArea && selectedBrand !== 'all') {
         filteredKPIs = filteredKPIs.map(kpi => {
             const brandKey = `${activeCompany}-${selectedBrand}`;
+            
+            // Si estamos proyectando un mes pasado, brandValues actuales no sirven.
+            // Necesitamos los brandValues HISTÓRICOS.
+            // Por ahora, si es proyección, usamos el valor consolidado si no hay histórico por marca.
+            // Pero idealmente historyPoint debería guardar brandValues.
+            
             const brandData = kpi.brandValues && kpi.brandValues[brandKey];
             
             if (brandData && brandData.hasData) {
@@ -181,8 +263,6 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
         if (!isRespA && isRespB) return 1;
         return 0;
     });
-
-
 
     // 4. Analytics based on FILTERED data
     const kpisWithData = filteredKPIs.filter(kpi => kpi.hasData);
@@ -230,9 +310,11 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
         }
     };
 
-    const totalComplianceSum = kpisWithData.reduce((sum, kpi) => sum + (kpi.compliance || 0), 0);
-    // Denominador = TOTAL de KPIs del área (los pendientes cuentan como 0%)
-    const groupCompliance = filteredKPIs.length > 0 ? Math.round(totalComplianceSum / filteredKPIs.length) : 0;
+    // Usar la utilidad central para que el puntaje del header coincida SIEMPRE con la card del dashboard
+    // Pasamos el array proyectado para que el score sea el del mes seleccionado
+    const areaTotalScore = calculateAreaScore(projectedKPIs, areaId) || 0;
+    const groupCompliance = areaTotalScore; // Forzar consistencia
+
 
     return (
         <div style={{ padding: 'clamp(1rem, 5vw, 2rem) clamp(1rem, 5vw, 3rem)', background: 'var(--bg-app)', minHeight: 'calc(100vh - 64px)' }}>
@@ -265,7 +347,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                                 {area.name}
                             </h1>
                             <p style={{ color: '#64748b', fontSize: '1rem', marginTop: '0.5rem', fontWeight: 500 }}>
-                                {area.description} • <span style={{ color: 'var(--brand)', fontWeight: 800 }}>PERIODO: ABRIL 2026</span>
+                                {area.description} • <span style={{ color: 'var(--brand)', fontWeight: 800 }}>PERIODO: {selectedMonth.toUpperCase()} 2026</span>
                             </p>
                         </div>
                     </div>

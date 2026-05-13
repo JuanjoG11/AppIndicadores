@@ -75,17 +75,19 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             : (commercialBrands.find(isBrandPending) || commercialBrands[0] || userEntity));
 
     // Obtener datos iniciales específicos de la marca si existen y son del periodo actual
-    const getInitialBrandData = (brandName) => {
+    const getInitialBrandData = (brandName, targetPeriod = null) => {
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
-        const currentPeriod = new Date().toISOString().substring(0, 7); // YYYY-MM
+        const currentPeriod = targetPeriod || new Date().toISOString().substring(0, 7); // YYYY-MM
         
         const data = kpi.brandValues?.[dataKey]?.additionalData || 
                     (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
 
         if (data) {
-            // Solo pre-cargar si el periodo coincide (mismo mes)
-            // Usamos startWith para que coincidan '2026-04-Q1' con '2026-04'
-            if (!data.period || (typeof data.period === 'string' && data.period.startsWith(currentPeriod))) {
+            // Pre-cargar si el periodo coincide (mismo mes o misma quincena)
+            if (!data.period || (typeof data.period === 'string' && data.period.startsWith(currentPeriod.substring(0, 7)))) {
+                // Si el KPI es granular (Q1/Q2/W), el periodo debe coincidir exactamente o ser compatible
+                if (data.period && targetPeriod && data.period !== targetPeriod) return {};
+
                 // Limpiar llaves de metadatos de sincronización para evitar "pegarse" en fechas viejas
                 const cleaned = { ...data };
                 delete cleaned.updatedAt;
@@ -136,6 +138,17 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         }
     }, [formData]);
 
+    // EFECTO: Pre-cargar datos cuando cambia la marca o el periodo
+    useEffect(() => {
+        const brandData = drafts.current[formData.brand] || getInitialBrandData(formData.brand, formData.period);
+        if (brandData && Object.keys(brandData).length > 1) { // 1 because brand is always there
+             setFormData(prev => ({
+                 ...prev,
+                 ...brandData
+             }));
+        }
+    }, [formData.brand, formData.period]);
+
     useLayoutEffect(() => {
         if (lastInput.current && lastSelectionStart.current !== null) {
             const input = lastInput.current;
@@ -158,6 +171,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         'cartera': <DollarSign size={18} />,
         'administrativo': <Activity size={18} />,
         'talento-humano': <Users size={18} />,
+        'sst-cultura': <ShieldIcon size={18} />,
         'facturacion': <FileText size={18} />,
         'software': <Cpu size={18} />
     };
@@ -468,9 +482,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         : kpi.meta;
         
     const isInverse = isInverseKPI(kpi.id);
-    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'conciliaciones-diarias'].includes(kpi.id);
+    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
     
-    // Forzar meta de 100 para indicadores de cumplimiento estricto
+    // Forzar meta de 100 para indicadores de cumplimiento estricto (100% o nada)
     if (isStrict) currentMeta = 100;
     
     let isMeetingMeta = false;
@@ -577,12 +591,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 const isNumericSource = /^[0-9.,\s]*$/.test(value);
                 
                 if (isNumericSource && fieldName !== 'brand' && fieldName !== 'newFrecuencia' && fieldName !== 'detalleFaltante') {
-                    // Norma Colombiana: Punto (.) es mil, Coma (,) es decimal.
-                    // Para el estado, guardamos el número "limpio". 
-                    // El punto lo eliminamos siempre (es estético de miles).
-                    // La coma la convertimos a punto internamente para cálculos.
-                    let raw = value.replace(/\./g, ''); 
-                    parsedValue = raw;
+                    // Permitimos el string crudo para que el usuario pueda escribir decimales (, o .)
+                    // La limpieza final se hace en handleSubmit de forma robusta.
+                    parsedValue = value;
                 }
             }
 
@@ -701,7 +712,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                     {(isMetaMode || (!hasCommercialBrands && (kpi.meta?.TYM || kpi.meta?.TAT))) && (
                                         <div>
                                             <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 800, marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-                                                {isMetaMode ? 'Nivel Empresa (Razón Social)' : 'Carga a Nivel Global'}
+                                                {isMetaMode ? 'Nivel Empresa (Razón Social)' : (hasCommercialBrands ? 'Carga a Nivel Marca' : 'Carga a Nivel Empresa')}
                                             </div>
                                             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                                                 {(isMetaMode ? ['Global', 'TYM', 'TAT'] : [userEntity]).map(scope => {
@@ -838,27 +849,55 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                     )}
 
                                     {kpi.frecuencia === 'QUINCENAL' && (
-                                        <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                            {['Q1', 'Q2'].map(q => {
-                                                const quincenaKey = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${q}`;
-                                                const isActive = formData.period === quincenaKey;
-                                                return (
-                                                    <button
-                                                        key={q}
-                                                        type="button"
-                                                        onClick={() => handleChange('period', quincenaKey)}
-                                                        style={{
-                                                            padding: '0.75rem 1.5rem', borderRadius: '14px', fontSize: '0.9rem', fontWeight: 800,
-                                                            border: isActive ? '2px solid var(--brand)' : '2px solid #e2e8f0',
-                                                            background: isActive ? 'var(--brand-bg)' : 'white',
-                                                            color: isActive ? 'var(--brand)' : '#64748b',
-                                                            cursor: 'pointer', transition: 'all 0.2s'
-                                                        }}
-                                                    >
-                                                        {q === 'Q1' ? '1ra Quincena' : '2da Quincena'}
-                                                    </button>
-                                                );
-                                            })}
+                                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                            <select 
+                                                value={formData.period?.substring(0, 7)}
+                                                onChange={(e) => {
+                                                    const currentQ = formData.period?.split('-').pop() || 'Q1';
+                                                    handleChange('period', `${e.target.value}-${currentQ}`);
+                                                }}
+                                                style={{
+                                                    padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                    fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                    background: '#f8fafc', cursor: 'pointer'
+                                                }}
+                                            >
+                                                {(() => {
+                                                    const options = [];
+                                                    const d = new Date();
+                                                    for (let i = 0; i < 4; i++) {
+                                                        const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+                                                        const label = m.toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+                                                        const value = m.toISOString().substring(0, 7);
+                                                        options.push(<option key={value} value={value}>{label} {m.getFullYear()}</option>);
+                                                    }
+                                                    return options;
+                                                })()}
+                                            </select>
+                                            
+                                            <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                                {['Q1', 'Q2'].map(q => {
+                                                    const currentMonthPrefix = formData.period?.substring(0, 7) || new Date().toISOString().substring(0, 7);
+                                                    const quincenaKey = `${currentMonthPrefix}-${q}`;
+                                                    const isActive = formData.period === quincenaKey;
+                                                    return (
+                                                        <button
+                                                            key={q}
+                                                            type="button"
+                                                            onClick={() => handleChange('period', quincenaKey)}
+                                                            style={{
+                                                                padding: '0.75rem 1.25rem', borderRadius: '14px', fontSize: '0.9rem', fontWeight: 800,
+                                                                border: isActive ? '2px solid var(--brand)' : '2px solid #e2e8f0',
+                                                                background: isActive ? 'var(--brand-bg)' : 'white',
+                                                                color: isActive ? 'var(--brand)' : '#64748b',
+                                                                cursor: 'pointer', transition: 'all 0.2s'
+                                                            }}
+                                                        >
+                                                            {q}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     )}
 

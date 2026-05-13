@@ -31,6 +31,7 @@ const AppInner = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 900);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()]);
 
   // ── KPI Data (via custom hook) ────────────────────────────────────────────
   const { kpiData, rawUpdates, isLoading, lastSyncTime, applyKPIUpdate } = useKPIs(
@@ -189,6 +190,8 @@ const AppInner = () => {
             onLogout={onLogout}
             onOpenCommandPalette={() => setShowCommandPalette(true)}
             lastSyncTime={lastSyncTime}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
           />
         )}
 
@@ -201,13 +204,30 @@ const AppInner = () => {
                 path="/"
                 element={
                   currentUser.role === 'Gerente'
-                    ? <ExecutiveDashboard kpiData={kpiData} rawUpdates={rawUpdates} activeCompany={activeCompany} setActiveCompany={setActiveCompany} onViewHistory={handleViewHistory} />
+                    ? <ExecutiveDashboard 
+                        kpiData={kpiData} 
+                        rawUpdates={rawUpdates} 
+                        activeCompany={activeCompany} 
+                        setActiveCompany={setActiveCompany} 
+                        onViewHistory={handleViewHistory}
+                        selectedMonth={selectedMonth}
+                        setSelectedMonth={setSelectedMonth}
+                      />
                     : <Navigate to="/mis-indicadores" />
                 }
               />
               <Route
                 path="/area/:areaId"
-                element={<AreaDashboard kpiData={kpiData} activeCompany={activeCompany} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} onViewHistory={handleViewHistory} />}
+                element={
+                  <AreaDashboard 
+                    kpiData={kpiData} 
+                    activeCompany={activeCompany} 
+                    currentUser={currentUser} 
+                    onUpdateKPI={handleUpdateKPI} 
+                    onViewHistory={handleViewHistory}
+                    selectedMonth={selectedMonth}
+                  />
+                }
               />
               <Route
                 path="/mis-indicadores"

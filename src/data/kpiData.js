@@ -320,7 +320,7 @@ export const kpiDefinitions = [
     },
     {
         id: 'calificacion-auditoria',
-        name: 'Cumplimiento SST',
+        name: 'Calificación de Auditoría SST',
         area: 'sst-cultura',
         objetivo: 'Ejecutar el Sistema de Gestión SST',
         meta: {

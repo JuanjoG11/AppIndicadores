@@ -32,8 +32,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         const day = now.getDate();
         
         let targetDate = now;
-        // Gracia de 3 días para reportar el mes anterior
-        if (day <= 3) {
+        // Gracia de 10 días para reportar el mes anterior (Accounting/SST closure window)
+        if (day <= 10) {
             targetDate = new Date(now.getFullYear(), now.getMonth(), 0);
         }
 
@@ -84,8 +84,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         const day = now.getDate();
         const freq = frequency.toUpperCase();
 
-        // Gracia Mensual: Primeros 3 días del mes permiten cargar el mes anterior
-        if (freq.includes('MENSUAL') && day <= 3) {
+        // Gracia Mensual: Primeros 10 días del mes permiten cargar el mes anterior
+        if (freq.includes('MENSUAL') && day <= 10) {
             return getPeriodIndex(subMonths(now, 1), 'MENSUAL');
         }
 
@@ -170,14 +170,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const isStrictCurrent = recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod;
             const isFromCurrentMonth = typeof recordPeriodIndex === 'string' && recordPeriodIndex.startsWith(currentPeriod);
 
-            // Para el estado de carga (hasData): Solo si es estrictamente del periodo reportable (hoy para diarios)
-            const isFromCurrentPeriod = !forceHistorical && isStrictCurrent;
+            // Para el estado de carga (hasData): Si es del periodo estrictamente actual O del reportable (gracia)
+            const isFromCurrentPeriod = !forceHistorical && (isStrictCurrent || recordPeriodIndex === currentReportablePeriod);
             // Para el tablero: si es una acción manual (el usuario presionó Guardar) SIEMPRE mostramos,
             // sin importar el período — el analista sabe qué mes está cargando.
-            // Para cargas automáticas desde DB al inicio, solo mostramos si es del período actual.
+            // Para cargas automáticas desde DB al inicio, mostramos si es del período actual 
+            // O si es del periodo reportable actual (grace period).
             const shouldShowInDashboard = !forceHistorical && (
                 isManualUpdate ||           // ← carga manual: siempre visible
                 isStrictCurrent ||
+                recordPeriodIndex === currentReportablePeriod || // Permitir ver el periodo en gracia
                 (frequency.includes('DIARI') && isFromCurrentMonth)
             );
             
@@ -196,12 +198,17 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             try {
                 if (d.type === 'META_UPDATE') newValue = kpi.currentValue;
+                else if (d.value !== undefined) newValue = d.value; // Priorizar valor pre-calculado (promedios)
                 else newValue = calculateKPIValue(kpiId, d);
             } catch (e) {
                 console.error("Calculation Error:", e);
                 newValue = d.value || 0;
             }
 
+            // Evitar NaN o Infinity en persistencia
+            if (!isFinite(newValue)) newValue = 0;
+            newValue = parseFloat((newValue || 0).toFixed(2));
+            
             // Gestionar actualización de meta (Modo Gerente)
             if (d.type === 'META_UPDATE') {
                 if (d.newFrecuencia && d.newFrecuencia !== kpi.frecuencia) {
@@ -331,12 +338,33 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             }
 
             // ── ACTUALIZACIÓN DEL HISTORIAL ──
-            const newHistory = (kpi.history || []).map(h => {
-                if (h.month === targetMonth && h.year === recordDateObj.getFullYear()) {
-                    return { ...h, [targetCompany]: historyValue };
-                }
-                return h;
-            });
+            const [year, monthNum] = (d.period || currentPeriod).split('-');
+            const MONTH_NAMES = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            const monthName = MONTH_NAMES[parseInt(monthNum) - 1];
+            const periodKey = d.period || currentPeriod;
+
+            const newHistory = [...(kpi.history || [])];
+            const existingHistoryIdx = newHistory.findIndex(h => h.monthKey === periodKey || h.month === monthName);
+            
+            const historyPoint = {
+                month: monthName,
+                year: parseInt(year),
+                monthKey: periodKey,
+                [currentCompany]: finalValue,
+                [`${currentCompany}-${currentBrand.toUpperCase()}`]: newValue,
+                [`${currentCompany}-${currentBrand.toUpperCase()}-COMP`]: compliance,
+                [`${currentCompany}-${currentBrand.toUpperCase()}-SEM`]: semaphore,
+                compliance: finalCompliance
+            };
+
+            if (existingHistoryIdx >= 0) {
+                newHistory[existingHistoryIdx] = { ...newHistory[existingHistoryIdx], ...historyPoint };
+            } else {
+                newHistory.push(historyPoint);
+            }
 
             const newKpi = {
                 ...kpi,
@@ -346,7 +374,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 hasData: finalHasData,
                 additionalData: shouldShowInDashboard ? d : (kpi.additionalData || d),
                 brandValues: { ...brandValues },
-                history: newHistory
+                history: newHistory.sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || ''))
             };
 
             if (shouldPersist && !suppressPersist.current) {
@@ -367,16 +395,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const frequency = kpiData.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL';
             const persistPeriod = additionalData?.period || getPeriodIndex(new Date(), frequency);
             
-            // USAR activeCompany (pasada al hook) para asegurar que se guarda en la empresa que se está visualizando
+            // USAR la empresa resuelta en applyKPIUpdate (newData.company) o la activa
             const payload = {
-                company_id: activeCompany || user?.company || 'TYM',
+                company_id: additionalData?.company || activeCompany || user?.company || 'TYM',
                 kpi_id: kpiId,
                 additional_data: { 
                     ...additionalData, 
                     brand: persistBrand,
                     period: persistPeriod 
                 },
-                value: value,
+                value: isFinite(value) ? value : 0,
                 cargo: user?.cargo || 'Sistema'
             };
 
@@ -468,33 +496,161 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     console.error("❌ Supabase fetch error:", error);
                 }
 
-                 if (data) {
+                if (data) {
                     setRawUpdates(data);
                     suppressPersist.current = true;
 
-                    // Inicio del mes actual (Abril 1)
-                    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                    // 3. Agrupar por KPI-Empresa-Marca-Periodo para tener el último dato de cada punto
+                    const aggregatedData = {};
+                    data.forEach(upd => {
+                        const kpiId = upd.kpi_id;
+                        const companyId = upd.company_id || 'TYM';
+                        const brand = upd.additional_data?.brand || 'Global';
+                        const kpiDef = kpiDefinitions.find(k => k.id === kpiId);
+                        const frequency = kpiDef?.frecuencia || 'MENSUAL';
+                        
+                        const date = new Date(upd.updated_at || upd.created_at);
+                        const periodKey = upd.additional_data?.period || getPeriodIndex(date, frequency);
+                        
+                        const groupKey = `${kpiId}-${companyId}-${brand}-${periodKey}`;
 
-                    // PASADA 1: Registros históricos (meses anteriores) → solo actualizan gráficas/historial
-                    // forceHistorical=true asegura que NO marquen hasData en el tablero principal
-                    data.filter(upd => upd.updated_at < currentMonthStart).forEach(upd => {
-                        applyKPIUpdate(
-                            upd.kpi_id,
-                            { ...upd.additional_data, updatedAt: upd.updated_at, period: upd.period || upd.additional_data?.period },
-                            false,
-                            true  // forceHistorical
-                        );
+                        if (!aggregatedData[groupKey] || new Date(upd.updated_at || upd.created_at) > new Date(aggregatedData[groupKey].latestUpdate.updated_at || aggregatedData[groupKey].latestUpdate.created_at)) {
+                            aggregatedData[groupKey] = {
+                                kpi_id: kpiId,
+                                company_id: companyId,
+                                brand: brand,
+                                periodKey: periodKey,
+                                latestUpdate: upd
+                            };
+                        }
                     });
 
-                    // PASADA 2: Registros del mes actual (Abril) → actualizan el tablero normalmente
-                    data.filter(upd => upd.updated_at >= currentMonthStart).forEach(upd => {
-                        applyKPIUpdate(
-                            upd.kpi_id,
-                            { ...upd.additional_data, updatedAt: upd.updated_at, period: upd.period || upd.additional_data?.period },
-                            false,
-                            false  // no forceHistorical
-                        );
+                    // 4. Ordenar cronológicamente para que las actualizaciones se apliquen en orden
+                    const sortedGroups = Object.values(aggregatedData).sort((a, b) => 
+                        (a.periodKey || '').localeCompare(b.periodKey || '') || 
+                        (new Date(a.latestUpdate.updated_at || a.latestUpdate.created_at) - new Date(b.latestUpdate.updated_at || b.latestUpdate.created_at))
+                    );
+
+                    // 5. Aplicar actualizaciones en bloque (BATCH UPDATE) para evitar problemas de estado
+                    setKpiData(prevData => {
+                        let newData = [...prevData];
+                        
+                        sortedGroups.forEach(group => {
+                            const upd = group.latestUpdate;
+                            const kpiDef = kpiDefinitions.find(k => k.id === group.kpi_id);
+                            const currentPeriodKey = getReportablePeriod(kpiDef?.frecuencia);
+                            const isFromCurrentPeriod = group.periodKey === currentPeriodKey;
+                            
+                            // Mantenemos el histórico en el array history
+                            newData = newData.map(kpi => {
+                                if (kpi.id !== upd.kpi_id) return kpi;
+
+                                const currentCompany = group.company_id;
+                                const currentBrand = group.brand;
+                                const dataKey = `${currentCompany}-${currentBrand.toUpperCase()}`;
+
+                                // Construir el punto de historia basado en el periodo reportado
+                                const [year, monthNum] = group.periodKey.split('-');
+                                const monthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][parseInt(monthNum) - 1];
+                                
+                                const historyPoint = {
+                                    month: monthName,
+                                    year: parseInt(year),
+                                    monthKey: group.periodKey,
+                                    [currentCompany]: upd.value,
+                                    [`${currentCompany}-${currentBrand.toUpperCase()}`]: upd.value,
+                                    [`${currentCompany}-${currentBrand.toUpperCase()}-COMP`]: upd.compliance || 0,
+                                    [`${currentCompany}-${currentBrand.toUpperCase()}-SEM`]: upd.semaphore || 'gray',
+                                    brand: currentBrand,
+                                    compliance: upd.compliance || 0
+                                };
+
+                                const history = [...(kpi.history || [])];
+                                // Buscar por monthKey o por nombre de mes (para machacar mock data)
+                                const existingHistoryIdx = history.findIndex(h => h.monthKey === group.periodKey || h.month === monthName);
+                                
+                                if (existingHistoryIdx >= 0) {
+                                    history[existingHistoryIdx] = { ...history[existingHistoryIdx], ...historyPoint };
+                                } else {
+                                    history.push(historyPoint);
+                                }
+
+                                // Actualizar brandValues (solo si es el periodo actual o no tiene datos)
+                                const brandValues = { ...(kpi.brandValues || {}) };
+                                const oldBrandData = brandValues[dataKey] || { hasData: false, currentValue: 0, compliance: 0, semaphore: 'gray' };
+                                
+                                // Importante: el currentValue del KPI en el objeto base SIEMPRE debe ser el del periodo actual
+                                // para compatibilidad con el dashboard, pero guardamos TODO en history para la proyección.
+                                if (isFromCurrentPeriod || !oldBrandData.hasData) {
+                                    brandValues[dataKey] = {
+                                        ...oldBrandData,
+                                        currentValue: upd.value,
+                                        compliance: Math.round(upd.compliance || 0),
+                                        semaphore: upd.semaphore || 'gray',
+                                        hasData: true,
+                                        additionalData: {
+                                            ...(upd.additional_data || {}),
+                                            updatedAt: upd.updated_at || upd.created_at,
+                                            period: group.periodKey
+                                        }
+                                    };
+                                }
+
+                                // Recalcular consolidado del periodo actual
+                                const brandsForThisCompany = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
+                                let sumVal = 0;
+                                let sumComp = 0;
+                                let count = 0;
+
+                                brandsForThisCompany.forEach(key => {
+                                    const bData = brandValues[key];
+                                    if (bData && bData.hasData) {
+                                        sumVal += bData.currentValue;
+                                        sumComp += bData.compliance;
+                                        count++;
+                                    }
+                                });
+
+                                const calculatedFinalValue = count > 0 ? sumVal / count : 0;
+                                const calculatedFinalComp = count > 0 ? sumComp / count : 0;
+
+                                let finalSemaphore = 'gray';
+                                if (count > 0) {
+                                    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+                                    if (calculatedFinalComp >= (isStrict ? 100 : 95)) finalSemaphore = 'green';
+                                    else if (calculatedFinalComp >= (isStrict ? 100 : 85)) finalSemaphore = 'yellow';
+                                    else finalSemaphore = 'red';
+                                }
+
+                                return {
+                                    ...kpi,
+                                    history: history.sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || '')),
+                                    // Los valores base solo se actualizan si es el periodo actual
+                                    ...(isFromCurrentPeriod ? {
+                                        currentValue: parseFloat(calculatedFinalValue.toFixed(2)),
+                                        compliance: Math.round(calculatedFinalComp),
+                                        semaphore: finalSemaphore,
+                                        hasData: true,
+                                        brandValues,
+                                        additionalData: {
+                                            ...(upd.additional_data || {}),
+                                            updatedAt: upd.updated_at || upd.created_at,
+                                            period: group.periodKey
+                                        }
+                                    } : { brandValues }),
+                                    // Actualizamos el punto de historia con el valor consolidado RECIÉN CALCULADO
+                                    // Esto asegura que la proyección vea el promedio de marcas y no solo el último dato.
+                                    history: history.map(h => 
+                                        h.monthKey === group.periodKey 
+                                            ? { ...h, [currentCompany]: calculatedFinalValue, compliance: calculatedFinalComp } 
+                                            : h
+                                    ).sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || ''))
+                                };
+                            });
+                        });
+                        return newData;
                     });
+
 
                     suppressPersist.current = false;
                     setLastSyncTime(new Date());
@@ -520,7 +676,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 const startDate = new Date(start);
                 const endDate   = new Date(end);
                 if (updatedAt >= startDate && updatedAt <= endDate) {
-                    applyKPIUpdate(p.new.kpi_id, p.new.additional_data, false);
+                    console.log("⚡ Cambio en tiempo real detectado:", p.new);
+                    applyKPIUpdate(p.new.kpi_id, { ...p.new.additional_data, value: p.new.value }, false);
                     if (onToast) onToast('info', `📊 KPI actualizado`);
                 }
             }).subscribe();

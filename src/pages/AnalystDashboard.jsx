@@ -23,6 +23,18 @@ import { Clock, Calendar } from 'lucide-react';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) => {
     const [editingKPIId, setEditingKPIId] = useState(null);
+    
+    const getDisplayPeriod = () => {
+        const now = new Date();
+        const day = now.getDate();
+        let targetDate = now;
+        // Gracia de 10 días para el mes anterior
+        if (day <= 10) {
+            targetDate = new Date(now.getFullYear(), now.getMonth(), 0);
+        }
+        return targetDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+    };
+    const displayPeriod = getDisplayPeriod();
     const [editMode, setEditMode] = useState('data');
 
     const handleStartEdit = (kpi, mode = 'data') => {
@@ -448,7 +460,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                             Hola, {currentUser.name}
                         </h1>
                         <p style={{ opacity: 0.8, fontSize: '1.1rem', fontWeight: 500 }}>
-                            {currentUser.company === 'TYM' ? 'TIENDAS Y MARCAS' : 'TAT DISTRIBUCIONES'} • <span style={{ color: 'var(--brand-light)' }}>PERIODO: ABRIL 2026</span>
+                            {currentUser.company === 'TYM' ? 'TIENDAS Y MARCAS' : 'TAT DISTRIBUCIONES'} • <span style={{ color: 'var(--brand-light)' }}>PERIODO: {displayPeriod}</span>
                         </p>
                     </div>
 

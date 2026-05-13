@@ -10,6 +10,7 @@ import { Activity, Target, ShieldCheck, AlertTriangle } from 'lucide-react';
 const MetricSummary = ({ kpiData, horizontal }) => {
     const kpisWithData = kpiData.filter(kpi => kpi.hasData);
     const overallScore = calculateOverallScore(kpiData);
+    const overallScoreColor = overallScore >= 95 ? 'var(--success)' : overallScore >= 80 ? 'var(--warning)' : 'var(--danger)';
 
     // Prepare chart data for area comparison
     const chartData = areas.map(area => ({
@@ -31,7 +32,7 @@ const MetricSummary = ({ kpiData, horizontal }) => {
         {
             title: 'Cumplimiento Total',
             value: overallScore ? `${overallScore}%` : '0%',
-            color: 'var(--brand)',
+            color: overallScoreColor,
             icon: <Activity size={18} />,
             history: getStabilizedHistory(overallScore || 0, 'total')
         },
@@ -156,7 +157,7 @@ const MetricSummary = ({ kpiData, horizontal }) => {
                         </RadialBarChart>
                     </ResponsiveContainer>
                     <div style={{ position: 'absolute', textAlign: 'center' }}>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--brand)', lineHeight: 1 }}>{overallScore}%</div>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 900, color: overallScoreColor, lineHeight: 1 }}>{overallScore}%</div>
                         <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: '0.25rem' }}>Efectividad</div>
                     </div>
                 </div>

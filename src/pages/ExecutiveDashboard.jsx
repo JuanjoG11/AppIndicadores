@@ -7,10 +7,9 @@ import { calculateOverallScore } from '../data/mockData';
 import { isInverseKPI } from '../utils/kpiCalculations';
 import { LayoutGrid, TrendingUp, Calendar, Clock, FileText, ChevronDown, Activity, ArrowRight } from 'lucide-react';
 
-const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory }) => {
+const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory, selectedMonth, setSelectedMonth }) => {
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'trend'
     const [activeHistoryTab, setActiveHistoryTab] = useState('overview');
-    const [selectedMonth, setSelectedMonth] = useState('Mayo'); // Default to current month in the system
 
     // Filter KPIs based on selected entity using the utility
     const baseKPIs = filterKPIsByEntity(kpiData, activeCompany);
@@ -18,14 +17,22 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
     // Project KPIs to the selected month using history
     const filteredKPIs = useMemo(() => {
         // If current month is selected, we use the live data
-        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'][new Date().getMonth()];
+        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
         // if (selectedMonth === currentMonthName) return baseKPIs; // Optional: always project for consistency
 
         return baseKPIs.map(kpi => {
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
-            const value = historyEntry ? historyEntry[activeCompany] : null;
+            let val = historyEntry ? historyEntry[activeCompany] : null;
 
-            if (value === null || value === undefined) {
+            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo
+            const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
+            if ((val === null || val === undefined) && selectedMonth === currentMonthName) {
+                if (kpi.hasData) {
+                    return kpi; // Usar el objeto base que ya tiene los datos de Mayo
+                }
+            }
+
+            if (val === null || val === undefined) {
                 return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray' };
             }
 
@@ -37,10 +44,10 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
             const isInverse = isInverseKPI(kpi.id);
             let compliance = 0;
             if (targetMeta === 0) {
-                compliance = isInverse ? (value === 0 ? 100 : 0) : (value > 0 ? 100 : 0);
+                compliance = isInverse ? (val === 0 ? 100 : 0) : (val > 0 ? 100 : 0);
             } else {
-                compliance = isInverse ? (targetMeta / value) * 100 : (value / targetMeta) * 100;
-                if (isInverse && value === 0) compliance = 100;
+                compliance = isInverse ? (targetMeta / val) * 100 : (val / targetMeta) * 100;
+                if (isInverse && val === 0) compliance = 100;
             }
             compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
 
@@ -49,12 +56,31 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
             if (compliance >= (isStrict ? 100 : 95)) semaphore = 'green';
             else if (compliance >= (isStrict ? 100 : 85)) semaphore = 'yellow';
 
+            // Reconstruir brandValues proyectados para que el desglose histórico sea visible
+            const projectedBrandValues = {};
+            if (kpi.meta && typeof kpi.meta === 'object') {
+                Object.keys(kpi.meta).forEach(brand => {
+                    const brandKey = `${activeCompany}-${brand.toUpperCase()}`;
+                    const brandVal = historyEntry ? historyEntry[brandKey] : null;
+                    
+                    if (brandVal !== null && brandVal !== undefined) {
+                        projectedBrandValues[brandKey] = {
+                            currentValue: brandVal,
+                            compliance: Math.round(historyEntry[`${brandKey}-COMP`] || 0),
+                            semaphore: historyEntry[`${brandKey}-SEM`] || 'gray',
+                            hasData: true
+                        };
+                    }
+                });
+            }
+
             return {
                 ...kpi,
-                currentValue: value,
+                currentValue: val,
                 compliance,
                 semaphore,
-                hasData: true
+                hasData: true,
+                brandValues: projectedBrandValues
             };
         });
     }, [baseKPIs, selectedMonth, activeCompany]);
@@ -67,6 +93,8 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
         setViewMode('trend');
         setActiveHistoryTab('log');
     };
+
+    const overallScoreColor = overallScore >= 95 ? 'var(--success)' : overallScore >= 80 ? 'var(--warning)' : 'var(--danger)';
 
     return (
         <div className="dashboard fade-in" style={{
@@ -90,22 +118,9 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
                             Panel de Control Estratégico
                         </h2>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.4rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-soft)', padding: '0.3rem 0.75rem', borderRadius: '8px' }}>
-                                <Calendar size={14} color="var(--brand)" />
-                                <select 
-                                    value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(e.target.value)}
-                                    style={{ 
-                                        border: 'none', background: 'transparent', fontWeight: 800, color: 'var(--text-main)', 
-                                        fontSize: '0.85rem', outline: 'none', cursor: 'pointer', textTransform: 'uppercase'
-                                    }}
-                                >
-                                    {months.map(m => <option key={m} value={m}>{m} 2026</option>)}
-                                </select>
-                            </div>
-                            <span style={{ color: 'var(--text-light)', fontSize: '0.8rem', fontWeight: 600 }}>
+                                <span style={{ color: 'var(--text-light)', fontSize: '0.8rem', fontWeight: 600 }}>
                                 <Clock size={12} style={{ marginRight: '0.3rem', verticalAlign: 'middle' }} />
-                                Actualizado: Hoy, 03:45 PM
+                                Actualizado: {new Date().toLocaleString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
                             </span>
                         </div>
                     </div>
@@ -114,14 +129,14 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{ 
-                            width: '48px', height: '48px', borderRadius: '14px', background: 'var(--brand-bg)', 
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)'
+                            width: '48px', height: '48px', borderRadius: '14px', background: `${overallScoreColor}15`, 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: overallScoreColor
                         }}>
                             <Activity size={24} />
                         </div>
                         <div>
                             <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase' }}>Cumplimiento Global</p>
-                            <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 950, color: overallScore >= 95 ? 'var(--success)' : 'var(--brand)' }}>
+                            <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 950, color: overallScoreColor }}>
                                 {overallScore ? `${overallScore}%` : '0%'}
                             </p>
                         </div>

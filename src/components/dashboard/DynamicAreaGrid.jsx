@@ -21,7 +21,8 @@ const AreaMiniCard = ({ area, score, kpiData }) => {
         { value: score }
     ];
 
-    const statusColor = score >= 80 ? 'var(--success)' : 'var(--danger)';
+    const statusColor = score >= 95 ? 'var(--success)' : score >= 80 ? 'var(--warning)' : 'var(--danger)';
+    const statusText = score >= 95 ? 'CUMPLE' : score >= 80 ? 'ACEPTABLE' : 'CRÍTICO';
 
     return (
         <div
@@ -35,7 +36,7 @@ const AreaMiniCard = ({ area, score, kpiData }) => {
                 justifyContent: 'space-between',
                 height: '100%',
                 background: 'white',
-                borderLeft: `4px solid ${area.color}`
+                borderLeft: `4px solid ${statusColor}`
             }}
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
@@ -51,7 +52,7 @@ const AreaMiniCard = ({ area, score, kpiData }) => {
                         marginTop: '0.25rem',
                         display: 'inline-block'
                     }}>
-                        {score >= 80 ? 'CUMPLE' : 'CRÍTICO'}
+                        {statusText}
                     </span>
                 </div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>

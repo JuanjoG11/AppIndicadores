@@ -342,7 +342,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                         color: '#94a3b8',
                         fontWeight: 800
                     }}>
-                        {kpi.frecuencia} - MARZO 2026
+                        {kpi.frecuencia} - {new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
                     </div>
                 </div>
 

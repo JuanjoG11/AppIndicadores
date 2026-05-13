@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCriticalAlerts } from '../../data/mockData';
-import { Bell, Settings, X, CheckCircle2, AlertCircle, LogOut, Menu, Search, Wifi, WifiOff, Command } from 'lucide-react';
+import { Bell, Settings, X, CheckCircle2, AlertCircle, LogOut, Menu, Search, Wifi, WifiOff, Command, Calendar } from 'lucide-react';
 
-const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuToggle, onLogout, onOpenCommandPalette, lastSyncTime }) => {
+const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuToggle, onLogout, onOpenCommandPalette, lastSyncTime, selectedMonth, setSelectedMonth }) => {
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -69,6 +69,35 @@ const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuTog
                         {syncLabel}
                     </span>
                 </div>
+
+                {/* Month Selector for Gerente */}
+                {currentUser?.role === 'Gerente' && (
+                    <div style={{ 
+                        marginLeft: '1rem',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        background: 'white', 
+                        padding: '0.3rem 0.75rem', 
+                        borderRadius: '10px',
+                        border: '1px solid var(--border-soft)',
+                        boxShadow: 'var(--shadow-sm)'
+                    }}>
+                        <Calendar size={14} color="var(--brand)" />
+                        <select 
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            style={{ 
+                                border: 'none', background: 'transparent', fontWeight: 800, color: 'var(--text-main)', 
+                                fontSize: '0.8rem', outline: 'none', cursor: 'pointer', textTransform: 'uppercase'
+                            }}
+                        >
+                            {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map(m => (
+                                <option key={m} value={m}>{m} 2026</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </div>
 
             {/* Right section */}

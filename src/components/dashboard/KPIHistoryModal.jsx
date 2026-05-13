@@ -440,18 +440,34 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
                                 const brands = availableBrands.length > 0 ? availableBrands : [activeCompany];
 
                                 // Build chart data from rawUpdates grouped by month
-                                const monthMap = {};
-                                rawUpdates
-                                    .filter(u => u.kpi_id === kpi.id)
-                                    .forEach(u => {
-                                        const d = new Date(u.updated_at || u.created_at);
-                                        const monthKey = d.toLocaleString('es-ES', { month: 'short' }).replace('.','');
-                                        const brand = u.additional_data?.brand || activeCompany;
-                                        if (!monthMap[monthKey]) monthMap[monthKey] = { month: monthKey };
-                                        if (!monthMap[monthKey][brand]) monthMap[monthKey][brand] = { total: 0, count: 0 };
-                                        monthMap[monthKey][brand].total += (u.value || 0);
-                                        monthMap[monthKey][brand].count++;
-                                    });
+                                 const monthMap = {};
+                                 
+                                 // FIRST: Group by period + brand to get the latest value of each point
+                                 const pointMap = {};
+                                 rawUpdates
+                                     .filter(u => u.kpi_id === kpi.id)
+                                     .forEach(u => {
+                                         const brand = u.additional_data?.brand || activeCompany;
+                                         const period = u.additional_data?.period || u.period;
+                                         if (!period) return;
+                                         
+                                         const key = `${brand}-${period}`;
+                                         if (!pointMap[key] || new Date(u.updated_at || u.created_at) > new Date(pointMap[key].updated_at || pointMap[key].created_at)) {
+                                             pointMap[key] = u;
+                                         }
+                                     });
+
+                                 // SECOND: Aggregate points by month for the chart
+                                 Object.values(pointMap).forEach(u => {
+                                     const d = new Date(u.updated_at || u.created_at);
+                                     const monthKey = d.toLocaleString('es-ES', { month: 'short' }).replace('.','');
+                                     const brand = u.additional_data?.brand || activeCompany;
+                                     
+                                     if (!monthMap[monthKey]) monthMap[monthKey] = { month: monthKey };
+                                     if (!monthMap[monthKey][brand]) monthMap[monthKey][brand] = { total: 0, count: 0 };
+                                     monthMap[monthKey][brand].total += (u.value || 0);
+                                     monthMap[monthKey][brand].count++;
+                                 });
 
                                 const chartData = Object.values(monthMap).map(row => {
                                     const out = { month: row.month };
@@ -591,13 +607,25 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
                                         
                                         {expandedMonth === month && (() => {
                                             // ── Brand Breakdown for this month ──
-                                            const brandSummary = {};
-                                            logs.forEach(log => {
-                                                const b = log.additional_data?.brand || log.brand || 'Global';
-                                                if (!brandSummary[b]) brandSummary[b] = { count: 0, total: 0 };
-                                                brandSummary[b].count++;
-                                                brandSummary[b].total += (log.value || 0);
-                                            });
+                                             const brandSummary = {};
+                                             const brandLatestPoints = {};
+
+                                             logs.forEach(log => {
+                                                 const b = log.additional_data?.brand || log.brand || 'Global';
+                                                 const p = log.additional_data?.period || log.period;
+                                                 const key = `${b}-${p}`;
+
+                                                 if (!brandLatestPoints[key] || new Date(log.updated_at || log.created_at) > new Date(brandLatestPoints[key].updated_at || brandLatestPoints[key].created_at)) {
+                                                     brandLatestPoints[key] = log;
+                                                 }
+                                             });
+
+                                             Object.values(brandLatestPoints).forEach(log => {
+                                                 const b = log.additional_data?.brand || log.brand || 'Global';
+                                                 if (!brandSummary[b]) brandSummary[b] = { count: 0, total: 0 };
+                                                 brandSummary[b].count++;
+                                                 brandSummary[b].total += (log.value || 0);
+                                             });
                                             const brandEntries = Object.entries(brandSummary).filter(([b]) => b !== 'Global');
                                             const hasBrands = brandEntries.length > 1;
 

@@ -27,22 +27,22 @@ export const calculateKPIValue = (kpiId, rawData) => {
     switch (kpiId) {
       // LOGÍSTICA DE ENTREGA
       case 'pedidos-devueltos':
-        newValue = (d.pedidosDevueltos / d.pedidosFacturados) * 100;
+        newValue = (d.pedidosDevueltos / (d.pedidosFacturados || 1)) * 100;
         break;
       case 'promedio-pedidos-auxiliar':
-        newValue = d.numeroPedidos / d.auxiliares;
+        newValue = d.numeroPedidos / (d.auxiliares || 1);
         break;
       case 'promedio-pedidos-carro':
-        newValue = d.numeroPedidos / d.vehiculos;
+        newValue = d.numeroPedidos / (d.vehiculos || 1);
         break;
       case 'gasto-nomina-venta':
-        newValue = (d.nominaLogistica / d.ventaTotal) * 100;
+        newValue = (d.nominaLogistica / (d.ventaTotal || 1)) * 100;
         break;
       case 'gasto-fletes-venta':
-        newValue = (d.valorFletes / d.ventaTotal) * 100;
+        newValue = (d.valorFletes / (d.ventaTotal || 1)) * 100;
         break;
       case 'horas-extras-auxiliares':
-        newValue = (d.totalHorasExtras / d.auxiliares) / 25;
+        newValue = (d.totalHorasExtras / (d.auxiliares || 1)) / 25;
         break;
 
       // COMERCIAL
@@ -175,17 +175,17 @@ export const calculateKPIValue = (kpiId, rawData) => {
         newValue = (d.personalRetirado / d.promedioEmpleados) * 100;
         break;
       case 'ausentismo':
-        newValue = (d.diasPerdidos / d.diasLaborados) * 100;
+        newValue = (d.diasPerdidos / (d.diasLaborados || 1)) * 100;
         break;
       case 'calificacion-auditoria':
       case 'actividades-cultura':
-        newValue = (d.actividadesEjecutadas / d.actividadesProgramadas) * 100;
+        newValue = (d.actividadesEjecutadas / (d.actividadesProgramadas || 1)) * 100;
         break;
       case 'he-rn-nomina':
-        newValue = (d.valorHEDHEN / d.totalNomina) * 100;
+        newValue = (d.valorHEDHEN / (d.totalNomina || 1)) * 100;
         break;
       case 'gasto-nomina-venta-rrhh':
-        newValue = (d.valorNomina / d.ventaTotal) * 100;
+        newValue = (d.valorNomina / (d.ventaTotal || 1)) * 100;
         break;
       case 'tiempo-contratacion':
         newValue = d.diasVacante;
