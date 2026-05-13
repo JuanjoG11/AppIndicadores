@@ -55,11 +55,20 @@ export const filterKPIsByEntity = (kpiData, entity) => {
         if (kpi.visibleEnAreas && Array.isArray(kpi.visibleEnAreas)) {
             return true;
         }
-        if (kpi.meta && typeof kpi.meta === 'object') {
-            const hasEntityBrand = Object.keys(kpi.meta).some(b => BRAND_TO_ENTITY[b] === entity || b === entity);
-            if (!hasEntityBrand) return false;
+        
+        // Si no tiene meta definida como objeto, es un KPI global y debe verse siempre
+        if (!kpi.meta || typeof kpi.meta !== 'object') {
+            return true;
         }
-        return true;
+
+        // Si tiene meta objeto, verificar si tiene alguna marca de la entidad o es 'Global'
+        const hasEntityBrand = Object.keys(kpi.meta).some(b => 
+            BRAND_TO_ENTITY[b] === entity || 
+            b === entity || 
+            b?.toUpperCase() === 'GLOBAL'
+        );
+
+        return hasEntityBrand;
     }).map(kpi => {
         // 1. Resolver Meta (Target) - Promedio si hay marcas de la misma entidad
         let targetMeta = kpi.meta;
@@ -135,13 +144,16 @@ export const filterKPIsByEntity = (kpiData, entity) => {
             };
         }
 
+        // Si llegamos aquí, es porque no hay datos específicos (brandValues) para esta entidad en este periodo
+        const isGlobalKPI = !kpi.meta || typeof kpi.meta !== 'object';
+        
         return {
             ...kpi,
             targetMeta,
-            hasData: kpi.hasData || false,
-            currentValue: 0,
-            compliance: 0,
-            semaphore: 'gray'
+            hasData: isGlobalKPI ? (kpi.hasData || false) : false,
+            currentValue: isGlobalKPI ? (kpi.currentValue || 0) : 0,
+            compliance: isGlobalKPI ? (kpi.compliance || 0) : 0,
+            semaphore: isGlobalKPI ? (kpi.semaphore || 'gray') : 'gray'
         };
     });
 };

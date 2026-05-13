@@ -80,6 +80,12 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
                 compliance,
                 semaphore,
                 hasData: true,
+                lastUpdate: historyEntry?.updatedAt || historyEntry?.[`${activeCompany}-UPDATED`] || kpi.lastUpdate,
+                additionalData: historyEntry?.additionalData || { 
+                    ...kpi.additionalData, 
+                    updatedAt: historyEntry?.updatedAt || historyEntry?.[`${activeCompany}-UPDATED`],
+                    period: historyEntry?.monthKey 
+                },
                 brandValues: projectedBrandValues
             };
         });

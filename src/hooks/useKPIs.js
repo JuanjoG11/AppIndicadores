@@ -16,7 +16,18 @@ const MONTH_NAMES = [
 
 export const useKPIs = (currentUser, activeCompany, onToast) => {
     // 1. Estado inicial
-    const [kpiData, setKpiData] = useState(initialMockData);
+    // Inicializar con definiciones limpias (sin datos de prueba) para que solo se vea lo real de Supabase
+    const cleanInitialData = kpiDefinitions.map(def => ({
+        ...def,
+        currentValue: 0,
+        compliance: 0,
+        semaphore: 'gray',
+        hasData: false,
+        brandValues: {},
+        history: []
+    }));
+
+    const [kpiData, setKpiData] = useState(cleanInitialData);
     const [isLoading, setIsLoading] = useState(true);
     const [rawUpdates, setRawUpdates] = useState([]);
     const [lastSyncTime, setLastSyncTime] = useState(null);
@@ -178,10 +189,11 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             // sin importar el período — el analista sabe qué mes está cargando.
             // Para cargas automáticas desde DB al inicio, mostramos si es del período actual 
             // O si es del periodo reportable actual (grace period).
+            // El valor se muestra en el dashboard SOLO si es del periodo estrictamente actual 
+            // O del reportable (gracia). Las cargas manuales de meses pasados no deben afectar Mayo.
             const shouldShowInDashboard = !forceHistorical && (
-                isManualUpdate ||           // ← carga manual: siempre visible
                 isStrictCurrent ||
-                recordPeriodIndex === currentReportablePeriod || // Permitir ver el periodo en gracia
+                recordPeriodIndex === currentReportablePeriod || 
                 (frequency.includes('DIARI') && isFromCurrentMonth)
             );
             
@@ -343,14 +355,15 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const existingHistoryIdx = newHistory.findIndex(h => h.monthKey === periodKey || h.month === monthName);
             
             const historyPoint = {
-                month: monthName,
-                year: parseInt(year),
+                month: targetMonth,
+                year: recordDateObj.getFullYear(),
                 monthKey: periodKey,
                 [currentCompany]: finalValue,
                 [`${currentCompany}-${currentBrand.toUpperCase()}`]: newValue,
                 [`${currentCompany}-${currentBrand.toUpperCase()}-COMP`]: compliance,
                 [`${currentCompany}-${currentBrand.toUpperCase()}-SEM`]: semaphore,
-                compliance: finalCompliance
+                compliance: finalCompliance,
+                updatedAt: d.updatedAt
             };
 
             if (existingHistoryIdx >= 0) {
@@ -365,6 +378,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 compliance: finalCompliance,
                 semaphore: finalSemaphore,
                 hasData: finalHasData,
+                lastUpdate: d.updatedAt,
                 additionalData: shouldShowInDashboard ? d : (kpi.additionalData || d),
                 brandValues: { ...brandValues },
                 history: newHistory.sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || ''))
@@ -524,7 +538,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         (new Date(a.latestUpdate.updated_at || a.latestUpdate.created_at) - new Date(b.latestUpdate.updated_at || b.latestUpdate.created_at))
                     );
 
-                    // 5. Aplicar actualizaciones en bloque (BATCH UPDATE) para evitar problemas de estado
+                    // 5. Aplicar actualizaciones en bloque (BATCH UPDATE) para asegurar consistencia
                     setKpiData(prevData => {
                         let newData = [...prevData];
                         
@@ -534,111 +548,116 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                             const currentPeriodKey = getReportablePeriod(kpiDef?.frecuencia);
                             const isFromCurrentPeriod = group.periodKey === currentPeriodKey;
                             
-                            // Mantenemos el histórico en el array history
                             newData = newData.map(kpi => {
                                 if (kpi.id !== upd.kpi_id) return kpi;
 
                                 const currentCompany = group.company_id;
                                 const currentBrand = group.brand;
                                 const dataKey = `${currentCompany}-${currentBrand.toUpperCase()}`;
-
-                                // Construir el punto de historia basado en el periodo reportado
                                 const [year, monthNum] = group.periodKey.split('-');
                                 const monthName = MONTH_NAMES[parseInt(monthNum) - 1];
-                                
+
+                                // Recalcular métricas (ya que no se guardan en la DB)
+                                let compliance = 0;
+                                let semaphore = 'gray';
+                                const targetMeta = (kpiDef.meta && typeof kpiDef.meta === 'object')
+                                    ? (kpiDef.meta[currentBrand] || kpiDef.meta[currentCompany] || Object.values(kpiDef.meta)[0])
+                                    : kpiDef.meta;
+
+                                if (typeof targetMeta === 'number') {
+                                    const isInverse = isInverseKPI(upd.kpi_id);
+                                    if (targetMeta === 0) {
+                                        compliance = isInverse ? (upd.value === 0 ? 100 : 0) : (upd.value > 0 ? 100 : 0);
+                                    } else {
+                                        compliance = isInverse ? (targetMeta / upd.value) * 100 : (upd.value / targetMeta) * 100;
+                                        if (isInverse && upd.value === 0) compliance = 100;
+                                    }
+                                    compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
+
+                                    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(upd.kpi_id);
+                                    if (compliance >= (isStrict ? 100 : 95)) semaphore = 'green';
+                                    else if (compliance >= (isStrict ? 100 : 85)) semaphore = 'yellow';
+                                    else semaphore = 'red';
+                                }
+
                                 const historyPoint = {
-                                    month: monthName,
-                                    year: parseInt(year),
-                                    monthKey: group.periodKey,
+                                    month: monthName, year: parseInt(year), monthKey: group.periodKey,
                                     [currentCompany]: upd.value,
                                     [`${currentCompany}-${currentBrand.toUpperCase()}`]: upd.value,
-                                    [`${currentCompany}-${currentBrand.toUpperCase()}-COMP`]: upd.compliance || 0,
-                                    [`${currentCompany}-${currentBrand.toUpperCase()}-SEM`]: upd.semaphore || 'gray',
+                                    [`${currentCompany}-${currentBrand.toUpperCase()}-COMP`]: compliance,
+                                    [`${currentCompany}-${currentBrand.toUpperCase()}-SEM`]: semaphore,
                                     brand: currentBrand,
-                                    compliance: upd.compliance || 0
+                                    compliance: compliance,
+                                    updatedAt: upd.updated_at || upd.created_at
                                 };
 
                                 const history = [...(kpi.history || [])];
-                                // Buscar por monthKey o por nombre de mes (para machacar mock data)
-                                const existingHistoryIdx = history.findIndex(h => h.monthKey === group.periodKey || h.month === monthName);
-                                
-                                if (existingHistoryIdx >= 0) {
-                                    history[existingHistoryIdx] = { ...history[existingHistoryIdx], ...historyPoint };
-                                } else {
-                                    history.push(historyPoint);
-                                }
+                                const hIdx = history.findIndex(h => h.monthKey === group.periodKey);
+                                if (hIdx >= 0) history[hIdx] = { ...history[hIdx], ...historyPoint };
+                                else history.push(historyPoint);
 
-                                // Actualizar brandValues (solo si es el periodo actual o no tiene datos)
+                                // Actualizamos brandValues y el estado base SIEMPRE con el dato más reciente
+                                // (Como sortedGroups está ordenado por fecha, el último proceso siempre es el más nuevo)
                                 const brandValues = { ...(kpi.brandValues || {}) };
-                                const oldBrandData = brandValues[dataKey] || { hasData: false, currentValue: 0, compliance: 0, semaphore: 'gray' };
-                                
-                                // Importante: el currentValue del KPI en el objeto base SIEMPRE debe ser el del periodo actual
-                                // para compatibilidad con el dashboard, pero guardamos TODO en history para la proyección.
-                                if (isFromCurrentPeriod || !oldBrandData.hasData) {
+                                // Actualizamos brandValues y métricas base SOLO si es el periodo reportable actual
+                                if (isFromCurrentPeriod) {
                                     brandValues[dataKey] = {
-                                        ...oldBrandData,
-                                        currentValue: upd.value,
-                                        compliance: Math.round(upd.compliance || 0),
-                                        semaphore: upd.semaphore || 'gray',
-                                        hasData: true,
-                                        additionalData: {
-                                            ...(upd.additional_data || {}),
-                                            updatedAt: upd.updated_at || upd.created_at,
-                                            period: group.periodKey
+                                        currentValue: upd.value, compliance, semaphore, hasData: true,
+                                        additionalData: { 
+                                            ...(upd.additional_data || {}), 
+                                            period: group.periodKey,
+                                            updatedAt: upd.updated_at || upd.created_at
                                         }
                                     };
-                                }
 
-                                // Recalcular consolidado del periodo actual
-                                const brandsForThisCompany = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
-                                let sumVal = 0;
-                                let sumComp = 0;
-                                let count = 0;
+                                    // Consolidado de marcas para el KPI base
+                                    const brands = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
+                                    let sumVal = 0, sumComp = 0, count = 0;
+                                    brands.forEach(k => {
+                                        if (brandValues[k].hasData) {
+                                            sumVal += brandValues[k].currentValue;
+                                            sumComp += brandValues[k].compliance;
+                                            count++;
+                                        }
+                                    });
 
-                                brandsForThisCompany.forEach(key => {
-                                    const bData = brandValues[key];
-                                    if (bData && bData.hasData) {
-                                        sumVal += bData.currentValue;
-                                        sumComp += bData.compliance;
-                                        count++;
+                                    const finalValue = count > 0 ? sumVal / count : 0;
+                                    const finalComp = count > 0 ? sumComp / count : 0;
+                                    let finalSem = 'gray';
+                                    if (count > 0) {
+                                        const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+                                        if (finalComp >= (isStrict ? 100 : 95)) finalSem = 'green';
+                                        else if (finalComp >= (isStrict ? 100 : 85)) finalSem = 'yellow';
+                                        else finalSem = 'red';
                                     }
-                                });
 
-                                const calculatedFinalValue = count > 0 ? sumVal / count : 0;
-                                const calculatedFinalComp = count > 0 ? sumComp / count : 0;
-
-                                let finalSemaphore = 'gray';
-                                if (count > 0) {
-                                    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
-                                    if (calculatedFinalComp >= (isStrict ? 100 : 95)) finalSemaphore = 'green';
-                                    else if (calculatedFinalComp >= (isStrict ? 100 : 85)) finalSemaphore = 'yellow';
-                                    else finalSemaphore = 'red';
-                                }
-
-                                return {
-                                    ...kpi,
-                                    history: history.sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || '')),
-                                    // Los valores base solo se actualizan si es el periodo actual
-                                    ...(isFromCurrentPeriod ? {
-                                        currentValue: parseFloat(calculatedFinalValue.toFixed(2)),
-                                        compliance: Math.round(calculatedFinalComp),
-                                        semaphore: finalSemaphore,
+                                    return {
+                                        ...kpi,
+                                        currentValue: parseFloat(finalValue.toFixed(2)),
+                                        compliance: Math.round(finalComp),
+                                        semaphore: finalSem,
                                         hasData: true,
                                         brandValues,
-                                        additionalData: {
-                                            ...(upd.additional_data || {}),
-                                            updatedAt: upd.updated_at || upd.created_at,
-                                            period: group.periodKey
-                                        }
-                                    } : { brandValues }),
-                                    // Actualizamos el punto de historia con el valor consolidado RECIÉN CALCULADO
-                                    // Esto asegura que la proyección vea el promedio de marcas y no solo el último dato.
-                                    history: history.map(h => 
-                                        h.monthKey === group.periodKey 
-                                            ? { ...h, [currentCompany]: calculatedFinalValue, compliance: calculatedFinalComp } 
-                                            : h
-                                    ).sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || ''))
-                                };
+                                        lastUpdate: upd.updated_at || upd.created_at,
+                                        additionalData: { 
+                                            ...(upd.additional_data || {}), 
+                                            period: group.periodKey,
+                                            updatedAt: upd.updated_at || upd.created_at
+                                        },
+                                        history: history.map(h => h.monthKey === group.periodKey ? { ...h, [currentCompany]: finalValue, compliance: finalComp } : h)
+                                            .sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || ''))
+                                    };
+                                } else {
+                                    // Para periodos pasados, solo actualizamos el historial y la fecha de última actividad global
+                                    return {
+                                        ...kpi,
+                                        lastUpdate: new Date(upd.updated_at || upd.created_at) > new Date(kpi.lastUpdate || 0) 
+                                            ? (upd.updated_at || upd.created_at) 
+                                            : kpi.lastUpdate,
+                                        history: history.map(h => h.monthKey === group.periodKey ? { ...h, [currentCompany]: historyPoint[currentCompany], compliance: historyPoint.compliance } : h)
+                                            .sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || ''))
+                                    };
+                                }
                             });
                         });
                         return newData;

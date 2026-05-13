@@ -371,7 +371,16 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                         </div>
                         <div style={{ fontSize: '0.7rem', fontWeight: 800, color: isManager ? 'var(--brand)' : '#334155' }}>
                             {(() => {
-                                const data = isBrandFocus ? kpi.brandValues?.[`${entity}-${selectedBrand}`]?.additionalData : kpi.additionalData;
+                                let data = isBrandFocus ? kpi.brandValues?.[`${entity}-${selectedBrand}`]?.additionalData : kpi.additionalData;
+                                
+                                // Fallback: Si no hay data global pero hay marcas, buscar la más reciente
+                                if (!data?.updatedAt && kpi.brandValues) {
+                                    const allBrandData = Object.values(kpi.brandValues)
+                                        .filter(b => b.hasData && b.additionalData?.updatedAt)
+                                        .sort((a, b) => new Date(b.additionalData.updatedAt) - new Date(a.additionalData.updatedAt));
+                                    if (allBrandData.length > 0) data = allBrandData[0].additionalData;
+                                }
+
                                 if (!data?.updatedAt) return 'Nunca';
                                 return `${formatDateTime(data.updatedAt)} ${data.period ? `(${formatPeriod(data.period)})` : ''}`;
                             })()}
