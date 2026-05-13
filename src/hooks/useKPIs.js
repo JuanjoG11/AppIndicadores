@@ -9,6 +9,11 @@ import { calculateKPIValue, isInverseKPI } from '../utils/kpiCalculations';
 /**
  * useKPIs - Hook central de datos sincronizado con el código y Supabase
  */
+const MONTH_NAMES = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
 export const useKPIs = (currentUser, activeCompany, onToast) => {
     // 1. Estado inicial
     const [kpiData, setKpiData] = useState(initialMockData);
@@ -21,10 +26,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     // Ref para ignorar persistencia automática en procesos internos
     const suppressPersist = useRef(false);
 
-    const MONTH_NAMES = [
-        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
 
     // ── Período mensual actual (YYYY-MM) para reseteо automático ──────────────
     const getCurrentPeriod = () => {
@@ -55,18 +56,19 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
      * Calcula un índice único para el periodo según la frecuencia del KPI.
      * Prevé que registros de distintos periodos (ej: Q1 vs Q2) no se solapen.
      */
-    const getPeriodIndex = (date, frequency = 'MENSUAL') => {
+    const getPeriodIndex = (date = new Date(), frequency = 'MENSUAL') => {
         const freq = frequency.toUpperCase();
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = d.getMonth() + 1;
+        const day = d.getDate();
         const monthStr = month.toString().padStart(2, '0');
 
         if (freq.includes('DIARI')) {
-            return format(date, 'yyyy-MM-dd');
+            return format(d, 'yyyy-MM-dd');
         }
         if (freq.includes('SEMANAL')) {
-            return format(date, "yyyy-'W'II"); // ISO Week
+            return format(d, "yyyy-'W'II"); // ISO Week
         }
         if (freq.includes('QUINCENAL')) {
             const fortnight = day <= 15 ? 'Q1' : 'Q2';
@@ -280,11 +282,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     : (isFromCurrentPeriod ? true : (oldBrandData.hasData || false))
             };
 
-            // Cálculo del mes para el histórico
-            const MONTH_NAMES = [
-                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-            ];
             const targetMonth = MONTH_NAMES[recordDateObj.getMonth()];
             const targetCompany = currentCompany;
 
@@ -339,10 +336,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             // ── ACTUALIZACIÓN DEL HISTORIAL ──
             const [year, monthNum] = (d.period || currentPeriod).split('-');
-            const MONTH_NAMES = [
-                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-            ];
             const monthName = MONTH_NAMES[parseInt(monthNum) - 1];
             const periodKey = d.period || currentPeriod;
 
@@ -551,7 +544,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
                                 // Construir el punto de historia basado en el periodo reportado
                                 const [year, monthNum] = group.periodKey.split('-');
-                                const monthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][parseInt(monthNum) - 1];
+                                const monthName = MONTH_NAMES[parseInt(monthNum) - 1];
                                 
                                 const historyPoint = {
                                     month: monthName,
