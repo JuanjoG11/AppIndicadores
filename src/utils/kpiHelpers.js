@@ -92,7 +92,18 @@ export const filterKPIsByEntity = (kpiData, entity) => {
             let totalCompliance = 0;
             let filledCount = 0;
 
-            // Requisito: Si tiene marcas definidas en meta, deben estar todas en brandValues para decir hasData: true
+            // Determinar qué claves usar para el cálculo:
+            // 1) Si existen datos brand-específicos (TYM-ALPINA, TYM-ZENU...) → usar SOLO esos
+            // 2) Si no hay brand-específicos pero hay nivel entidad (TYM-TYM) → usar ese
+            // Esto evita mezclar ambos niveles y promedios incorrectos
+            const brandSpecificKeys = entityBrands.length > 0
+                ? entityBrands.map(b => `${entity}-${b}`).filter(k => brandValues[k]?.hasData)
+                : [];
+            const keysToAggregate = brandSpecificKeys.length > 0
+                ? brandSpecificKeys
+                : entityKeys.filter(k => brandValues[k]?.hasData);
+
+            // allFilled: todas las marcas definidas tienen datos brand-específicos
             let allFilled = false;
             if (entityBrands.length > 0) {
                 allFilled = entityBrands.every(brand => {
@@ -103,9 +114,9 @@ export const filterKPIsByEntity = (kpiData, entity) => {
                 allFilled = brandValues[`${entity}-${entity}`]?.hasData || brandValues[`${entity}-GLOBAL`]?.hasData || false;
             }
 
-            entityKeys.forEach(key => {
+            keysToAggregate.forEach(key => {
                 const data = brandValues[key];
-                if (data.hasData) {
+                if (data && data.hasData) {
                     totalValue += (data.currentValue || 0);
                     totalCompliance += (data.compliance || 0);
                     filledCount++;
@@ -122,12 +133,10 @@ export const filterKPIsByEntity = (kpiData, entity) => {
                 else semaphore = 'red';
             }
 
-            // Si hay múltiples marcas, la marca en additionalData debe reflejar el consolidado
             const baseAdditionalData = brandValues[entityKeys[entityKeys.length - 1]].additionalData || {};
 
-            const anyFilled = entityBrands.length > 0
-                ? entityBrands.some(brand => brandValues[`${entity}-${brand}`]?.hasData)
-                : entityKeys.some(key => brandValues[key].hasData);
+            // anyFilled: hay dato si alguna clave usada tiene datos
+            const anyFilled = keysToAggregate.length > 0;
 
             return {
                 ...kpi,

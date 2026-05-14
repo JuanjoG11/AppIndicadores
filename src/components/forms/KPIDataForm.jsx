@@ -83,12 +83,17 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                     (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
 
         if (data) {
-            // Pre-cargar si el periodo coincide (mismo mes o misma quincena)
-            if (!data.period || (typeof data.period === 'string' && data.period.startsWith(currentPeriod.substring(0, 7)))) {
-                // Si el KPI es granular (Q1/Q2/W), el periodo debe coincidir exactamente o ser compatible
-                if (data.period && targetPeriod && data.period !== targetPeriod) return {};
+            // Pre-cargar si el periodo coincide:
+            // - Coincidencia exacta (weekly/quincenal: '2026-W20' === '2026-W20')
+            // - O el periodo empieza con el mismo mes (mensual: '2026-05')
+            const storedPeriod = data.period || '';
+            const periodMatch = !storedPeriod ||
+                storedPeriod === currentPeriod ||
+                (typeof storedPeriod === 'string' && storedPeriod.startsWith(currentPeriod.substring(0, 7)));
 
-                // Limpiar llaves de metadatos de sincronización para evitar "pegarse" en fechas viejas
+            if (periodMatch) {
+                if (storedPeriod && targetPeriod && storedPeriod !== targetPeriod) return {};
+
                 const cleaned = { ...data };
                 delete cleaned.updatedAt;
                 delete cleaned.period;
@@ -105,11 +110,16 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         let defaultPeriod = d.toISOString().split('T')[0]; // Default Day
         
         if (kpi.frecuencia === 'SEMANAL') {
-            const date = new Date();
-            const oneJan = new Date(date.getFullYear(), 0, 1);
-            const numberOfDays = Math.floor((date - oneJan) / (24 * 60 * 60 * 1000));
-            const week = Math.ceil((date.getDay() + 1 + numberOfDays) / 7);
-            defaultPeriod = `${date.getFullYear()}-W${week}`;
+            // ISO week: mismo algoritmo que date-fns format(d, "yyyy-'W'II")
+            const isoWeek = (dt) => {
+                const d = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()));
+                const day = d.getUTCDay() || 7;
+                d.setUTCDate(d.getUTCDate() + 4 - day);
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+            };
+            defaultPeriod = isoWeek(d);
         } else if (kpi.frecuencia === 'QUINCENAL') {
             const quincena = d.getDate() <= 15 ? 'Q1' : 'Q2';
             defaultPeriod = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${quincena}`;
@@ -131,22 +141,35 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const lastSelectionStart = useRef(null);
     const lastValueLength = useRef(0);
     const drafts = useRef({});
+    // Ref para detectar cambio de marca y evitar guardar datos de una marca en el borrador de otra
+    const prevBrandRef = useRef(null);
 
+    // Guardar borrador SOLO cuando la marca NO cambió (evita copiar datos de ALPINA a ZENU)
     useEffect(() => {
-        if (formData.brand) {
+        if (formData.brand && formData.brand === prevBrandRef.current) {
             drafts.current[formData.brand] = formData;
         }
+        prevBrandRef.current = formData.brand;
     }, [formData]);
 
     // EFECTO: Pre-cargar datos cuando cambia la marca o el periodo
     useEffect(() => {
         const brandData = drafts.current[formData.brand] || getInitialBrandData(formData.brand, formData.period);
-        if (brandData && Object.keys(brandData).length > 1) { // 1 because brand is always there
-             setFormData(prev => ({
-                 ...prev,
-                 ...brandData
-             }));
+        if (brandData && Object.keys(brandData).length > 1) {
+            setFormData(prev => ({
+                ...prev,
+                ...brandData
+            }));
+        } else {
+            // Nueva marca sin datos previos: limpiar campos numéricos para no heredar valores de la marca anterior
+            setFormData(prev => {
+                const cleared = { ...prev };
+                const formulaFields = getFormulaFields();
+                formulaFields.forEach(f => { cleared[f.name] = ''; });
+                return cleared;
+            });
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData.brand, formData.period]);
 
     useLayoutEffect(() => {
@@ -517,23 +540,22 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             // Ensure numbers are really numbers before saving
             // And strip separators, but EXCLUDE non-numeric fields
             Object.keys(cleanedData).forEach(key => {
-                const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id'];
+                // 'value' se excluye para que siempre se recalcule desde los campos del formulario
+                const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id', 'value'];
                 if (skipKeys.includes(key)) return;
 
                 if (typeof cleanedData[key] === 'string' && cleanedData[key].trim() !== '') {
-                    // Robust parsing: handle both dot and comma as decimals
+                    // Formato colombiano: el punto es SIEMPRE separador de miles, la coma es decimal
                     let valStr = cleanedData[key].trim().replace(/\s/g, '');
                     
-                    // If it has both, assume . is thousand and , is decimal (es-CO)
                     if (valStr.includes(',') && valStr.includes('.')) {
+                        // Ambos: punto=miles, coma=decimal → "1.234,56" → "1234.56"
                         valStr = valStr.replace(/\./g, '').replace(',', '.');
                     } else if (valStr.includes(',')) {
-                        // Only comma: it's the decimal separator
+                        // Solo coma: separador decimal → "1,5" → "1.5"
                         valStr = valStr.replace(',', '.');
-                    }
-                    // If it only has a dot, we keep it as decimal separator (standard web format)
-                    // unless it's clearly a thousands separator (e.g. multiple dots)
-                    else if ((valStr.match(/\./g) || []).length > 1) {
+                    } else {
+                        // Solo puntos o ninguno: todos los puntos son miles → "200.000" → "200000"
                         valStr = valStr.replace(/\./g, '');
                     }
 

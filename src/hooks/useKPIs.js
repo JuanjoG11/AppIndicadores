@@ -159,7 +159,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         let preValue = 0;
         try {
             if (newData.type !== 'META_UPDATE') {
-                preValue = newData.value !== undefined ? newData.value : calculateKPIValue(kpiId, enrichedData);
+                // Manual: siempre recalcular. DB: usar value persistido
+                preValue = (!isManualUpd && newData.value !== undefined)
+                    ? newData.value
+                    : calculateKPIValue(kpiId, enrichedData);
             }
         } catch { preValue = newData.value || 0; }
         if (!isFinite(preValue)) preValue = 0;
@@ -254,7 +257,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             try {
                 if (d.type === 'META_UPDATE') newValue = kpi.currentValue;
-                else if (d.value !== undefined) newValue = d.value; // Priorizar valor pre-calculado (promedios)
+                // Para updates de DB (recarga): usar el value persistido
+                // Para updates manuales (analista): SIEMPRE recalcular desde los campos del formulario
+                else if (!isManualUpdate && d.value !== undefined) newValue = d.value;
                 else newValue = calculateKPIValue(kpiId, d);
             } catch (e) {
                 console.error("Calculation Error:", e);
@@ -347,14 +352,25 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             let historyValue = newValue; // Para el historial, usamos el valor que se está cargando
 
             if (kpi.meta && typeof kpi.meta === 'object') {
-                const brandsForThisCompany = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
-                
-                if (brandsForThisCompany.length > 0) {
+                const allEntityKeys = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
+
+                // Misma lógica que filterKPIsByEntity:
+                // 1) Usar solo claves brand-específicas si existen con datos
+                // 2) Fallback a nivel entidad (TYM-TYM) si no hay brand-específicos
+                const brandSpecificWithData = allEntityKeys.filter(k => {
+                    const suffix = k.slice(currentCompany.length + 1);
+                    return suffix !== currentCompany && brandValues[k]?.hasData;
+                });
+                const keysForConsolidation = brandSpecificWithData.length > 0
+                    ? brandSpecificWithData
+                    : allEntityKeys.filter(k => brandValues[k]?.hasData);
+
+                if (keysForConsolidation.length > 0) {
                     let sumVal = 0;
                     let sumComp = 0;
                     let count = 0;
 
-                    brandsForThisCompany.forEach(key => {
+                    keysForConsolidation.forEach(key => {
                         const bData = brandValues[key];
                         if (bData && bData.hasData) {
                             sumVal += bData.currentValue;
@@ -366,12 +382,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     if (count > 0) {
                         const calculatedFinalValue = sumVal / count;
                         
-                        // Si se muestra en dashboard, actualizamos los finales consolidados
                         if (shouldShowInDashboard) {
                             finalValue = calculatedFinalValue;
                             finalCompliance = Math.round(sumComp / count);
                             
-                            // Recalcular semáforo consolidado
                             const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
                             const greenThreshold = isStrict ? 100 : 95;
                             const yellowThreshold = isStrict ? 100 : 85;
