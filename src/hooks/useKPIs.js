@@ -123,6 +123,48 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
      * Aplica actualizaciones locales al estado.
      */
     const applyKPIUpdate = useCallback((kpiId, newData, shouldPersist = true, forceHistorical = false) => {
+        // Pre-calcular periodo y valor FUERA del updater (evita side-effects en updaters de React)
+        const kpiDef = kpiDefinitions.find(k => k.id === kpiId);
+        const freq = (kpiDef?.frecuencia || 'MENSUAL').toUpperCase();
+        const isManualUpd = !newData.updatedAt;
+
+        // Calcular fecha del registro
+        let recDateObj;
+        if (isManualUpd && freq === 'MENSUAL' && newData.period?.length === 7) {
+            const [yr, mo] = newData.period.split('-').map(Number);
+            recDateObj = new Date(yr, mo - 1, 15);
+        } else {
+            const raw = newData.updatedAt || new Date().toISOString();
+            try { recDateObj = typeof raw === 'string' ? parseISO(raw) : new Date(raw); }
+            catch { recDateObj = new Date(); }
+        }
+        if (isNaN(recDateObj?.getTime())) recDateObj = new Date();
+
+        // Calcular periodo
+        let prePeriodIndex = isManualUpd
+            ? getPeriodIndex(recDateObj, freq)
+            : (newData.period || getPeriodIndex(recDateObj, freq)).toString();
+        if (prePeriodIndex.length === 7 && freq !== 'MENSUAL') {
+            prePeriodIndex = getPeriodIndex(recDateObj, freq);
+        }
+
+        // Datos enriquecidos con periodo correcto
+        const enrichedData = {
+            ...newData,
+            updatedAt: newData.updatedAt || new Date().toISOString(),
+            period: prePeriodIndex
+        };
+
+        // Pre-calcular valor para persistencia
+        let preValue = 0;
+        try {
+            if (newData.type !== 'META_UPDATE') {
+                preValue = newData.value !== undefined ? newData.value : calculateKPIValue(kpiId, enrichedData);
+            }
+        } catch { preValue = newData.value || 0; }
+        if (!isFinite(preValue)) preValue = 0;
+        preValue = parseFloat((preValue || 0).toFixed(2));
+
         setKpiData(prevData => {
             const index = prevData.findIndex(k => k.id === kpiId);
             if (index === -1) return prevData;
@@ -384,25 +426,27 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 history: newHistory.sort((a, b) => (a.monthKey || '').localeCompare(b.monthKey || ''))
             };
 
-            if (shouldPersist && !suppressPersist.current) {
-                persistUpdate(kpiId, updatedAdditionalData, newValue, currentUser);
-            }
-
             const newDataFull = [...prevData];
             newDataFull[index] = newKpi;
             return newDataFull;
         });
-    }, [activeCompany, currentUser, isInverseKPI, calculateKPIValue, currentPeriod]);
+
+        // ⚠️ persistUpdate FUERA del updater - los valores ya fueron pre-calculados arriba
+        if (shouldPersist && !suppressPersist.current) {
+            persistUpdate(kpiId, enrichedData, preValue, currentUser)
+                .catch(err => console.error('persistUpdate fallido:', err));
+        }
+    }, [activeCompany, currentUser, calculateKPIValue, currentPeriod]);
 
     const persistUpdate = async (kpiId, additionalData, value, user) => {
         try {
             const persistBrand = additionalData?.brand || (Array.isArray(user?.activeBrand) ? user.activeBrand[0] : user?.activeBrand) || 'Global';
             
-            // Si el KPI es diario/semanal, el fallback no puede ser solo el mes (getCurrentPeriod)
-            const frequency = kpiData.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL';
+            // Usar kpiDefinitions (estático) para evitar closure stale de kpiData
+            const frequency = kpiDefinitions.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL';
+            // Respetar el periodo ya calculado en applyKPIUpdate (tiene prioridad)
             const persistPeriod = additionalData?.period || getPeriodIndex(new Date(), frequency);
             
-            // USAR la empresa resuelta en applyKPIUpdate (newData.company) o la activa
             const payload = {
                 company_id: additionalData?.company || activeCompany || user?.company || 'TYM',
                 kpi_id: kpiId,
@@ -545,8 +589,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         sortedGroups.forEach(group => {
                             const upd = group.latestUpdate;
                             const kpiDef = kpiDefinitions.find(k => k.id === group.kpi_id);
-                            const currentPeriodKey = getReportablePeriod(kpiDef?.frecuencia);
-                            const isFromCurrentPeriod = group.periodKey === currentPeriodKey;
+                            const freq = kpiDef?.frecuencia || 'MENSUAL';
+                            const currentPeriodKey = getReportablePeriod(freq);
+                            // También aceptar el periodo actual estricto (sin gracia) y el
+                            // periodo de la semana/quincena anterior para datos ya guardados
+                            const strictCurrentPeriod = getPeriodIndex(new Date(), freq);
+                            const isFromCurrentPeriod = 
+                                group.periodKey === currentPeriodKey ||
+                                group.periodKey === strictCurrentPeriod;
                             
                             newData = newData.map(kpi => {
                                 if (kpi.id !== upd.kpi_id) return kpi;
@@ -554,8 +604,18 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 const currentCompany = group.company_id;
                                 const currentBrand = group.brand;
                                 const dataKey = `${currentCompany}-${currentBrand.toUpperCase()}`;
-                                const [year, monthNum] = group.periodKey.split('-');
-                                const monthName = MONTH_NAMES[parseInt(monthNum) - 1];
+                                const [year, rawMonthPart] = group.periodKey.split('-');
+                                // Para SEMANAL (2026-W20) usar la fecha del registro para el mes
+                                // Para MENSUAL/QUINCENAL (2026-05, 2026-05-Q1) extraer el número de mes
+                                let monthName;
+                                if (rawMonthPart?.startsWith('W')) {
+                                    const d = new Date(upd.updated_at || upd.created_at);
+                                    monthName = MONTH_NAMES[isNaN(d) ? new Date().getMonth() : d.getMonth()];
+                                } else {
+                                    const monthNumStr = rawMonthPart?.replace(/[^0-9]/g, '') || '1';
+                                    const monthIdx = Math.min(Math.max(parseInt(monthNumStr) - 1, 0), 11);
+                                    monthName = MONTH_NAMES[monthIdx];
+                                }
 
                                 // Recalcular métricas (ya que no se guardan en la DB)
                                 let compliance = 0;

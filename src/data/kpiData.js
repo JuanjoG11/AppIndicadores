@@ -774,6 +774,7 @@ export const kpiDefinitions = [
         meta: {
             ALPINA: 1.8,
             ZENU: 1.8,
+            FLEISCHMANN: 1.8,
             UNILEVER: 1.8,
             FAMILIA: 1.8
         },
