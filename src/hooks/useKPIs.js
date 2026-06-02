@@ -97,37 +97,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     };
 
     /**
-     * Determina el periodo reportable "Actual". 
-     * Incluye lógica de gracia (los primeros días permiten cargar el periodo anterior).
+     * Determina el periodo reportable "Actual".
+     * Ahora simplemente devuelve el mes actual sin aplicar ninguna gracia.
      */
     const getReportablePeriod = (frequency = 'MENSUAL') => {
         const now = new Date();
-        const day = now.getDate();
-        const freq = frequency.toUpperCase();
-
-        // Gracia Mensual/Bimestral: Primeros 10 días del mes permiten cargar el mes ante-anterior (M-2), el resto del mes M-1
-        if (freq.includes('MENSUAL') || freq.includes('BIMESTRAL')) {
-            if (day <= 10) {
-                return getPeriodIndex(subMonths(now, 2), frequency);
-            }
-            return getPeriodIndex(subMonths(now, 1), frequency);
-        }
-
-        // Gracia Quincenal: 
-        // Si estamos entre el 1 y el 5, reportamos Q2 del mes pasado.
-        // Si estamos entre el 16 y el 20, reportamos Q1 de este mes.
-        if (freq.includes('QUINCENAL')) {
-            if (day <= 5) return getPeriodIndex(subMonths(now, 1), 'QUINCENAL').replace('Q1', 'Q2');
-            if (day >= 16 && day <= 20) return `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-Q1`;
-        }
-        
-        // Gracia Semanal: Primeros 2 días de la semana permiten cargar la anterior
-        if (freq.includes('SEMANAL') && now.getDay() >= 1 && now.getDay() <= 2) {
-             // ISO Week de hace 3 días (para estar seguro de caer en la semana anterior)
-             return getPeriodIndex(new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), 'SEMANAL');
-        }
-
-        return getPeriodIndex(now, frequency);
+        // Ignorar el día del mes y devolver siempre el periodo del mes actual
+        const period = getPeriodIndex(now, frequency);
+        return period;
     };
 
     /**
@@ -364,7 +341,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             let finalValue = shouldShowInDashboard ? newValue : (kpi.currentValue || 0);
             let finalCompliance = shouldShowInDashboard ? compliance : (kpi.compliance || 0);
             let finalSemaphore = shouldShowInDashboard ? semaphore : (kpi.semaphore || 'gray');
-            let finalHasData = kpi.hasData || isFromCurrentPeriod || isManualUpdate;
+            let finalHasData = isFromCurrentPeriod || isManualUpdate;
             let historyValue = newValue; // Para el historial, usamos el valor que se está cargando
 
             if (kpi.meta && typeof kpi.meta === 'object') {
