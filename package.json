@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "backup": "node scripts/backup_supabase.js",
+    "retain": "node scripts/retain_backups.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.91.0",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.4.2",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

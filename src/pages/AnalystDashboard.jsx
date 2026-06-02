@@ -27,11 +27,10 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
     const getDisplayPeriod = () => {
         const now = new Date();
         const day = now.getDate();
-        let targetDate = now;
-        // Gracia de 10 días para el mes anterior
-        if (day <= 10) {
-            targetDate = new Date(now.getFullYear(), now.getMonth(), 0);
-        }
+        // targetDate es el mes M-2 si estamos en los primeros 10 días, de lo contrario es M-1
+        const targetDate = day <= 10 
+            ? new Date(now.getFullYear(), now.getMonth() - 2, 15) 
+            : new Date(now.getFullYear(), now.getMonth() - 1, 15);
         return targetDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
     };
     const displayPeriod = getDisplayPeriod();

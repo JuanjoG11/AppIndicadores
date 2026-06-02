@@ -297,8 +297,8 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
 
             {/* Sparkline */}
             {kpi.history && kpi.history.length > 0 && (
-                <div style={{ height: '50px', margin: '0.5rem -1.5rem', opacity: 0.8 }}>
-                    <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={50}>
+                <div style={{ height: '50px', margin: '0.5rem -1.5rem', opacity: 0.8, minWidth: '0' }}>
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <AreaChart data={kpi.history}>
                             <defs>
                                 <linearGradient id={`gradient-${kpi.id}`} x1="0" y1="0" x2="0" y2="1">

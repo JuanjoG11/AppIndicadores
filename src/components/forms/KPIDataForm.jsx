@@ -142,7 +142,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const lastValueLength = useRef(0);
     const drafts = useRef({});
     // Ref para detectar cambio de marca y evitar guardar datos de una marca en el borrador de otra
-    const prevBrandRef = useRef(null);
+    // Se inicializa con defaultBrand para que el primer draft se guarde correctamente
+    const prevBrandRef = useRef(defaultBrand);
 
     // Guardar borrador SOLO cuando la marca NO cambió (evita copiar datos de ALPINA a ZENU)
     useEffect(() => {
@@ -302,10 +303,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 { name: 'valorVerificado', label: 'Valor Verificado ($)', type: 'number' },
                 { name: 'valorCorrecto', label: 'Valor Correcto ($)', type: 'number' }
             ],
-            'quiebres-inventario': [
-                { name: 'quiebres', label: 'Quiebres de Inventario', type: 'number' },
-                { name: 'totalSku', label: 'Total SKU / Referencias', type: 'number' }
-            ],
+
             'obsolescencia': [
                 { name: 'inventarioObsoleto', label: 'Inventario Obsoleto ($)', type: 'number' },
                 { name: 'inventarioTotal', label: 'Inventario Total ($)', type: 'number' }
@@ -434,6 +432,11 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             ],
             'ajustes-revisoria': [
                 { name: 'ajustesRevisor', label: 'Cantidad de Ajustes', type: 'number', placeholder: 'Eje: 1' }
+            ],
+
+            'quiebres-inventario': [
+                { name: 'quiebres', label: 'Número de Quiebres', type: 'number', placeholder: 'Eje: 5' },
+                { name: 'totalSku', label: 'Total SKUs', type: 'number', placeholder: 'Eje: 500' }
             ],
             'rotacion-cxc': [
                 { name: 'ventasCredito', label: 'Ventas a Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' },

@@ -247,6 +247,26 @@ export const calculateKPIValue = (kpiId, rawData) => {
       case 'error-facturacion':
         newValue = (parseFloat(d.errores || 0) / (parseFloat(d.facturas || 0) || 1)) * 100;
         break;
+      // INVENTARIO
+      case 'fiabilidad-inventarios':
+        {
+           const verificado = parseFloat(d.valorVerificado || 0);
+           const correcto = parseFloat(d.valorCorrecto || 0);
+           // Exactitud de Inventario: (Verificado / Correcto) * 100
+           // Si verificado > correcto, generalmente se capta al 100% o se mide la desviación
+           // Para el dashboard de TYM, lo captaremos al 100% si se desea ver cumplimiento de meta
+           const ratio = correcto > 0 ? (verificado / correcto) * 100 : 0;
+           newValue = Math.min(ratio, 100); 
+        }
+        break;
+      case 'quiebres-inventario':
+        {
+           const quiebres = parseFloat(d.quiebres || 0);
+           const totalSku = parseFloat(d.totalSku || 0);
+           // % de SKUs sin quiebre
+           newValue = totalSku > 0 ? ((totalSku - quiebres) / totalSku) * 100 : 100;
+        }
+        break;
       // SOFTWARE
       case 'tareas-programadas':
         newValue = (parseFloat(d.tareasEjecutadas || 0) / (parseFloat(d.tareasProgramadas || 0) || 1)) * 100;

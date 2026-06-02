@@ -227,7 +227,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                         <p style={{ margin: '0 0 1rem', fontSize: '0.8rem', color: '#94a3b8' }}>
                             % promedio de todos los indicadores por empresa
                         </p>
-                        <ResponsiveContainer width="100%" height="80%">
+                        <ResponsiveContainer width="100%" height="80%" minWidth={0}>
                             <AreaChart data={comparisonData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="gTYM" x1="0" y1="0" x2="0" y2="1">
@@ -360,7 +360,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                         {chartData[chartData.length - 1]?.score ?? '—'}%
                                     </div>
                                 </div>
-                                <ResponsiveContainer width="100%" height="75%">
+                                <ResponsiveContainer width="100%" height="75%" minWidth={0}>
                                     <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id={`g${co}`} x1="0" y1="0" x2="0" y2="1">

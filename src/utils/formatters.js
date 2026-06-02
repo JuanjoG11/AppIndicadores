@@ -137,8 +137,8 @@ export const getKPIDeadline = (frequency) => {
             }
             return mid;
         case 'MENSUAL':
-            // Grace period: hasta el día 5 del mes siguiente para reportar el mes anterior
-            if (day <= 5) {
+            // Grace period: hasta el día 10 del mes siguiente para reportar el mes anterior
+            if (day <= 10) {
                 return new Date(today.getFullYear(), today.getMonth(), 0, 23, 59);
             }
             // Último día del mes corriente
