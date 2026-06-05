@@ -48,17 +48,11 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     const suppressPersist = useRef(false);
 
 
-    // ── Período mensual actual (YYYY-MM) para reseteо automático ──────────────
+    // ── Período mensual actual (YYYY-MM) ──────────────
     const getCurrentPeriod = () => {
         const now = new Date();
-        const day = now.getDate();
-        
-        // Gracia de 10 días para reportar el mes anterior (Accounting/SST closure window)
-        // targetDate es el mes M-2 si estamos en los primeros 10 días, de lo contrario es M-1
-        const targetDate = day <= 10 ? subMonths(now, 2) : subMonths(now, 1);
-
-        const y = targetDate.getFullYear();
-        const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
         return `${y}-${m}`;
     };
     const currentPeriod = getCurrentPeriod();
@@ -327,11 +321,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 compliance: shouldShowInDashboard ? compliance : (oldBrandData.compliance || 0),
                 semaphore: shouldShowInDashboard ? semaphore : (oldBrandData.semaphore || 'gray'),
                 additionalData: shouldShowInDashboard ? d : (oldBrandData.additionalData || d),
-                hasData: isManualUpdate 
-                    ? true 
-                    : (d.type === 'META_UPDATE') 
-                    ? (oldBrandData.hasData) 
-                    : (isFromCurrentPeriod ? true : (oldBrandData.hasData || false))
+                hasData: isFromCurrentPeriod ? true : (oldBrandData.hasData || false)
             };
 
             const targetMonth = MONTH_NAMES[recordDateObj.getMonth()];
@@ -341,7 +331,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             let finalValue = shouldShowInDashboard ? newValue : (kpi.currentValue || 0);
             let finalCompliance = shouldShowInDashboard ? compliance : (kpi.compliance || 0);
             let finalSemaphore = shouldShowInDashboard ? semaphore : (kpi.semaphore || 'gray');
-            let finalHasData = isFromCurrentPeriod || isManualUpdate;
+            let finalHasData = isFromCurrentPeriod;
             let historyValue = newValue; // Para el historial, usamos el valor que se está cargando
 
             if (kpi.meta && typeof kpi.meta === 'object') {

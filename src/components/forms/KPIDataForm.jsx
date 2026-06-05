@@ -83,13 +83,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                     (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
 
         if (data) {
-            // Pre-cargar si el periodo coincide:
-            // - Coincidencia exacta (weekly/quincenal: '2026-W20' === '2026-W20')
-            // - O el periodo empieza con el mismo mes (mensual: '2026-05')
+            // Pre-cargar solo si el periodo coincide exactamente o corresponde al mismo mes.
+            // Si el dato no tiene información de periodo (storedPeriod vacío), no lo usamos.
             const storedPeriod = data.period || '';
-            const periodMatch = !storedPeriod ||
-                storedPeriod === currentPeriod ||
-                (typeof storedPeriod === 'string' && storedPeriod.startsWith(currentPeriod.substring(0, 7)));
+            const periodMatch = storedPeriod && (
+                storedPeriod === targetPeriod ||
+                (typeof storedPeriod === 'string' && storedPeriod.startsWith(targetPeriod.substring(0, 7)))
+            );
 
             if (periodMatch) {
                 if (storedPeriod && targetPeriod && storedPeriod !== targetPeriod) return {};
@@ -143,19 +143,21 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const drafts = useRef({});
     // Ref para detectar cambio de marca y evitar guardar datos de una marca en el borrador de otra
     // Se inicializa con defaultBrand para que el primer draft se guarde correctamente
-    const prevBrandRef = useRef(defaultBrand);
+    const prevBrandPeriodRef = useRef(`${defaultBrand}-${formData.period}`);
 
-    // Guardar borrador SOLO cuando la marca NO cambió (evita copiar datos de ALPINA a ZENU)
+    // Guardar borrador SOLO cuando la marca O el periodo NO cambiaron
     useEffect(() => {
-        if (formData.brand && formData.brand === prevBrandRef.current) {
-            drafts.current[formData.brand] = formData;
+        const currentKey = `${formData.brand}-${formData.period}`;
+        if (currentKey === prevBrandPeriodRef.current) {
+            drafts.current[currentKey] = formData;
         }
-        prevBrandRef.current = formData.brand;
+        prevBrandPeriodRef.current = currentKey;
     }, [formData]);
 
     // EFECTO: Pre-cargar datos cuando cambia la marca o el periodo
     useEffect(() => {
-        const brandData = drafts.current[formData.brand] || getInitialBrandData(formData.brand, formData.period);
+        const draftKey = `${formData.brand}-${formData.period}`;
+        const brandData = drafts.current[draftKey] || getInitialBrandData(formData.brand, formData.period);
         if (brandData && Object.keys(brandData).length > 1) {
             setFormData(prev => ({
                 ...prev,
@@ -470,7 +472,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             ],
             'pedidos-facturados': [
                 { name: 'pedidos', label: 'Número de Pedidos', type: 'number', placeholder: 'Eje: 1500' },
-                { name: 'facturas', label: 'Número de Facturas', type: 'number', placeholder: 'Eje: 1500' }
+                { name: 'facturas', label: 'Pedidos Facturados', type: 'number', placeholder: 'Eje: 1500' }
             ],
             'impresion-facturas': [
                 { name: 'facturasImpresas', label: 'Facturas Impresas', type: 'number', placeholder: 'Eje: 800' },
