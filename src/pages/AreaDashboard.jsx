@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getAreaById } from '../data/areas';
 import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { filterKPIsByEntity, getKPIResponsable } from '../utils/kpiHelpers';
 import { calculateAreaScore } from '../data/mockData';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline } from '../utils/formatters';
@@ -781,15 +782,17 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
 
             {/* Form Modal */}
             {editingKPI && (
-                <KPIDataForm
-                    key={`${editingKPI.id}-${editMode}`}
-                    kpi={editingKPI}
-                    currentUser={currentUser}
-                    onSave={handleSaveKPI}
-                    onCancel={() => setEditingKPIId(null)}
-                    mode={editMode}
-                    initialBrand={initialBrand}
-                />
+                <ErrorBoundary>
+                    <KPIDataForm
+                        key={`${editingKPI.id}-${editMode}`}
+                        kpi={editingKPI}
+                        currentUser={currentUser}
+                        onSave={handleSaveKPI}
+                        onCancel={() => setEditingKPIId(null)}
+                        mode={editMode}
+                        initialBrand={initialBrand}
+                    />
+                </ErrorBoundary>
             )}
 
             {/* Info Footer */}

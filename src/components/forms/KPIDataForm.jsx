@@ -76,10 +76,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     // Obtener datos iniciales específicos de la marca si existen y son del periodo actual
     const getInitialBrandData = (brandName, targetPeriod = null) => {
+        if (!brandName) return {};
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
-        const currentPeriod = targetPeriod || new Date().toISOString().substring(0, 7); // YYYY-MM
-        
-        const data = kpi.brandValues?.[dataKey]?.additionalData || 
+        const period = targetPeriod || new Date().toISOString().substring(0, 7); // YYYY-MM
+        const data = kpi.brandValues?.[dataKey]?.additionalData ||
                     (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
 
         if (data) {
@@ -87,12 +87,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             // Si el dato no tiene información de periodo (storedPeriod vacío), no lo usamos.
             const storedPeriod = data.period || '';
             const periodMatch = storedPeriod && (
-                storedPeriod === targetPeriod ||
-                (typeof storedPeriod === 'string' && storedPeriod.startsWith(targetPeriod.substring(0, 7)))
+                storedPeriod === period ||
+                storedPeriod.startsWith(period)
             );
 
             if (periodMatch) {
-                if (storedPeriod && targetPeriod && storedPeriod !== targetPeriod) return {};
+                if (storedPeriod && period && storedPeriod !== period) return {};
 
                 const cleaned = { ...data };
                 delete cleaned.updatedAt;
@@ -128,11 +128,11 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         }
 
         return {
-            brand: defaultBrand,
+            brand: (defaultBrand || userEntity),
             company: userEntity,
             period: defaultPeriod,
             newFrecuencia: kpi.frecuencia,
-            ...getInitialBrandData(defaultBrand)
+            ...getInitialBrandData(defaultBrand || userEntity)
         };
     });
 
