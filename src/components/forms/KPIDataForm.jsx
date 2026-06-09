@@ -83,17 +83,14 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                     (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
 
         if (data) {
-            // Pre-cargar solo si el periodo coincide exactamente o corresponde al mismo mes.
-            // Si el dato no tiene información de periodo (storedPeriod vacío), no lo usamos.
+            // If the stored data does not contain a period, do not preload it (prevents cross-month bleed).
             const storedPeriod = data.period || '';
-            const periodMatch = storedPeriod && (
-                storedPeriod === period ||
-                storedPeriod.startsWith(period)
-            );
+            if (!storedPeriod) return {};
+
+            // Accept exact month (YYYY-MM) or exact date that starts with the target month.
+            const periodMatch = storedPeriod && (storedPeriod === period || storedPeriod.startsWith(period));
 
             if (periodMatch) {
-                if (storedPeriod && period && storedPeriod !== period) return {};
-
                 const cleaned = { ...data };
                 delete cleaned.updatedAt;
                 delete cleaned.period;
@@ -165,12 +162,16 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             }));
         } else {
             // Nueva marca sin datos previos: limpiar campos numéricos para no heredar valores de la marca anterior
-            setFormData(prev => {
-                const cleared = { ...prev };
-                const formulaFields = getFormulaFields();
-                formulaFields.forEach(f => { cleared[f.name] = ''; });
-                return cleared;
+            // No existing data for this brand/period: reset all KPI fields to empty values
+            const emptyFields = {};
+            getFormulaFields().forEach(f => {
+                emptyFields[f.name] = '';
             });
+            setFormData(prev => ({
+                ...prev,
+                ...emptyFields,
+                // Preserve brand, company, period, newFrecuencia
+            }));
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData.brand, formData.period]);
@@ -523,7 +524,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     } else if (currentMeta === 0 && liveResult > 0) {
         compliance = isInverse ? 0 : 100;
     } else if (typeof currentMeta === 'number') {
-        compliance = isInverse ? (currentMeta / liveResult) * 100 : (liveResult / currentMeta) * 100;
+        compliance = isInverse ? (liveResult !== 0 ? (currentMeta / liveResult) * 100 : 0) : (currentMeta !== 0 ? (liveResult / currentMeta) * 100 : 0);
         compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
     }
 
@@ -534,7 +535,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         e.preventDefault();
 
         // Aseguramos de que el actual se guarde en borradores
-        drafts.current[formData.brand] = formData;
+        drafts.current[`${formData.brand}-${formData.period}`] = formData;
 
         let savedBrands = [];
 
@@ -625,7 +626,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             }
 
             if (fieldName === 'brand') {
-                const brandData = drafts.current[value] || getInitialBrandData(value);
+                const brandData = drafts.current[`${value}-${formData.period}`] || getInitialBrandData(value, formData.period);
                 const newCompany = (value === 'TYM' || value === 'TAT') ? value : (BRAND_TO_ENTITY[value] || userEntity);
                 
                 if (isMetaMode) {
