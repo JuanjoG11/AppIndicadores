@@ -95,15 +95,14 @@ export const generateMockData = () => {
             compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
         }
 
-        const currentMonth = getMonthKey();
-        const kpiHistory = generateRealHistory().map(h => {
-            if (h.month === currentMonth) {
-                // Si realData tiene brand, inferimos la empresa (ALPINA -> TYM, UNILEVER -> TAT)
-                const entity = realData?.brand ? (BRAND_TO_ENTITY[realData.brand] || 'TYM') : 'TYM';
-                return { ...h, [entity]: currentValue };
-            }
-            return h;
-        });
+        // 3. Generar historial para todos los meses y ambas compañías (TYM y TAT)
+        const kpiHistory = MONTH_NAMES.map(m => ({
+            month: m,
+            year: START_YEAR,
+            // Asignamos el valor actual a ambas compañías para simplificar el mock
+            TYM: currentValue,
+            TAT: currentValue,
+        }));
 
         // 3. Generar brandValues para el desglose (Para que el filtro por marca funcione)
         const brandValues = {};

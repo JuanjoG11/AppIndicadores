@@ -129,7 +129,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             company: userEntity,
             period: defaultPeriod,
             newFrecuencia: kpi.frecuencia,
-            ...getInitialBrandData(defaultBrand || userEntity)
+            ...getInitialBrandData(defaultBrand || userEntity, defaultPeriod)
         };
     });
 

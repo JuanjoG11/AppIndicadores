@@ -63,8 +63,86 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
     // 1. Get filtered data for ONLY the current user's company
     const companyKPIsRaw = filterKPIsByEntity(kpiData, currentUser.company);
 
+    const targetMonth = React.useMemo(() => {
+        const now = new Date();
+        const day = now.getDate();
+        const targetDate = day <= 10 
+            ? new Date(now.getFullYear(), now.getMonth() - 2, 15) 
+            : new Date(now.getFullYear(), now.getMonth() - 1, 15);
+        const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        return months[targetDate.getMonth()];
+    }, []);
+
+    // Project KPIs to selected target month
+    const projectedKPIs = React.useMemo(() => {
+        return companyKPIsRaw.map(kpi => {
+            // Find history entry for selected month
+            const historyEntry = kpi.history?.find(h => h.month === targetMonth);
+            let val = historyEntry ? historyEntry[currentUser.company] : null;
+
+            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo
+            const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
+            if ((val === null || val === undefined) && targetMonth === currentMonthName) {
+                if (kpi.hasData) {
+                    return kpi; // Usar el objeto base que ya tiene los datos vivos
+                }
+            }
+
+            if (val === null || val === undefined) {
+                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray' };
+            }
+
+            // Recalculate based on history value
+            const targetMeta = (kpi.meta && typeof kpi.meta === 'object')
+                ? (kpi.meta[currentUser.company] || Object.values(kpi.meta)[0])
+                : kpi.meta;
+
+            const isInverse = isInverseKPI(kpi.id);
+            let compliance = 0;
+            if (targetMeta === 0) {
+                compliance = isInverse ? (val === 0 ? 100 : 0) : (val > 0 ? 100 : 0);
+            } else {
+                compliance = isInverse ? (targetMeta / val) * 100 : (val / targetMeta) * 100;
+                if (isInverse && val === 0) compliance = 100;
+            }
+            compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
+
+            let semaphore = 'red';
+            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+            if (compliance >= (isStrict ? 100 : 95)) semaphore = 'green';
+            else if (compliance >= (isStrict ? 100 : 85)) semaphore = 'yellow';
+
+            // Reconstruir brandValues proyectados para que las cards muestren el desglose histórico
+            const projectedBrandValues = {};
+            if (kpi.meta && typeof kpi.meta === 'object') {
+                Object.keys(kpi.meta).forEach(brand => {
+                    const brandKey = `${currentUser.company}-${brand.toUpperCase()}`;
+                    const brandVal = historyEntry ? historyEntry[brandKey] : null;
+                    
+                    if (brandVal !== null && brandVal !== undefined) {
+                        projectedBrandValues[brandKey] = {
+                            currentValue: brandVal,
+                            compliance: Math.round(historyEntry[`${brandKey}-COMP`] || 0),
+                            semaphore: historyEntry[`${brandKey}-SEM`] || 'gray',
+                            hasData: true
+                        };
+                    }
+                });
+            }
+
+            return {
+                ...kpi,
+                currentValue: val,
+                compliance,
+                semaphore,
+                hasData: true,
+                brandValues: projectedBrandValues
+            };
+        });
+    }, [companyKPIsRaw, targetMonth, currentUser.company]);
+
     // Filter helper: check user permissions for authorized areas
-    const myAccessKPIs = companyKPIsRaw.filter(kpi => {
+    const myAccessKPIs = projectedKPIs.filter(kpi => {
         const effectiveResponsable = getKPIResponsable(kpi, currentUser);
         return (currentUser.authorizedAreas?.includes('all') ||
             currentUser.authorizedAreas?.includes(kpi.area) ||
