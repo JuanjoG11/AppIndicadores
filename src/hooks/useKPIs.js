@@ -728,6 +728,21 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                     group.periodKey === strictCurrentPeriod ||
                                     (freq === 'BIMESTRAL' && isSameBimonthlyPeriod(group.periodKey, currentPeriodKey));
 
+                                const currentCompany = group.company_id;
+                                const currentBrand = group.brand;
+                                const dataKey = `${currentCompany}-${currentBrand.toUpperCase()}`;
+                                const [year, rawMonthPart] = group.periodKey.split('-');
+                                
+                                let monthName;
+                                if (rawMonthPart?.startsWith('W')) {
+                                    const d = new Date(upd.updated_at || upd.created_at);
+                                    monthName = MONTH_NAMES[isNaN(d) ? new Date().getMonth() : d.getMonth()];
+                                } else {
+                                    const monthNumStr = rawMonthPart?.replace(/[^0-9]/g, '') || '1';
+                                    const monthIdx = Math.min(Math.max(parseInt(monthNumStr) - 1, 0), 11);
+                                    monthName = MONTH_NAMES[monthIdx];
+                                }
+
                                 // Recalcular métricas usando la meta del estado actual del KPI (no la estática)
                                 let compliance = 0;
                                 let semaphore = 'gray';
