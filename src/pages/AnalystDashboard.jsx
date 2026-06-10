@@ -27,10 +27,10 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
     const getDisplayPeriod = () => {
         const now = new Date();
         const day = now.getDate();
-        // targetDate es el mes M-2 si estamos en los primeros 10 días, de lo contrario es M-1
+        // targetDate es el mes M-1 si estamos en los primeros 10 días, de lo contrario es el mes en curso (M)
         const targetDate = day <= 10 
-            ? new Date(now.getFullYear(), now.getMonth() - 2, 15) 
-            : new Date(now.getFullYear(), now.getMonth() - 1, 15);
+            ? new Date(now.getFullYear(), now.getMonth() - 1, 15) 
+            : new Date(now.getFullYear(), now.getMonth(), 15);
         return targetDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
     };
     const displayPeriod = getDisplayPeriod();
@@ -67,8 +67,8 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
         const now = new Date();
         const day = now.getDate();
         const targetDate = day <= 10 
-            ? new Date(now.getFullYear(), now.getMonth() - 2, 15) 
-            : new Date(now.getFullYear(), now.getMonth() - 1, 15);
+            ? new Date(now.getFullYear(), now.getMonth() - 1, 15) 
+            : new Date(now.getFullYear(), now.getMonth(), 15);
         const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         return months[targetDate.getMonth()];
     }, []);
@@ -743,6 +743,18 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                     onSave={handleSaveKPI}
                     onCancel={() => setEditingKPIId(null)}
                     mode={editMode}
+                    defaultPeriod={
+                        editingKPI.frecuencia === 'MENSUAL'
+                            ? (() => {
+                                  const now = new Date();
+                                  const day = now.getDate();
+                                  const targetDate = day <= 10 
+                                      ? new Date(now.getFullYear(), now.getMonth() - 1, 15) 
+                                      : new Date(now.getFullYear(), now.getMonth(), 15);
+                                  return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
+                              })()
+                            : undefined
+                    }
                 />
             )}
 

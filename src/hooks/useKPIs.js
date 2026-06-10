@@ -16,6 +16,29 @@ const isSameBimonthlyPeriod = (p1, p2) => {
     return bim1 === bim2;
 };
 
+const periodToMonth = (period) => {
+    if (!period) return '';
+    if (/^\d{4}-\d{2}$/.test(period)) return period;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(period)) return period.substring(0, 7);
+    if (/^\d{4}-\d{2}-Q[12]$/.test(period)) return period.substring(0, 7);
+    if (/^\d{4}-W\d{1,2}$/.test(period)) {
+        try {
+            const parts = period.split('-');
+            const year = Number(parts[0]);
+            const week = Number(parts[1].replace('W', ''));
+            const simple = new Date(year, 0, 1 + (week - 1) * 7);
+            const dow = simple.getDay();
+            const isoStart = new Date(simple);
+            if (dow <= 4) { isoStart.setDate(simple.getDate() - simple.getDay() + 1); }
+            else { isoStart.setDate(simple.getDate() + 8 - simple.getDay()); }
+            isoStart.setDate(isoStart.getDate() + 3);
+            return isoStart.getFullYear() + '-' + String(isoStart.getMonth() + 1).padStart(2, '0');
+        } catch(e) { return ''; }
+    }
+    return period.substring(0, 7);
+};
+
+
 const getDateFromPeriod = (period, frequency) => {
     if (!period) return new Date();
     const freq = frequency.toUpperCase();
@@ -89,6 +112,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     const [rawUpdates, setRawUpdates] = useState([]);
     const [lastSyncTime, setLastSyncTime] = useState(null);
 
+    // Ref para mantener kpiData fresco en applyKPIUpdate sin causar loop infinito
+    const kpiDataRef = useRef(kpiData);
+    useEffect(() => {
+        kpiDataRef.current = kpiData;
+    }, [kpiData]);
+
     // ... (rest of the state and logic)
 
     // Ref para ignorar persistencia automática en procesos internos
@@ -154,7 +183,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     const applyKPIUpdate = useCallback((kpiId, newData, shouldPersist = true, forceHistorical = false) => {
         // Pre-calcular periodo y valor FUERA del updater (evita side-effects en updaters de React)
         const kpiDef = kpiDefinitions.find(k => k.id === kpiId);
-        const freq = (kpiDef?.frecuencia || 'MENSUAL').toUpperCase();
+        const liveKpi = kpiDataRef.current.find(k => k.id === kpiId);
+        const freq = (liveKpi?.frecuencia || kpiDef?.frecuencia || 'MENSUAL').toUpperCase();
         const isManualUpd = !newData.updatedAt;
 
         // Calcular fecha del registro
@@ -245,15 +275,23 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const isStrictCurrent = recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod;
             const isFromCurrentMonth = typeof recordPeriodIndex === 'string' && recordPeriodIndex.startsWith(currentPeriod);
 
+            // Comparación cruzada de meses para frecuencias gruesas (ej: si se cambió de semanal a mensual)
+            const recordMonth = periodToMonth(recordPeriodIndex);
+            const currentMonth = periodToMonth(currentReportablePeriod);
+            const isCrossPeriodMatch = (frequency === 'MENSUAL' || frequency === 'BIMESTRAL' || frequency === 'SEMESTRAL') && 
+                                       recordMonth && recordMonth === currentMonth;
+
             // Para el estado de carga (hasData): Si es del periodo estrictamente actual O del reportable (gracia)
             const isFromCurrentPeriod = !forceHistorical && (
                 isStrictCurrent || 
+                isCrossPeriodMatch ||
                 recordPeriodIndex === currentReportablePeriod ||
                 (frequency === 'BIMESTRAL' && isSameBimonthlyPeriod(recordPeriodIndex, currentReportablePeriod))
             );
             // Para el tablero: mostramos si es del período actual O si es del periodo reportable actual (grace period)
             const shouldShowInDashboard = !forceHistorical && (
                 isStrictCurrent ||
+                isCrossPeriodMatch ||
                 recordPeriodIndex === currentReportablePeriod ||
                 (frequency === 'SEMANAL') ||
                 (frequency === 'BIMESTRAL' && isSameBimonthlyPeriod(recordPeriodIndex, currentReportablePeriod)) ||
@@ -524,8 +562,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         try {
             const persistBrand = additionalData?.brand || (Array.isArray(user?.activeBrand) ? user.activeBrand[0] : user?.activeBrand) || 'Global';
             
-            // Usar kpiDefinitions (estático) para evitar closure stale de kpiData
-            const frequency = kpiDefinitions.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL';
+            const liveKpi = kpiDataRef.current.find(k => k.id === kpiId);
+            const frequency = (liveKpi?.frecuencia || kpiDefinitions.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL').toUpperCase();
             // Respetar el periodo ya calculado en applyKPIUpdate (tiene prioridad)
             const persistPeriod = additionalData?.period || getPeriodIndex(new Date(), frequency);
             
@@ -723,9 +761,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 const freq = (kpi.frecuencia || kpiDef.frecuencia || 'MENSUAL').toUpperCase();
                                 const currentPeriodKey = getReportablePeriod(freq);
                                 const strictCurrentPeriod = getPeriodIndex(new Date(), freq);
+
+                                const recordMonth = periodToMonth(group.periodKey);
+                                const currentMonth = periodToMonth(currentPeriodKey);
+                                const isCrossPeriodMatch = (freq === 'MENSUAL' || freq === 'BIMESTRAL' || freq === 'SEMESTRAL') && 
+                                                           recordMonth && recordMonth === currentMonth;
+
                                 const isFromCurrentPeriod =
                                     group.periodKey === currentPeriodKey ||
                                     group.periodKey === strictCurrentPeriod ||
+                                    isCrossPeriodMatch ||
                                     (freq === 'BIMESTRAL' && isSameBimonthlyPeriod(group.periodKey, currentPeriodKey));
 
                                 const currentCompany = group.company_id;
@@ -769,11 +814,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 // Actualizamos brandValues y el estado base SIEMPRE con el dato más reciente
                                 // (Como sortedGroups está ordenado por fecha, el último proceso siempre es el más nuevo)
                                 const brandValues = { ...(kpi.brandValues || {}) };
+                                const oldBrandEntry = brandValues[dataKey] || {};
                                 brandValues[dataKey] = {
-                                    currentValue: upd.value,
-                                    compliance,
-                                    semaphore,
-                                    hasData: true,
+                                    // Preserve previous entry's currentValue unless this record is from the current period
+                                    currentValue: isFromCurrentPeriod ? upd.value : (oldBrandEntry.currentValue ?? upd.value),
+                                    compliance: isFromCurrentPeriod ? compliance : (oldBrandEntry.compliance ?? compliance),
+                                    semaphore: isFromCurrentPeriod ? semaphore : (oldBrandEntry.semaphore ?? semaphore),
+                                    // Only mark as "ready" (hasData) when the record matches the current period
+                                    hasData: isFromCurrentPeriod ? true : (oldBrandEntry.hasData || false),
                                     additionalData: {
                                         ...(upd.additional_data || {}),
                                         period: group.periodKey,

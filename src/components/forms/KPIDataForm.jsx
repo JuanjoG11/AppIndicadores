@@ -21,7 +21,7 @@ import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
 import { formatNumber, formatKPIValue } from '../../utils/formatters';
 
-const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initialBrand }) => {
+const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initialBrand, defaultPeriod }) => {
     const isMetaMode = mode === 'meta';
     const hasMultipleMetas = kpi.meta && typeof kpi.meta === 'object';
     const userEntity = currentUser?.company || 'TYM';
@@ -102,51 +102,104 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     };
 
     // Inicializar con datos previos si existen
-    const [formData, setFormData] = useState(() => {
-        const d = new Date();
-        let defaultPeriod = d.toISOString().split('T')[0]; // Default Day
-        
-        if (kpi.frecuencia === 'SEMANAL') {
-            // ISO week: mismo algoritmo que date-fns format(d, "yyyy-'W'II")
-            const isoWeek = (dt) => {
-                const d = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()));
-                const day = d.getUTCDay() || 7;
-                d.setUTCDate(d.getUTCDate() + 4 - day);
-                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-                const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-                return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
-            };
-            defaultPeriod = isoWeek(d);
-        } else if (kpi.frecuencia === 'QUINCENAL') {
-            const quincena = d.getDate() <= 15 ? 'Q1' : 'Q2';
-            defaultPeriod = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${quincena}`;
-        } else if (kpi.frecuencia === 'MENSUAL') {
-            defaultPeriod = d.toISOString().substring(0, 7);
-        }
-
-        return {
-            brand: (defaultBrand || userEntity),
-            company: userEntity,
-            period: defaultPeriod,
-            newFrecuencia: kpi.frecuencia,
-            ...getInitialBrandData(defaultBrand || userEntity, defaultPeriod)
-        };
-    });
-
-    // Refs para mantener la posición del cursor en campos con formato
+    const drafts = useRef({});
     const lastInput = useRef(null);
     const lastSelectionStart = useRef(null);
     const lastValueLength = useRef(0);
-    const drafts = useRef({});
+    
+    const [formData, setFormData] = useState(() => {
+        let initialPeriod = defaultPeriod;
+        
+        if (!initialPeriod) {
+            const d = new Date();
+            initialPeriod = d.toISOString().split('T')[0]; // Default Day
+            
+            if (kpi.frecuencia === 'SEMANAL') {
+                // ISO week: mismo algoritmo que date-fns format(d, "yyyy-'W'II")
+                const isoWeek = (dt) => {
+                    const d = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()));
+                    const day = d.getUTCDay() || 7;
+                    d.setUTCDate(d.getUTCDate() + 4 - day);
+                    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                    return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+                };
+                initialPeriod = isoWeek(d);
+            } else if (kpi.frecuencia === 'QUINCENAL') {
+                const quincena = d.getDate() <= 15 ? 'Q1' : 'Q2';
+                initialPeriod = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${quincena}`;
+            } else if (kpi.frecuencia === 'MENSUAL') {
+                initialPeriod = d.toISOString().substring(0, 7);
+            }
+        }
+        const savedDraft = drafts.current[`${defaultBrand}-${initialPeriod}`];
+        if (savedDraft) {
+            return savedDraft;
+        }
+        return {
+            brand: (defaultBrand || userEntity),
+            company: userEntity,
+            period: initialPeriod,
+            newFrecuencia: kpi.frecuencia,
+            ...getInitialBrandData(defaultBrand || userEntity, initialPeriod)
+        };
+    });
+
+
+    // Helper: compute the expected period prefix for the current KPI frequency
+    const getPeriodPrefix = (freq) => {
+        const d = new Date();
+        if (freq === 'SEMANAL' || freq === 'semanal') return `${d.getFullYear()}-W`;
+        if (freq === 'QUINCENAL' || freq === 'quincenal') return d.toISOString().substring(0, 7);
+        if (freq === 'DIARIO' || freq === 'diaria' || freq === 'DIARIA') return d.toISOString().substring(0, 7);
+        return d.toISOString().substring(0, 7); // MENSUAL default
+    };
+
+    // Load persisted drafts from localStorage on mount, filtering stale period formats
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = window.localStorage.getItem(`kpi_drafts_${kpi.id}`);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    const currentPrefix = getPeriodPrefix(kpi.frecuencia);
+                    // Only keep drafts whose period matches the current frequency format
+                    const valid = {};
+                    Object.entries(parsed).forEach(([key, draft]) => {
+                        const draftPeriod = draft?.period || '';
+                        if (draftPeriod.startsWith(currentPrefix)) {
+                            valid[key] = draft;
+                        }
+                    });
+                    drafts.current = valid;
+                } else {
+                    drafts.current = {};
+                }
+            } catch (e) {
+                console.error('Failed to load KPI drafts from localStorage', e);
+                drafts.current = {};
+            }
+        }
+    }, []);
+
     // Ref para detectar cambio de marca y evitar guardar datos de una marca en el borrador de otra
     // Se inicializa con defaultBrand para que el primer draft se guarde correctamente
     const prevBrandPeriodRef = useRef(`${defaultBrand}-${formData.period}`);
 
     // Guardar borrador SOLO cuando la marca O el periodo NO cambiaron
+    // Guardar borrador SOLO cuando el actual se guarde en borradores
     useEffect(() => {
         const currentKey = `${formData.brand}-${formData.period}`;
         if (currentKey === prevBrandPeriodRef.current) {
             drafts.current[currentKey] = formData;
+            // Sync drafts to localStorage
+            if (typeof window !== 'undefined') {
+                try {
+                    window.localStorage.setItem(`kpi_drafts_${kpi.id}`, JSON.stringify(drafts.current));
+                } catch (e) {
+                    console.error('Failed to save KPI drafts to localStorage', e);
+                }
+            }
         }
         prevBrandPeriodRef.current = currentKey;
     }, [formData]);
@@ -534,73 +587,57 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Aseguramos de que el actual se guarde en borradores
-        drafts.current[`${formData.brand}-${formData.period}`] = formData;
-
-        let savedBrands = [];
-
-        Object.keys(drafts.current).forEach(brandKey => {
-            const dataForBrand = drafts.current[brandKey];
-            const cleanedData = { ...dataForBrand };
-            
-            // Ensure numbers are really numbers before saving
-            // And strip separators, but EXCLUDE non-numeric fields
-            Object.keys(cleanedData).forEach(key => {
-                // 'value' se excluye para que siempre se recalcule desde los campos del formulario
-                const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id', 'value'];
+        // ── Limpiar número: formato colombiano (punto=miles, coma=decimal) ──
+        const cleanNumericFields = (data) => {
+            const cleaned = { ...data };
+            const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id', 'value'];
+            Object.keys(cleaned).forEach(key => {
                 if (skipKeys.includes(key)) return;
-
-                if (typeof cleanedData[key] === 'string' && cleanedData[key].trim() !== '') {
-                    // Formato colombiano: el punto es SIEMPRE separador de miles, la coma es decimal
-                    let valStr = cleanedData[key].trim().replace(/\s/g, '');
-                    
+                if (typeof cleaned[key] === 'string' && cleaned[key].trim() !== '') {
+                    let valStr = cleaned[key].trim().replace(/\s/g, '');
                     if (valStr.includes(',') && valStr.includes('.')) {
-                        // Ambos: punto=miles, coma=decimal → "1.234,56" → "1234.56"
                         valStr = valStr.replace(/\./g, '').replace(',', '.');
                     } else if (valStr.includes(',')) {
-                        // Solo coma: separador decimal → "1,5" → "1.5"
                         valStr = valStr.replace(',', '.');
                     } else {
-                        // Solo puntos o ninguno: todos los puntos son miles → "200.000" → "200000"
                         valStr = valStr.replace(/\./g, '');
                     }
-
                     const parsed = parseFloat(valStr);
-                    
-                    if (!isNaN(parsed)) {
-                       cleanedData[key] = parsed;
-                    }
+                    if (!isNaN(parsed)) cleaned[key] = parsed;
                 }
             });
+            return cleaned;
+        };
 
-            const dataToSave = isMetaMode
-                ? { ...cleanedData, type: 'META_UPDATE' }
-                : { ...cleanedData, type: 'DATA_UPDATE' };
+        // SOLO guardar el formulario actual (evitar que borradores viejos de otros periodos
+        // se cuelen como datos del periodo actual)
+        const currentDraftKey = `${formData.brand}-${formData.period}`;
+        drafts.current[currentDraftKey] = formData;
 
-            onSave(kpi.id, dataToSave);
-            savedBrands.push(brandKey);
-        });
+        // Solo enviar el registro actual — no iterar drafts viejos
+        const cleanedData = cleanNumericFields(formData);
+        const dataToSave = isMetaMode
+            ? { ...cleanedData, type: 'META_UPDATE' }
+            : { ...cleanedData, type: 'DATA_UPDATE' };
+        onSave(kpi.id, dataToSave);
 
-        const msgString = savedBrands.length > 1 ? 'todos los proveedores modificados' : formData.brand;
+        const msgString = formData.brand;
+
+        // Limpiar borradores en memoria Y en localStorage
+        drafts.current = {};
+        if (typeof window !== 'undefined') {
+            try { window.localStorage.removeItem(`kpi_drafts_${kpi.id}`); } catch (_) {}
+        }
 
         if (isMetaMode) {
             setSuccessMessage(`¡Meta actualizada para ${msgString}! Puedes cerrar esta ventana.`);
             setSaveSuccess(true);
             setFormData(prev => ({ ...prev, newMeta: '' }));
-            drafts.current = {}; // Limpiamos para futuras ediciones
-            setTimeout(() => {
-                setSaveSuccess(false);
-                setSuccessMessage('');
-            }, 3000);
+            setTimeout(() => { setSaveSuccess(false); setSuccessMessage(''); }, 3000);
         } else {
-            // Confirmation for regular data entry
             setSuccessMessage(`¡Datos guardados para ${msgString}! Puedes cerrar esta ventana.`);
             setSaveSuccess(true);
-            drafts.current = {}; // Limpiamos para futuras ediciones
-            setTimeout(() => {
-                setSaveSuccess(false);
-                setSuccessMessage('');
-            }, 3000);
+            setTimeout(() => { setSaveSuccess(false); setSuccessMessage(''); }, 3000);
         }
     };
 
