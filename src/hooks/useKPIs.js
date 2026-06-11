@@ -239,7 +239,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             // ─── Lógica de Periodo ───
             let recordDateObj;
-            const isManualUpdate = !newData.updatedAt || newData.manual === true;
+            // Si viene de la base de datos (con updatedAt), NO es una actualización manual local que requiera recalcular.
+            const isManualUpdate = !newData.updatedAt;
 
             // Si es una carga manual y se especificó un periodo, calculamos la fecha en base al periodo
             if (isManualUpdate && newData.period) {
@@ -373,7 +374,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 bComp = Math.min(Math.max(Math.round(bComp || 0), 0), 100);
                             }
                             
-                            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
+                            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpiId);
                             const greenThreshold = isStrict ? 100 : 95;
                             const yellowThreshold = isStrict ? 100 : 85;
 
@@ -419,7 +420,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
                 }
 
-                const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
+                const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpiId);
                 const greenThreshold = isStrict ? 100 : 95;
                 const yellowThreshold = isStrict ? 100 : 85;
 
@@ -488,7 +489,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     historyValue = sumVal / count;
                     historyCompliance = Math.round(sumComp / count);
                     
-                    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpiId);
+                    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpiId);
                     const greenThreshold = isStrict ? 100 : 95;
                     const yellowThreshold = isStrict ? 100 : 85;
 
@@ -614,7 +615,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     filteredMeta = {};
                     Object.keys(def.meta).forEach(brandKey => {
                         // EXCEPCIÓN: Forzamos la sincronización de metas críticas desde el código si cambian (para evitar valores basura de la DB)
-                        const isForcedMeta = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(def.id);
+                        const isForcedMeta = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(def.id);
                         filteredMeta[brandKey] = (live.meta.hasOwnProperty(brandKey) && !isForcedMeta) ? live.meta[brandKey] : def.meta[brandKey];
                     });
                 }
@@ -791,9 +792,35 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 // Recalcular métricas usando la meta del estado actual del KPI (no la estática)
                                 let compliance = 0;
                                 let semaphore = 'gray';
-                                const targetMeta = (kpi.meta && typeof kpi.meta === 'object')
-                                    ? (kpi.meta[currentBrand] || kpi.meta[currentCompany] || Object.values(kpi.meta)[0])
-                                    : (kpi.meta ?? kpiDef?.meta);
+                                let targetMeta = 0;
+                                if (kpi.meta && typeof kpi.meta === 'object') {
+                                    targetMeta = kpi.meta[currentBrand] || kpi.meta[currentCompany] || kpi.meta.global ||
+                                        kpi.meta[Object.keys(kpi.meta).find(b => BRAND_TO_ENTITY[b] === currentCompany)] || 0;
+                                } else {
+                                    targetMeta = kpi.meta ?? kpiDef?.meta ?? 0;
+                                }
+
+                                if (typeof targetMeta === 'number') {
+                                    const isInverse = isInverseKPI(kpi.id);
+
+                                    if (targetMeta === 0 && upd.value === 0) {
+                                        compliance = isInverse ? 100 : 0;
+                                    } else if (targetMeta === 0 && upd.value > 0) {
+                                        compliance = isInverse ? 0 : 100;
+                                    } else {
+                                        compliance = isInverse ? (targetMeta / upd.value) * 100 : (upd.value / targetMeta) * 100;
+                                        if (isInverse && upd.value === 0) compliance = 100;
+                                        compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
+                                    }
+
+                                    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpi.id);
+                                    const greenThreshold = isStrict ? 100 : 95;
+                                    const yellowThreshold = isStrict ? 100 : 85;
+
+                                    if (compliance >= greenThreshold) semaphore = 'green';
+                                    else if (compliance >= yellowThreshold) semaphore = 'yellow';
+                                    else semaphore = 'red';
+                                }
 
                                 const historyPoint = {
                                     month: monthName, year: parseInt(year), monthKey: group.periodKey,
@@ -956,7 +983,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 console.log("⚡ Cambio en tiempo real detectado:", p.new);
                 applyKPIUpdate(
                     p.new.kpi_id,
-                    { ...p.new.additional_data, value: p.new.value, updatedAt: p.new.updated_at },
+                    { 
+                        ...p.new.additional_data, 
+                        company: p.new.company_id, // Pasar el company_id desde el registro de la DB
+                        value: p.new.value, 
+                        updatedAt: p.new.updated_at 
+                    },
                     false
                 );
                 if (onToast) onToast('info', `📊 KPI actualizado`);

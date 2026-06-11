@@ -41,8 +41,8 @@ export const generateMockData = () => {
         let additionalData = {};
 
         if (realData) {
-            // SIEMPRE empezamos en false para que el analista deba cargar la información manualmente
-            hasData = false;
+            // Cuando hay datos reales, marcamos hasData como true para que se muestren en la UI
+            hasData = true;
             additionalData = { ...realData };
 
             if (kpi.id === 'pedidos-devueltos') {
@@ -92,7 +92,7 @@ export const generateMockData = () => {
             else if (compliance >= 85) semaphore = 'yellow';
             else semaphore = 'red';
 
-            compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
+            compliance = Math.min(Math.max(compliance || 0, 0), 100);
         }
 
         // 3. Generar historial para todos los meses y ambas compañías (TYM y TAT)
@@ -137,7 +137,7 @@ export const generateMockData = () => {
             brandValues[dataKey] = {
                 currentValue: parseFloat(brandVal.toFixed(2)),
                 compliance: Math.min(Math.round(brandCompliance || 0), 100),
-                hasData: false // No simulamos datos, deben ser cargados manualmente
+                hasData: !!realData // Si hay datos reales, marcamos como disponible
             };
         });
 

@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { ChevronRight, BarChart3, AlertTriangle, Target, Search, Filter } from 'lucide-react';
 import { areas } from '../../data/areas';
+import { isInverseKPI } from '../../utils/kpiCalculations';
 
 // Aggregate compliance by area for a given company
 const getAreaScoreByMonth = (kpis, areaId, company) => {
@@ -19,12 +20,7 @@ const getAreaScoreByMonth = (kpis, areaId, company) => {
             const point = kpi.history.find(h => h.month === month);
             const val = point?.[company]; // Lee TYM o TAT
             if (val === null || val === undefined || !kpi.targetMeta) return;
-            const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('gasto') ||
-                kpi.id.includes('horas-extras') || kpi.id.includes('mal-estado') ||
-                kpi.id.includes('vencida') || kpi.id === 'segundos-unidad-separada' ||
-                kpi.id === 'notas-errores-venta' || kpi.id.includes('nomina') ||
-                kpi.id === 'rotacion-personal' || kpi.id === 'ausentismo' ||
-                kpi.id === 'he-rn-nomina' || kpi.id === 'tiempo-contratacion';
+            const isInverse = isInverseKPI(kpi.id);
 
             const meta = (kpi.meta && typeof kpi.meta === 'object')
                 ? (kpi.meta[company] || Object.values(kpi.meta)[0])
@@ -51,12 +47,7 @@ const getOverallByMonth = (kpis, company) => {
                 const point = kpi.history.find(h => h.month === month);
                 const val = point?.[company]; // Lee TYM o TAT
                 if (val === null || val === undefined || !kpi.targetMeta) return;
-                const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('gasto') ||
-                    kpi.id.includes('horas-extras') || kpi.id.includes('mal-estado') ||
-                    kpi.id.includes('vencida') || kpi.id === 'segundos-unidad-separada' ||
-                    kpi.id === 'notas-errores-venta' || kpi.id.includes('nomina') ||
-                    kpi.id === 'rotacion-personal' || kpi.id === 'ausentismo' ||
-                    kpi.id === 'he-rn-nomina' || kpi.id === 'tiempo-contratacion';
+                const isInverse = isInverseKPI(kpi.id);
                 const meta = (kpi.meta && typeof kpi.meta === 'object')
                     ? (kpi.meta[company] || Object.values(kpi.meta)[0])
                     : kpi.meta;
@@ -74,12 +65,14 @@ const getOverallByMonth = (kpis, company) => {
 const semColor = (score) => {
     if (score === null || score === undefined) return '#e2e8f0';
     if (score >= 95) return '#22c55e';
+    if (score >= 85) return '#f59e0b';
     return '#ef4444';
 };
 
 const semLabel = (score) => {
     if (score === null || score === undefined) return 'S.D.';
     if (score >= 95) return '🟢';
+    if (score >= 85) return '🟡';
     return '🔴';
 };
 
@@ -501,7 +494,8 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                             const kpi = kpiData.find(k => k.id === log.kpi_id);
                             const matchesArea = logAreaFilter === 'all' || kpi?.area === logAreaFilter;
                             const matchesCompany = logCompanyFilter === 'all' || log.company_id === logCompanyFilter;
-                            const itemPeriodFull = (log.period || log.additional_data?.period || (log.updated_at ? (typeof log.updated_at === 'string' ? log.updated_at.substring(0, 10) : new Date(log.updated_at).toISOString().substring(0, 10)) : null));
+                            const dateSource = log.updated_at || log.created_at || log.period || log.additional_data?.period;
+                            const itemPeriodFull = dateSource ? (typeof dateSource === 'string' ? dateSource.substring(0, 10) : new Date(dateSource).toISOString().substring(0, 10)) : null;
                             const itemPeriodMonth = (itemPeriodFull && typeof itemPeriodFull === 'string') ? itemPeriodFull.substring(0, 7) : null;
                             const matchesMonth = logMonthFilter === 'all' || itemPeriodMonth === logMonthFilter;
                             const matchesSearch = !searchQuery || (kpi?.name || log.kpi_id).toLowerCase().includes(searchQuery);
@@ -591,18 +585,21 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                                                 const isFaltante = log.additional_data?.faltanteInventario;
                                                                 const areaObj = areas.find(a => a.id === kpi?.area);
 
-                                                                const isInverse = kpi?.id.includes('devueltos') || kpi?.id.includes('gasto') || 
-                                                                                kpi?.id.includes('horas-extras') || kpi?.id.includes('mal-estado') ||
-                                                                                kpi?.id.includes('vencida') || kpi?.id === 'segundos-unidad-separada' ||
-                                                                                kpi?.id === 'notas-errores-venta' || kpi?.id.includes('nomina') ||
-                                                                                kpi?.id === 'rotacion-personal' || kpi?.id === 'ausentismo';
+                                                                const isInverse = kpi ? isInverseKPI(kpi.id) : false;
 
                                                                 const meta = (kpi?.meta && typeof kpi.meta === 'object')
-                                                                    ? (kpi.meta[log.company_id] || Object.values(kpi.meta)[0])
+                                                                    ? (kpi.meta[brand] || kpi.meta[log.company_id] || Object.values(kpi.meta)[0])
                                                                     : kpi?.meta;
                                                                 
-                                                                const compliance = meta && !isMeta ? (isInverse ? (meta / log.value) * 100 : (log.value / meta) * 100) : null;
-                                                                const statusColor = compliance === null ? 'var(--text-light)' : compliance >= 95 ? 'var(--success)' : 'var(--danger)';
+                                                                let compliance = null;
+                                                                if (meta && !isMeta) {
+                                                                    if (isInverse) {
+                                                                        compliance = log.value === 0 ? 100 : Math.min((meta / log.value) * 100, 100);
+                                                                    } else {
+                                                                        compliance = meta === 0 ? (log.value === 0 ? 100 : 0) : Math.min((log.value / meta) * 100, 100);
+                                                                    }
+                                                                }
+                                                                const statusColor = compliance === null ? 'var(--text-light)' : compliance >= 95 ? 'var(--success)' : compliance >= 85 ? 'var(--warning)' : 'var(--danger)';
                                                                 
                                                                 return (
                                                                     <div key={li} style={{ 

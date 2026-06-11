@@ -564,7 +564,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         : kpi.meta;
         
     const isInverse = isInverseKPI(kpi.id);
-    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpi.id);
     
     // Forzar meta de 100 para indicadores de cumplimiento estricto (100% o nada)
     if (isStrict) currentMeta = 100;

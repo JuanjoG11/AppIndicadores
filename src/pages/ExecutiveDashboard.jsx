@@ -17,17 +17,20 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
 
     // Project KPIs to the selected month using history
     const filteredKPIs = useMemo(() => {
-        // If current month is selected, we use the live data
         const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-        // if (selectedMonth === currentMonthName) return baseKPIs; // Optional: always project for consistency
+        const isCurrentMonth = selectedMonth === currentMonthName;
 
         return baseKPIs.map(kpi => {
+            const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
+            if (isCurrentMonth && isNonMonthly) {
+                return kpi; // Keep live status for current month's daily/weekly KPIs
+            }
+
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
             let val = historyEntry ? historyEntry[activeCompany] : null;
 
             // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo SOLO si pertenece a selectedMonth
-            const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-            if ((val === null || val === undefined) && selectedMonth === currentMonthName) {
+            if ((val === null || val === undefined) && isCurrentMonth) {
                 if (kpi.hasData) {
                     const periodStr = kpi.additionalData?.period;
                     const liveMonth = getMonthFromPeriod(periodStr);
@@ -38,7 +41,19 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
             }
 
             if (val === null || val === undefined) {
-                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray', brandValues: {} };
+                return { 
+                    ...kpi, 
+                    hasData: false, 
+                    compliance: 0, 
+                    currentValue: 0, 
+                    semaphore: 'gray', 
+                    brandValues: {},
+                    additionalData: {
+                        ...kpi.additionalData,
+                        updatedAt: null,
+                        period: null
+                    }
+                };
             }
 
             // Recalculate compliance for the projected value
@@ -57,7 +72,7 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
             compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
 
             let semaphore = 'red';
-            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpi.id);
             if (compliance >= (isStrict ? 100 : 95)) semaphore = 'green';
             else if (compliance >= (isStrict ? 100 : 85)) semaphore = 'yellow';
 
@@ -73,7 +88,12 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
                             currentValue: brandVal,
                             compliance: Math.round(historyEntry[`${brandKey}-COMP`] || 0),
                             semaphore: historyEntry[`${brandKey}-SEM`] || 'gray',
-                            hasData: true
+                            hasData: true,
+                            additionalData: {
+                                updatedAt: historyEntry.updatedAt,
+                                period: historyEntry.monthKey || historyEntry.month,
+                                brand
+                            }
                         };
                     }
                 });
@@ -86,10 +106,14 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
                 semaphore,
                 hasData: true,
                 lastUpdate: historyEntry?.updatedAt || historyEntry?.[`${activeCompany}-UPDATED`] || kpi.lastUpdate,
-                additionalData: historyEntry?.additionalData || { 
+                additionalData: historyEntry ? { 
                     ...kpi.additionalData, 
-                    updatedAt: historyEntry?.updatedAt || historyEntry?.[`${activeCompany}-UPDATED`],
-                    period: historyEntry?.monthKey 
+                    updatedAt: historyEntry.updatedAt || historyEntry[`${activeCompany}-UPDATED`],
+                    period: historyEntry.monthKey || historyEntry.month
+                } : {
+                    ...kpi.additionalData,
+                    updatedAt: null,
+                    period: null
                 },
                 brandValues: projectedBrandValues
             };

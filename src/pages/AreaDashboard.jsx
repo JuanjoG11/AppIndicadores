@@ -43,6 +43,15 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
+    if (!area) {
+        return (
+            <div style={{ textAlign: 'center', padding: '5rem 2rem' }}>
+                <AlertCircle size={48} color="#ef4444" style={{ marginBottom: '1rem' }} />
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Área no encontrada</h3>
+                <button onClick={() => navigate('/')} className="btn-ghost" style={{ marginTop: '1rem' }}>Volver al Inicio</button>
+            </div>
+        );
+    }
     const [activeSubArea, setActiveSubArea] = useState(
         areaId === 'logistica' ? 'Logística de Entrega' : 
         areaId === 'comercial' ? 'Gestión de Ventas' : 
@@ -62,15 +71,20 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
     // Project KPIs to selected month
     const projectedKPIs = React.useMemo(() => {
         const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
+        const isCurrentMonth = selectedMonth === currentMonthName;
         
         return baseCompanyKPIs.map(kpi => {
+            const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
+            if (isCurrentMonth && isNonMonthly) {
+                return kpi; // Keep live status for current month's daily/weekly KPIs
+            }
+
             // Find history entry for selected month
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
             let val = historyEntry ? historyEntry[activeCompany] : null;
 
             // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo SOLO si es del periodo de selectedMonth
-            const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-            if ((val === null || val === undefined) && selectedMonth === currentMonthName) {
+            if ((val === null || val === undefined) && isCurrentMonth) {
                 if (kpi.hasData) {
                     const periodStr = kpi.additionalData?.period;
                     const liveMonth = getMonthFromPeriod(periodStr);
@@ -81,7 +95,18 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
             }
 
             if (val === null || val === undefined) {
-                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray' };
+                return { 
+                    ...kpi, 
+                    hasData: false, 
+                    compliance: 0, 
+                    currentValue: 0, 
+                    semaphore: 'gray',
+                    additionalData: {
+                        ...kpi.additionalData,
+                        updatedAt: null,
+                        period: null
+                    }
+                };
             }
 
             // Recalculate based on history value
@@ -100,7 +125,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
             compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
 
             let semaphore = 'red';
-            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpi.id);
             if (compliance >= (isStrict ? 100 : 95)) semaphore = 'green';
             else if (compliance >= (isStrict ? 100 : 85)) semaphore = 'yellow';
 
@@ -116,7 +141,12 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                             currentValue: brandVal,
                             compliance: Math.round(historyEntry[`${brandKey}-COMP`] || 0),
                             semaphore: historyEntry[`${brandKey}-SEM`] || 'gray',
-                            hasData: true
+                            hasData: true,
+                            additionalData: {
+                                updatedAt: historyEntry.updatedAt,
+                                period: historyEntry.monthKey || historyEntry.month,
+                                brand
+                            }
                         };
                     }
                 });
@@ -128,7 +158,16 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                 compliance,
                 semaphore,
                 hasData: true,
-                brandValues: projectedBrandValues
+                brandValues: projectedBrandValues,
+                additionalData: historyEntry ? {
+                    ...kpi.additionalData,
+                    updatedAt: historyEntry.updatedAt,
+                    period: historyEntry.monthKey || historyEntry.month
+                } : {
+                    ...kpi.additionalData,
+                    updatedAt: null,
+                    period: null
+                }
             };
         });
     }, [baseCompanyKPIs, selectedMonth, activeCompany]);
@@ -148,15 +187,6 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
     // Restricted access: Manager (Gerente) cannot edit
     const canModify = currentUser?.role !== 'Gerente';
 
-    if (!area) {
-        return (
-            <div style={{ textAlign: 'center', padding: '5rem 2rem' }}>
-                <AlertCircle size={48} color="#ef4444" style={{ marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Área no encontrada</h3>
-                <button onClick={() => navigate('/')} className="btn-ghost" style={{ marginTop: '1rem' }}>Volver al Inicio</button>
-            </div>
-        );
-    }
 
     // Filter by area
     const areaKPIs = projectedKPIs.filter(kpi => 
@@ -256,7 +286,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                 };
             }
             // If the brand is in meta but has no specific data yet, show as 0
-            if (kpi.meta && kpi.meta.hasOwnProperty(selectedBrand)) {
+            if (Object.prototype.hasOwnProperty.call(kpi.meta, selectedBrand)) {
                 return {
                     ...kpi,
                     currentValue: 0,
@@ -267,7 +297,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                 };
             }
             return kpi;
-        }).filter(kpi => kpi.meta && kpi.meta.hasOwnProperty(selectedBrand));
+        }).filter(kpi => Object.prototype.hasOwnProperty.call(kpi.meta, selectedBrand));
     }
 
     // 6. Sort: KPIs the user is responsible for (to load/edit) come first
@@ -275,7 +305,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
         const userCargo = currentUser?.cargo || '';
         const isRespA = getKPIResponsable(a, currentUser) === userCargo;
         const isRespB = getKPIResponsable(b, currentUser) === userCargo;
-        
+
         if (isRespA && !isRespB) return -1;
         if (!isRespA && isRespB) return 1;
         return 0;
@@ -283,9 +313,6 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
 
     // 4. Analytics based on FILTERED data
     const kpisWithData = filteredKPIs.filter(kpi => kpi.hasData);
-    const greenCount = filteredKPIs.filter(kpi => kpi.semaphore === 'green').length;
-    const redCount = filteredKPIs.filter(kpi => kpi.semaphore !== 'green' && kpi.hasData).length;
-    const pendingCount = filteredKPIs.filter(kpi => !kpi.hasData).length;
 
     // Alertas logic
     const kpiAlerts = filteredKPIs.map(kpi => {

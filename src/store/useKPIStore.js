@@ -166,9 +166,15 @@ const useKPIStore = create((set, get) => ({
         try {
             await supabase.from('kpi_updates').insert({
                 kpi_id: kpiId,
-                additional_data: additionalData,
+                additional_data: {
+                    ...additionalData,
+                    company: additionalData?.company || get().activeCompany || 'TYM',
+                    period: additionalData?.period || getMonthKey(new Date().toISOString()),
+                },
                 value: value,
                 cargo: currentUser?.cargo || 'Sistema',
+                company_id: additionalData?.company || get().activeCompany || 'TYM',
+                period: additionalData?.period || getMonthKey(new Date().toISOString()),
             });
         } catch (err) {
             console.error('Error persistiendo en Supabase:', err);

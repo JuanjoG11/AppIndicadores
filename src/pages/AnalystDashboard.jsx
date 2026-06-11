@@ -76,6 +76,11 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
     // Project KPIs to selected target month
     const projectedKPIs = React.useMemo(() => {
         return companyKPIsRaw.map(kpi => {
+            const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
+            if (isNonMonthly) {
+                return kpi; // Keep live status for daily/weekly/quincenal KPIs on the Analyst Dashboard
+            }
+
             // Find history entry for selected month
             const historyEntry = kpi.history?.find(h => h.month === targetMonth);
             let val = historyEntry ? historyEntry[currentUser.company] : null;
@@ -93,7 +98,19 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
             }
 
             if (val === null || val === undefined) {
-                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray', brandValues: {} };
+                return { 
+                    ...kpi, 
+                    hasData: false, 
+                    compliance: 0, 
+                    currentValue: 0, 
+                    semaphore: 'gray', 
+                    brandValues: {},
+                    additionalData: {
+                        ...kpi.additionalData,
+                        updatedAt: null,
+                        period: null
+                    }
+                };
             }
 
             // Recalculate based on history value
@@ -112,7 +129,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
             compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
 
             let semaphore = 'red';
-            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas'].includes(kpi.id);
+            const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpi.id);
             if (compliance >= (isStrict ? 100 : 95)) semaphore = 'green';
             else if (compliance >= (isStrict ? 100 : 85)) semaphore = 'yellow';
 
@@ -128,7 +145,12 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                             currentValue: brandVal,
                             compliance: Math.round(historyEntry[`${brandKey}-COMP`] || 0),
                             semaphore: historyEntry[`${brandKey}-SEM`] || 'gray',
-                            hasData: true
+                            hasData: true,
+                            additionalData: {
+                                updatedAt: historyEntry.updatedAt,
+                                period: historyEntry.monthKey || historyEntry.month,
+                                brand
+                            }
                         };
                     }
                 });
@@ -140,7 +162,16 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                 compliance,
                 semaphore,
                 hasData: true,
-                brandValues: projectedBrandValues
+                brandValues: projectedBrandValues,
+                additionalData: historyEntry ? {
+                    ...kpi.additionalData,
+                    updatedAt: historyEntry.updatedAt,
+                    period: historyEntry.monthKey || historyEntry.month
+                } : {
+                    ...kpi.additionalData,
+                    updatedAt: null,
+                    period: null
+                }
             };
         });
     }, [companyKPIsRaw, targetMonth, currentUser.company]);

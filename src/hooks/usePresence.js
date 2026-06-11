@@ -37,11 +37,11 @@ export const usePresence = (currentUser, activeCompany) => {
                 
                 setOnlineUsers(users);
             })
-            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-                // console.log('User joined:', key, newPresences);
+                        .on('presence', { event: 'join' }, () => {
+                // User joined - no action needed
             })
-            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-                // console.log('User left:', key, leftPresences);
+            .on('presence', { event: 'leave' }, () => {
+                // User left - no action needed
             })
             .subscribe(async (status) => {
                 if (status === 'SUBSCRIBED') {
