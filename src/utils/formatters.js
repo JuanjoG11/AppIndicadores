@@ -204,3 +204,35 @@ export const formatPeriod = (periodStr) => {
     }
     return periodStr;
 };
+
+export const getMonthFromPeriod = (periodStr) => {
+    if (!periodStr) return null;
+    const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    
+    // YYYY-MM or YYYY-MM-QX or YYYY-MM-DD
+    const match = periodStr.match(/^\d{4}-(\d{2})/);
+    if (match) {
+        const monthIndex = parseInt(match[1], 10) - 1;
+        if (monthIndex >= 0 && monthIndex < 12) {
+            return MONTH_NAMES[monthIndex];
+        }
+    }
+    // YYYY-WXX (Semanal)
+    const weekMatch = periodStr.match(/^\d{4}-W(\d{1,2})/);
+    if (weekMatch) {
+        const year = parseInt(periodStr.substring(0, 4), 10);
+        const w = parseInt(weekMatch[1], 10);
+        const simple = new Date(year, 0, 1 + (w - 1) * 7);
+        const dow = simple.getDay();
+        const ISOweekStart = new Date(simple);
+        if (dow <= 4) {
+            ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+        } else {
+            ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+        }
+        ISOweekStart.setDate(ISOweekStart.getDate() + 3);
+        return MONTH_NAMES[ISOweekStart.getMonth()];
+    }
+    return null;
+};
+

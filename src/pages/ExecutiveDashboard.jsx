@@ -6,6 +6,7 @@ import { filterKPIsByEntity } from '../utils/kpiHelpers';
 import { calculateOverallScore } from '../data/mockData';
 import { isInverseKPI } from '../utils/kpiCalculations';
 import { LayoutGrid, TrendingUp, Calendar, Clock, FileText, ChevronDown, Activity, ArrowRight } from 'lucide-react';
+import { getMonthFromPeriod } from '../utils/formatters';
 
 const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory, selectedMonth, setSelectedMonth }) => {
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'trend'
@@ -24,16 +25,20 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
             let val = historyEntry ? historyEntry[activeCompany] : null;
 
-            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo
+            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo SOLO si pertenece a selectedMonth
             const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
             if ((val === null || val === undefined) && selectedMonth === currentMonthName) {
                 if (kpi.hasData) {
-                    return kpi; // Usar el objeto base que ya tiene los datos de Mayo
+                    const periodStr = kpi.additionalData?.period;
+                    const liveMonth = getMonthFromPeriod(periodStr);
+                    if (liveMonth === selectedMonth) {
+                        return kpi; // Usar el objeto base que ya tiene los datos vivos
+                    }
                 }
             }
 
             if (val === null || val === undefined) {
-                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray' };
+                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray', brandValues: {} };
             }
 
             // Recalculate compliance for the projected value

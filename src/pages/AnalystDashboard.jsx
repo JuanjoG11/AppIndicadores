@@ -18,7 +18,7 @@ import {
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, BRAND_TO_ENTITY, getEntityBrands, getKPIResponsable } from '../utils/kpiHelpers';
 import { isInverseKPI } from '../utils/kpiCalculations';
-import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../utils/formatters';
+import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue, getMonthFromPeriod } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) => {
@@ -80,16 +80,20 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
             const historyEntry = kpi.history?.find(h => h.month === targetMonth);
             let val = historyEntry ? historyEntry[currentUser.company] : null;
 
-            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo
+            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo SOLO si pertenece a targetMonth
             const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
             if ((val === null || val === undefined) && targetMonth === currentMonthName) {
                 if (kpi.hasData) {
-                    return kpi; // Usar el objeto base que ya tiene los datos vivos
+                    const periodStr = kpi.additionalData?.period;
+                    const liveMonth = getMonthFromPeriod(periodStr);
+                    if (liveMonth === targetMonth) {
+                        return kpi; // Usar el objeto base que ya tiene los datos vivos
+                    }
                 }
             }
 
             if (val === null || val === undefined) {
-                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray' };
+                return { ...kpi, hasData: false, compliance: 0, currentValue: 0, semaphore: 'gray', brandValues: {} };
             }
 
             // Recalculate based on history value

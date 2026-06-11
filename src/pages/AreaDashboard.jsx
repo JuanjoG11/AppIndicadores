@@ -6,7 +6,7 @@ import KPIDataForm from '../components/forms/KPIDataForm';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { filterKPIsByEntity, getKPIResponsable } from '../utils/kpiHelpers';
 import { calculateAreaScore } from '../data/mockData';
-import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline } from '../utils/formatters';
+import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, getMonthFromPeriod } from '../utils/formatters';
 import {
     ResponsiveContainer,
     RadarChart,
@@ -68,11 +68,15 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
             let val = historyEntry ? historyEntry[activeCompany] : null;
 
-            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo
+            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo SOLO si es del periodo de selectedMonth
             const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
             if ((val === null || val === undefined) && selectedMonth === currentMonthName) {
                 if (kpi.hasData) {
-                    return kpi; // Usar el objeto base que ya tiene los datos de Mayo
+                    const periodStr = kpi.additionalData?.period;
+                    const liveMonth = getMonthFromPeriod(periodStr);
+                    if (liveMonth === selectedMonth) {
+                        return kpi; // Usar el objeto base que ya tiene los datos vivos
+                    }
                 }
             }
 
@@ -229,7 +233,19 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
             
             const brandData = kpi.brandValues && kpi.brandValues[brandKey];
             
+            let isFromSelectedMonth = false;
             if (brandData && brandData.hasData) {
+                if (!brandData.additionalData) {
+                    // Reconstructed from history, so it belongs to the selected month
+                    isFromSelectedMonth = true;
+                } else {
+                    const brandPeriodStr = brandData.additionalData.period;
+                    const brandMonth = getMonthFromPeriod(brandPeriodStr);
+                    isFromSelectedMonth = brandMonth === selectedMonth;
+                }
+            }
+            
+            if (brandData && brandData.hasData && isFromSelectedMonth) {
                 return {
                     ...kpi,
                     currentValue: brandData.currentValue,
