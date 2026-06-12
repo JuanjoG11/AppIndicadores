@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Bell, User, LogOut, CheckCircle2, AlertCircle, AlertTriangle, X } from 'lucide-react';
 import Logo from '../common/Logo';
 
 const Header = ({ kpiData, currentUser, onLogout }) => {
     const [showNotifications, setShowNotifications] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
-    const [alerts, setAlerts] = useState({ critical: [], warning: [] });
 
     // Generate real-time alerts based on KPI status
-    useEffect(() => {
-        if (!kpiData) return;
+    const alerts = useMemo(() => {
+        if (!kpiData) return { critical: [], warning: [] };
 
         // User requested STRICT Red/Green logic. 
         // Treating anything NOT Green (i.e., Red or Yellow) as a Critical Alert (Red).
@@ -23,7 +22,7 @@ const Header = ({ kpiData, currentUser, onLogout }) => {
             message: k.semaphore === 'yellow' ? 'Atención: Desempeño por debajo de la meta' : 'Crítico: Desempeño deficiente'
         }));
 
-        setAlerts({ critical, warning: [] }); // No warnings, only Critical (Red) or OK (Green)
+        return { critical, warning: [] };
     }, [kpiData]);
 
     const totalAlerts = alerts.critical.length;

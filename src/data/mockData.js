@@ -20,7 +20,7 @@ export const generateRealHistory = () => {
     let y = START_YEAR;
     let m = START_MONTH;
     while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) {
-        history.push({ month: MONTH_NAMES[m], year: y, TYM: null, TAT: null });
+        history.push({ month: MONTH_NAMES[m], year: y, monthKey: `${y}-${String(m + 1).padStart(2, '0')}`, TYM: null, TAT: null });
         m++;
         if (m > 11) { m = 0; y++; }
     }
@@ -95,13 +95,12 @@ export const generateMockData = () => {
             compliance = Math.min(Math.max(compliance || 0, 0), 100);
         }
 
-        // 3. Generar historial para todos los meses y ambas compañías (TYM y TAT)
-        const kpiHistory = MONTH_NAMES.map(m => ({
-            month: m,
-            year: START_YEAR,
-            // Asignamos el valor actual a ambas compañías para simplificar el mock
-            TYM: currentValue,
-            TAT: currentValue,
+        // 3. Generar historial vacío — los valores reales vienen de Supabase vía useKPIs
+        // No pre-poblar con currentValue para evitar contaminar meses sin datos reales
+        const kpiHistory = generateRealHistory().map(h => ({
+            ...h,
+            TYM: null,
+            TAT: null,
         }));
 
         // 3. Generar brandValues para el desglose (Para que el filtro por marca funcione)

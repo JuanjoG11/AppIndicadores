@@ -108,10 +108,11 @@ export const getKPIDeadline = (frequency) => {
     const cleanFrequency = frequency?.toUpperCase();
     switch (cleanFrequency) {
         case 'DIARIO':
-        case 'DIARIA':
+        case 'DIARIA': {
             const EOD = new Date(today.setHours(23, 59, 0, 0));
             return EOD;
-        case 'SEMANAL':
+        }
+        case 'SEMANAL': {
             // Próximo viernes a las 17:00
             // Si es sábado o domingo, podríamos mostrar el viernes pasado como gracia,
             // pero por ahora mantenemos el próximo viernes según flujo semanal.
@@ -119,7 +120,8 @@ export const getKPIDeadline = (frequency) => {
             nextFriday.setDate(today.getDate() + (5 + 7 - today.getDay()) % 7);
             nextFriday.setHours(17, 0, 0, 0);
             return nextFriday;
-        case 'QUINCENAL':
+        }
+        case 'QUINCENAL': {
             // Grace period: hasta el día 5 del mes para el cierre anterior, 
             // y hasta el 20 para la primera quincena.
             if (day <= 5) {
@@ -136,6 +138,7 @@ export const getKPIDeadline = (frequency) => {
                 return new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59);
             }
             return mid;
+        }
         case 'MENSUAL':
             // Grace period: hasta el día 10 del mes siguiente para reportar el mes anterior
             if (day <= 10) {
@@ -143,11 +146,12 @@ export const getKPIDeadline = (frequency) => {
             }
             // Último día del mes corriente
             return new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59);
-        case 'BIMESTRAL':
+        case 'BIMESTRAL': {
             // Cada dos meses (pares)
             const month = today.getMonth();
             const nextBim = month % 2 === 0 ? month + 2 : month + 1;
             return new Date(today.getFullYear(), nextBim, 0, 23, 59);
+        }
         default:
             return null;
     }
@@ -172,7 +176,6 @@ export const formatDeadline = (date) => {
     const today = new Date();
     const isToday = date.toDateString() === today.toDateString();
 
-    const options = { day: '2-digit', month: '2-digit' };
     if (isToday) return `HOY ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
     return new Intl.DateTimeFormat('es-CO', {

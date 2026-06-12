@@ -12,10 +12,8 @@ const TICK_INTERVAL = 30000; // refresca reloj cada 30s
 const PresentationView = ({ kpiData, activeCompany, setActiveCompany }) => {
     const [now, setNow] = useState(new Date());
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [animateIn, setAnimateIn] = useState(false);
 
     useEffect(() => {
-        setAnimateIn(true);
         const timer = setInterval(() => setNow(new Date()), TICK_INTERVAL);
         return () => clearInterval(timer);
     }, []);
@@ -207,7 +205,7 @@ const PresentationView = ({ kpiData, activeCompany, setActiveCompany }) => {
                 minHeight: 0,
                 overflow: 'hidden',
             }}>
-                {areaStats.map((area, idx) => {
+                {areaStats.map((area) => {
                     const color = semColor(area.semaphore);
                     const label = semLabel(area.semaphore);
                     const Icon = area.pct === 100 ? CheckCircle2 : area.pct > 0 ? Clock : AlertCircle;

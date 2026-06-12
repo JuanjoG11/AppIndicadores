@@ -47,17 +47,17 @@ export const calculateKPIValue = (kpiId, rawData) => {
 
       // COMERCIAL
       case 'primer-margen':
-        newValue = ((d.ventas - d.costoVentas) / d.ventas) * 100;
+        newValue = ((d.ventas - d.costoVentas) / (d.ventas || 1)) * 100;
         break;
       case 'devoluciones-mal-estado':
       case 'devoluciones-mal-estado-comercial':
         newValue = ((d.valorDevolucion || d.devolucionMalEstado || 0) / (d.ventaTotal || 1)) * 100;
         break;
       case 'devoluciones-buen-estado':
-        newValue = (d.devolucionBuenEstado / d.ventaTotal) * 100;
+        newValue = (d.devolucionBuenEstado / (d.ventaTotal || 1)) * 100;
         break;
       case 'promedio-venta-vendedor':
-        newValue = d.ventasTotales / d.numeroVendedores;
+        newValue = d.ventasTotales / (d.numeroVendedores || 1);
         break;
       case 'venta-credito-total':
       case 'participacion-venta-credito':
@@ -100,32 +100,36 @@ export const calculateKPIValue = (kpiId, rawData) => {
         newValue = ((d.carteraNoVencida || d.totalCarteraVencida || 0) / (d.carteraTotal || d.totalVenta || 1)) * 100;
         break;
       case 'cartera-11-30':
-        if (d.cartera1130) newValue = (d.cartera1130 / d.carteraTotal) * 100;
-        else newValue = (d.totalCartera1130 / d.totalCartera) * 100;
+        if (d.cartera1130) newValue = (d.cartera1130 / (d.carteraTotal || 1)) * 100;
+        else newValue = (d.totalCartera1130 / (d.totalCartera || 1)) * 100;
         break;
       case 'cartera-31-45':
-        newValue = (d.totalCartera3145 / d.totalCartera) * 100;
+        newValue = (d.totalCartera3145 / (d.totalCartera || 1)) * 100;
         break;
       case 'cartera-mayor-30':
-        newValue = (d.totalMayor30 / d.totalCartera) * 100;
+        newValue = (d.totalMayor30 / (d.totalCartera || 1)) * 100;
         break;
       case 'valor-cartera-venta':
-        newValue = (d.carteraTotal || d.ventaCredito) / d.ventaTotal * 100;
+        newValue = ((d.carteraTotal || d.ventaCredito) / (d.ventaTotal || 1)) * 100;
         break;
       case 'notas-errores-venta':
-        newValue = (d.notasDevolucion / d.valorVenta) * 100;
+        newValue = (d.notasDevolucion / (d.valorVenta || 1)) * 100;
         break;
-      case 'fiabilidad-inventarios':
-        newValue = (d.valorVerificado / d.valorCorrecto) * 100;
+      case 'fiabilidad-inventarios': {
+        const verificado = parseFloat(d.valorVerificado || 0);
+        const correcto = parseFloat(d.valorCorrecto || 0);
+        const ratio = correcto > 0 ? (verificado / correcto) * 100 : 0;
+        newValue = Math.min(ratio, 100);
         break;
+      }
       case 'quiebres-inventario':
-        newValue = (d.quiebres / d.totalSku) * 100;
+        newValue = (d.quiebres / (d.totalSku || 1)) * 100;
         break;
       case 'obsolescencia':
-        newValue = (d.inventarioObsoleto / d.inventarioTotal) * 100;
+        newValue = (d.inventarioObsoleto / (d.inventarioTotal || 1)) * 100;
         break;
       case 'mermas':
-        newValue = (d.valorMermas / d.inventarioTotal) * 100;
+        newValue = (d.valorMermas / (d.inventarioTotal || 1)) * 100;
         break;
       case 'recircularizaciones':
         newValue = (d.efectuadas / (d.programadas || 1)) * 100;
@@ -138,10 +142,10 @@ export const calculateKPIValue = (kpiId, rawData) => {
 
       // PICKING
       case 'segundos-unidad-separada':
-        newValue = d.segundosUtilizados / d.unidadesSeparadas;
+        newValue = d.segundosUtilizados / (d.unidadesSeparadas || 1);
         break;
       case 'pesos-separados-hombre':
-        newValue = d.valorVenta / d.auxiliaresSeparacion;
+        newValue = d.valorVenta / (d.auxiliaresSeparacion || 1);
         break;
       case 'pedidos-separar-total':
         newValue = (d.pedidosSeparados / d.pedidosFacturados) * 100;
@@ -201,7 +205,7 @@ export const calculateKPIValue = (kpiId, rawData) => {
 
       // CONTABILIDAD EXTRA
       case 'dias-cierre':
-        newValue = (d.diasReporte / d.totalDiasCierre) * 100;
+        newValue = (d.diasReporte / (d.totalDiasCierre || 1)) * 100;
         break;
       case 'ajustes-posteriores':
         newValue = parseFloat(d.ajustesPosteriores || 0);
@@ -247,26 +251,7 @@ export const calculateKPIValue = (kpiId, rawData) => {
       case 'error-facturacion':
         newValue = (parseFloat(d.errores || 0) / (parseFloat(d.facturas || 0) || 1)) * 100;
         break;
-      // INVENTARIO
-      case 'fiabilidad-inventarios':
-        {
-           const verificado = parseFloat(d.valorVerificado || 0);
-           const correcto = parseFloat(d.valorCorrecto || 0);
-           // Exactitud de Inventario: (Verificado / Correcto) * 100
-           // Si verificado > correcto, generalmente se capta al 100% o se mide la desviación
-           // Para el dashboard de TYM, lo captaremos al 100% si se desea ver cumplimiento de meta
-           const ratio = correcto > 0 ? (verificado / correcto) * 100 : 0;
-           newValue = Math.min(ratio, 100); 
-        }
-        break;
-      case 'quiebres-inventario':
-        {
-           const quiebres = parseFloat(d.quiebres || 0);
-           const totalSku = parseFloat(d.totalSku || 0);
-           // % de SKUs sin quiebre
-           newValue = totalSku > 0 ? ((totalSku - quiebres) / totalSku) * 100 : 100;
-        }
-        break;
+
       // SOFTWARE
       case 'tareas-programadas':
         newValue = (parseFloat(d.tareasEjecutadas || 0) / (parseFloat(d.tareasProgramadas || 0) || 1)) * 100;

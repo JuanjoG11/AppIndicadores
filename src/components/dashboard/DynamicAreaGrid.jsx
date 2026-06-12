@@ -2,24 +2,45 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { areas } from '../../data/areas';
 import { calculateAreaScore } from '../../data/mockData';
+import { isInverseKPI } from '../../utils/kpiCalculations';
 import {
     ResponsiveContainer,
     Area,
     AreaChart,
-    Tooltip
 } from 'recharts';
 
 const AreaMiniCard = ({ area, score, kpiData }) => {
     const navigate = useNavigate();
 
-    // Mock history for sparkline
-    const history = [
-        { value: score - 5 },
-        { value: score - 2 },
-        { value: score + 3 },
-        { value: score - 1 },
-        { value: score }
-    ];
+    // Construir sparkline desde el historial real de los KPIs del área
+    const history = React.useMemo(() => {
+        const areaKpis = kpiData.filter(k => k.area === area.id && k.history?.length);
+        if (areaKpis.length === 0) return [];
+
+        // Recopilar monthKeys únicos
+        const monthKeys = new Set();
+        areaKpis.forEach(k => k.history.forEach(h => { if (h.monthKey) monthKeys.add(h.monthKey); }));
+        const sorted = [...monthKeys].sort().slice(-6); // últimos 6 meses
+
+        return sorted.map(mk => {
+            let total = 0; let count = 0;
+            areaKpis.forEach(kpi => {
+                const pt = kpi.history.find(h => h.monthKey === mk);
+                if (!pt) return;
+                const compKeys = Object.keys(pt).filter(k => k.endsWith('-COMP'));
+                if (compKeys.length > 0) {
+                    compKeys.forEach(ck => { if (pt[ck] != null) { total += pt[ck]; count++; } });
+                } else {
+                    const val = pt.TYM ?? pt.TAT;
+                    if (val != null && kpi.targetMeta) {
+                        const c = Math.min((val / kpi.targetMeta) * 100, 100);
+                        if (!isNaN(c)) { total += c; count++; }
+                    }
+                }
+            });
+            return { value: count > 0 ? Math.round(total / count) : null };
+        }).filter(p => p.value !== null);
+    }, [kpiData, area.id]);
 
     const statusColor = score >= 95 ? 'var(--success)' : score >= 80 ? 'var(--warning)' : 'var(--danger)';
     const statusText = score >= 95 ? 'CUMPLE' : score >= 80 ? 'ACEPTABLE' : 'CRÍTICO';
@@ -61,18 +82,21 @@ const AreaMiniCard = ({ area, score, kpiData }) => {
             </div>
 
             <div style={{ height: '40px', marginTop: '1rem' }}>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                    <AreaChart data={history}>
-                        <Area
-                            type="monotone"
-                            dataKey="value"
-                            stroke={area.color}
-                            fill={area.color}
-                            fillOpacity={0.1}
-                            strokeWidth={2}
-                        />
-                    </AreaChart>
-                </ResponsiveContainer>
+                {history.length > 1 ? (
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                        <AreaChart data={history}>
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke={area.color}
+                                fill={area.color}
+                                fillOpacity={0.1}
+                                strokeWidth={2}
+                                isAnimationActive={false}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                ) : null}
             </div>
         </div>
     );

@@ -8,7 +8,7 @@ import { isInverseKPI } from '../utils/kpiCalculations';
 import { LayoutGrid, TrendingUp, Calendar, Clock, FileText, ChevronDown, Activity, ArrowRight } from 'lucide-react';
 import { getMonthFromPeriod } from '../utils/formatters';
 
-const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory, selectedMonth, setSelectedMonth }) => {
+const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory, selectedMonth }) => {
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'trend'
     const [activeHistoryTab, setActiveHistoryTab] = useState('overview');
 
@@ -22,23 +22,13 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
 
         return baseKPIs.map(kpi => {
             const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
-            if (isCurrentMonth && isNonMonthly) {
-                return kpi; // Keep live status for current month's daily/weekly KPIs
-            }
+
+            // KPIs no-mensuales Y KPIs del mes actual con dato vivo: usar directamente
+            if (isNonMonthly) return kpi;
+            if (isCurrentMonth && kpi.hasData) return kpi;
 
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
             let val = historyEntry ? historyEntry[activeCompany] : null;
-
-            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo SOLO si pertenece a selectedMonth
-            if ((val === null || val === undefined) && isCurrentMonth) {
-                if (kpi.hasData) {
-                    const periodStr = kpi.additionalData?.period;
-                    const liveMonth = getMonthFromPeriod(periodStr);
-                    if (liveMonth === selectedMonth) {
-                        return kpi; // Usar el objeto base que ya tiene los datos vivos
-                    }
-                }
-            }
 
             if (val === null || val === undefined) {
                 return { 
@@ -48,11 +38,7 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
                     currentValue: 0, 
                     semaphore: 'gray', 
                     brandValues: {},
-                    additionalData: {
-                        ...kpi.additionalData,
-                        updatedAt: null,
-                        period: null
-                    }
+                    additionalData: { ...kpi.additionalData, updatedAt: null, period: null }
                 };
             }
 
@@ -122,7 +108,7 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
 
     const overallScore = useMemo(() => calculateOverallScore(filteredKPIs), [filteredKPIs]);
 
-    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'];
+
 
     const handleGoToLog = () => {
         setViewMode('trend');

@@ -43,15 +43,6 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
-    if (!area) {
-        return (
-            <div style={{ textAlign: 'center', padding: '5rem 2rem' }}>
-                <AlertCircle size={48} color="#ef4444" style={{ marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Área no encontrada</h3>
-                <button onClick={() => navigate('/')} className="btn-ghost" style={{ marginTop: '1rem' }}>Volver al Inicio</button>
-            </div>
-        );
-    }
     const [activeSubArea, setActiveSubArea] = useState(
         areaId === 'logistica' ? 'Logística de Entrega' : 
         areaId === 'comercial' ? 'Gestión de Ventas' : 
@@ -75,24 +66,14 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
         
         return baseCompanyKPIs.map(kpi => {
             const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
-            if (isCurrentMonth && isNonMonthly) {
-                return kpi; // Keep live status for current month's daily/weekly KPIs
-            }
 
-            // Find history entry for selected month
+            // KPIs no-mensuales Y KPIs del mes actual con dato vivo: usar directamente
+            if (isNonMonthly) return kpi;
+            if (isCurrentMonth && kpi.hasData) return kpi;
+
+            // Buscar en historial para meses pasados
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
             let val = historyEntry ? historyEntry[activeCompany] : null;
-
-            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo SOLO si es del periodo de selectedMonth
-            if ((val === null || val === undefined) && isCurrentMonth) {
-                if (kpi.hasData) {
-                    const periodStr = kpi.additionalData?.period;
-                    const liveMonth = getMonthFromPeriod(periodStr);
-                    if (liveMonth === selectedMonth) {
-                        return kpi; // Usar el objeto base que ya tiene los datos vivos
-                    }
-                }
-            }
 
             if (val === null || val === undefined) {
                 return { 
@@ -101,11 +82,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                     compliance: 0, 
                     currentValue: 0, 
                     semaphore: 'gray',
-                    additionalData: {
-                        ...kpi.additionalData,
-                        updatedAt: null,
-                        period: null
-                    }
+                    additionalData: { ...kpi.additionalData, updatedAt: null, period: null }
                 };
             }
 
@@ -242,6 +219,16 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
         }
     }, [areaId, activeCompany, lockedBrand]);
 
+    if (!area) {
+        return (
+            <div style={{ textAlign: 'center', padding: '5rem 2rem' }}>
+                <AlertCircle size={48} color="#ef4444" style={{ marginBottom: '1rem' }} />
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Área no encontrada</h3>
+                <button onClick={() => navigate('/')} className="btn-ghost" style={{ marginTop: '1rem' }}>Volver al Inicio</button>
+            </div>
+        );
+    }
+
     const showBrandFilter = isBrandSpecificArea;
 
     // 4. Filtered KPIs for the CURRENT view (Area or Sub-Area + Brand)
@@ -327,7 +314,6 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
     }).filter(k => k.isExpired || k.isUrgent || (k.isPending && canModify));
 
     const criticalAlerts = kpiAlerts.filter(k => k.isExpired);
-    const warningAlerts = kpiAlerts.filter(k => k.isUrgent);
 
     const radarData = filteredKPIs.map(kpi => ({
         subject: filteredKPIs.length <= 6 
@@ -391,7 +377,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                                 {area.name}
                             </h1>
                             <p style={{ color: '#64748b', fontSize: '1rem', marginTop: '0.5rem', fontWeight: 500 }}>
-                                {area.description} • <span style={{ color: 'var(--brand)', fontWeight: 800 }}>PERIODO: {selectedMonth.toUpperCase()} 2026</span>
+                                {area.description} • <span style={{ color: 'var(--brand)', fontWeight: 800 }}>PERIODO: {selectedMonth.toUpperCase()} {new Date().getFullYear()}</span>
                             </p>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatKPIValue, formatDateTime, formatDeadline, formatPeriod, getKPIDeadline, checkIsUrgent, checkIsExpired } from '../../utils/formatters';
+import { formatKPIValue, formatNumber, formatDateTime, formatDeadline, formatPeriod, getKPIDeadline, checkIsUrgent, checkIsExpired } from '../../utils/formatters';
 import { ResponsiveContainer, Area, AreaChart, Tooltip } from 'recharts';
 import {
     Edit2,
@@ -296,7 +296,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
             </div>
 
             {/* Sparkline */}
-            {kpi.history && kpi.history.length > 0 && (
+            {kpi.history && kpi.history.filter(h => h[activeCompany || 'TYM'] != null || h.value != null).length > 1 && (
                 <div style={{ height: '50px', margin: '0.5rem -1.5rem', opacity: 0.8, minWidth: '0' }}>
                     <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <AreaChart data={kpi.history}>
@@ -313,6 +313,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                                 strokeWidth={2}
                                 fill={`url(#gradient-${kpi.id})`}
                                 animationDuration={1500}
+                                isAnimationActive={false}
                             />
                         </AreaChart>
                     </ResponsiveContainer>

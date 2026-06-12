@@ -1,10 +1,33 @@
+/* eslint-disable react-hooks/exhaustive-deps, no-prototype-builtins */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { isSameDay, isSameWeek, isSameMonth, parseISO, format, subMonths } from 'date-fns';
+import { parseISO, format } from 'date-fns';
 import { kpiDefinitions } from '../data/kpiData';
 import { mockKPIData as initialMockData } from '../data/mockData';
 import { supabase } from '../lib/supabase';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 import { calculateKPIValue, isInverseKPI } from '../utils/kpiCalculations';
+
+// Normaliza cualquier período granular (quincenal, semanal, diario) a YYYY-MM
+const toMonthKey = (periodOrKey) => {
+    if (!periodOrKey) return null;
+    const s = String(periodOrKey);
+    if (/^\d{4}-\d{2}$/.test(s)) return s;
+    if (/^\d{4}-\d{2}[-_]/.test(s)) return s.substring(0, 7);
+    const weekMatch = s.match(/^(\d{4})-W(\d{1,2})$/);
+    if (weekMatch) {
+        const year = parseInt(weekMatch[1]);
+        const week = parseInt(weekMatch[2]);
+        const simple = new Date(year, 0, 1 + (week - 1) * 7);
+        const dow = simple.getDay();
+        const isoStart = new Date(simple);
+        if (dow <= 4) isoStart.setDate(simple.getDate() - simple.getDay() + 1);
+        else isoStart.setDate(simple.getDate() + 8 - simple.getDay());
+        isoStart.setDate(isoStart.getDate() + 3);
+        return `${isoStart.getFullYear()}-${String(isoStart.getMonth() + 1).padStart(2, '0')}`;
+    }
+    if (s.length >= 7 && /^\d{4}-\d{2}/.test(s)) return s.substring(0, 7);
+    return null;
+};
 
 const isSameBimonthlyPeriod = (p1, p2) => {
     if (!p1 || !p2) return false;
@@ -33,7 +56,7 @@ const periodToMonth = (period) => {
             else { isoStart.setDate(simple.getDate() + 8 - simple.getDay()); }
             isoStart.setDate(isoStart.getDate() + 3);
             return isoStart.getFullYear() + '-' + String(isoStart.getMonth() + 1).padStart(2, '0');
-        } catch(e) { return ''; }
+        } catch { return ''; }
     }
     return period.substring(0, 7);
 };
@@ -133,12 +156,11 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     };
     const currentPeriod = getCurrentPeriod();
 
-    // Inicio y fin del mes actual para el filtro de Supabase
+    // (getMonthDateRange no se usa en la query principal — se dejó por compatibilidad)
     const getMonthDateRange = () => {
         const now = new Date();
-        const start = new Date(now.getFullYear(), now.getMonth(), 1);
-        const end   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-        return { start: start.toISOString(), end: end.toISOString() };
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 2, 23, 59, 59);
+        return { end: end.toISOString() };
     };
 
     /**
@@ -252,7 +274,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 } else {
                     try {
                         recordDateObj = typeof rawDate === 'string' ? parseISO(rawDate) : new Date(rawDate);
-                    } catch (e) {
+                    } catch {
                         recordDateObj = new Date();
                     }
                 }
@@ -271,30 +293,34 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const currentReportablePeriod = getReportablePeriod(frequency);
             const today = new Date();
             const actualCurrentPeriod = getPeriodIndex(today, frequency);
+            // Mes actual YYYY-MM para comparación independiente de granularidad
+            const currentMonthNorm = toMonthKey(currentReportablePeriod) || currentReportablePeriod;
+            const recordMonthNorm = toMonthKey(recordPeriodIndex) || recordPeriodIndex;
 
             // Periodos comparativos
             const isStrictCurrent = recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod;
             const isFromCurrentMonth = typeof recordPeriodIndex === 'string' && recordPeriodIndex.startsWith(currentPeriod);
+            const isSameMonthNorm = currentMonthNorm === recordMonthNorm;
 
-            // Comparación cruzada de meses para frecuencias gruesas (ej: si se cambió de semanal a mensual)
+            // Comparación cruzada de meses para frecuencias gruesas
             const recordMonth = periodToMonth(recordPeriodIndex);
             const currentMonth = periodToMonth(currentReportablePeriod);
             const isCrossPeriodMatch = (frequency === 'MENSUAL' || frequency === 'BIMESTRAL' || frequency === 'SEMESTRAL') && 
                                        recordMonth && recordMonth === currentMonth;
 
-            // Para el estado de carga (hasData): Si es del periodo estrictamente actual O del reportable (gracia)
+            // isFromCurrentPeriod: true si el dato pertenece al mes actual (cualquier granularidad)
             const isFromCurrentPeriod = !forceHistorical && (
                 isStrictCurrent || 
+                isSameMonthNorm ||
                 isCrossPeriodMatch ||
                 recordPeriodIndex === currentReportablePeriod ||
                 (frequency === 'BIMESTRAL' && isSameBimonthlyPeriod(recordPeriodIndex, currentReportablePeriod))
             );
-            // Para el tablero: mostramos si es del período actual O si es del periodo reportable actual (grace period)
             const shouldShowInDashboard = !forceHistorical && (
                 isStrictCurrent ||
+                isSameMonthNorm ||
                 isCrossPeriodMatch ||
                 recordPeriodIndex === currentReportablePeriod ||
-                (frequency === 'SEMANAL') ||
                 (frequency === 'BIMESTRAL' && isSameBimonthlyPeriod(recordPeriodIndex, currentReportablePeriod)) ||
                 (frequency.includes('DIARI') && isFromCurrentMonth)
             );
@@ -306,8 +332,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 period: recordPeriodIndex
             };
             const d = updatedAdditionalData;
-
-            const isHistoricalUpdate = d.type !== 'META_UPDATE' && !isManualUpdate && !isFromCurrentPeriod;
 
             let newValue = 0;
             let targetMeta = 0;
@@ -332,16 +356,21 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 if (d.newFrecuencia && d.newFrecuencia !== kpi.frecuencia) {
                     kpi.frecuencia = d.newFrecuencia;
                 }
-                const scope = d.brand;
-                if (!scope || scope === 'Global' || scope === 'global' || scope === currentCompany) {
-                    const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
-                    kpi.meta = { ...currentMeta, [currentCompany]: d.newMeta };
-                } else {
-                    const staticDef = kpiDefinitions.find(s => s.id === kpiId);
-                    const originalHasBrand = staticDef && staticDef.meta && typeof staticDef.meta === 'object' && staticDef.meta.hasOwnProperty(scope);
-                    if (originalHasBrand) {
+                // Solo actualizar meta si newMeta es un número válido
+                const rawNewMeta = d.newMeta;
+                const parsedNewMeta = typeof rawNewMeta === 'string' ? parseFloat(rawNewMeta) : rawNewMeta;
+                if (rawNewMeta !== undefined && rawNewMeta !== null && rawNewMeta !== '' && !isNaN(parsedNewMeta)) {
+                    const scope = d.brand;
+                    if (!scope || scope === 'Global' || scope === 'global' || scope === currentCompany) {
                         const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
-                        kpi.meta = { ...currentMeta, [scope]: d.newMeta };
+                        kpi.meta = { ...currentMeta, [currentCompany]: parsedNewMeta };
+                    } else {
+                        const staticDef = kpiDefinitions.find(s => s.id === kpiId);
+                        const originalHasBrand = staticDef && staticDef.meta && typeof staticDef.meta === 'object' && staticDef.meta.hasOwnProperty(scope);
+                        if (originalHasBrand) {
+                            const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
+                            kpi.meta = { ...currentMeta, [scope]: parsedNewMeta };
+                        }
                     }
                 }
                 
@@ -441,63 +470,51 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 hasData: (isFromCurrentPeriod || isManualUpdate) ? true : (oldBrandData.hasData || false)
             };
 
-            const targetMonth = MONTH_NAMES[recordDateObj.getMonth()];
-            const targetCompany = currentCompany;
-
-            // ── CONSOLIDACIÓN DE VALORES PARA EL HISTORIAL (Para periodos pasados o actuales) ──
+            // ── CONSOLIDACIÓN DE VALORES PARA EL HISTORIAL ──
             let historyValue = newValue;
             let historyCompliance = compliance;
             let historySemaphore = semaphore;
 
-            const [year, monthNum] = (d.period || currentPeriod).split('-');
+            const [, monthNum] = (d.period || currentPeriod).split('-');
             const monthName = MONTH_NAMES[parseInt(monthNum) - 1];
             const periodKey = d.period || currentPeriod;
+            const normalizedMonthKey = toMonthKey(periodKey) || periodKey;
+            // Nombre del mes basado en el monthKey normalizado (más fiable que recordDateObj para histórico)
+            const histMonth = MONTH_NAMES[parseInt(normalizedMonthKey.split('-')[1]) - 1] || monthName;
 
-            if (kpi.meta && typeof kpi.meta === 'object') {
-                // Para multi-marca, consolidamos los valores de las marcas para este periodo específico (periodKey)
-                // Buscamos si ya existe una entrada para este periodo en el historial
-                const existingEntry = (kpi.history || []).find(h => h.monthKey === periodKey || h.month === targetMonth);
-                
+            // Para KPIs con marcas: consolidar promedio de marcas del mismo mes
+            const hasMultiBrandMeta = kpi.meta && typeof kpi.meta === 'object';
+            if (hasMultiBrandMeta) {
+                const existingEntry = (kpi.history || []).find(h => toMonthKey(h.monthKey) === normalizedMonthKey);
                 const allEntityKeys = Object.keys(kpi.meta).filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT');
                 const brandsOfEntity = allEntityKeys.filter(b => BRAND_TO_ENTITY[b] === currentCompany || b === currentCompany);
                 
-                let sumVal = 0;
-                let sumComp = 0;
-                let count = 0;
-                
+                let sumVal = 0, sumComp = 0, count = 0;
                 brandsOfEntity.forEach(brand => {
                     const brandKey = `${currentCompany}-${brand.toUpperCase()}`;
-                    let brandVal = null;
-                    let brandComp = null;
-                    
+                    let brandVal = null, brandComp = null;
                     if (brand.toUpperCase() === currentBrand.toUpperCase()) {
-                        brandVal = newValue;
-                        brandComp = compliance;
+                        brandVal = newValue; brandComp = compliance;
                     } else if (existingEntry) {
                         brandVal = existingEntry[brandKey];
                         brandComp = existingEntry[`${brandKey}-COMP`];
                     }
-                    
                     if (brandVal !== null && brandVal !== undefined) {
                         sumVal += brandVal;
                         sumComp += (brandComp !== null && brandComp !== undefined ? brandComp : 100);
                         count++;
                     }
                 });
-                
                 if (count > 0) {
                     historyValue = sumVal / count;
                     historyCompliance = Math.round(sumComp / count);
-                    
-                    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpiId);
-                    const greenThreshold = isStrict ? 100 : 95;
-                    const yellowThreshold = isStrict ? 100 : 85;
-
-                    if (historyCompliance >= greenThreshold) historySemaphore = 'green';
-                    else if (historyCompliance >= yellowThreshold) historySemaphore = 'yellow';
+                    const isStrict = ['revision-margenes','revision-precios','pedidos-facturados','impresion-facturas','fiabilidad-inventarios','planillas-separadas','pedidos-separar-total'].includes(kpiId);
+                    if (historyCompliance >= (isStrict ? 100 : 95)) historySemaphore = 'green';
+                    else if (historyCompliance >= (isStrict ? 100 : 85)) historySemaphore = 'yellow';
                     else historySemaphore = 'red';
                 }
             }
+            // Para KPIs sin marcas: usar directamente el valor calculado (ya está en historyValue)
 
             let finalValue = shouldShowInDashboard ? historyValue : (kpi.currentValue || 0);
             let finalCompliance = shouldShowInDashboard ? historyCompliance : (kpi.compliance || 0);
@@ -506,12 +523,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
             // ── ACTUALIZACIÓN DEL HISTORIAL ──
             const newHistory = [...(kpi.history || [])];
-            const existingHistoryIdx = newHistory.findIndex(h => h.monthKey === periodKey || h.month === monthName);
+            const existingHistoryIdx = newHistory.findIndex(h =>
+                toMonthKey(h.monthKey) === normalizedMonthKey
+            );
             
             const historyPoint = {
-                month: targetMonth,
+                month: histMonth,
                 year: recordDateObj.getFullYear(),
-                monthKey: periodKey,
+                monthKey: normalizedMonthKey,
                 [currentCompany]: historyValue,
                 [`${currentCompany}-${currentBrand.toUpperCase()}`]: newValue,
                 [`${currentCompany}-${currentBrand.toUpperCase()}-COMP`]: compliance,
@@ -565,8 +584,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             
             const liveKpi = kpiDataRef.current.find(k => k.id === kpiId);
             const frequency = (liveKpi?.frecuencia || kpiDefinitions.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL').toUpperCase();
-            // Respetar el periodo ya calculado en applyKPIUpdate (tiene prioridad)
             const persistPeriod = additionalData?.period || getPeriodIndex(new Date(), frequency);
+            const persistMonthKey = toMonthKey(persistPeriod) || persistPeriod;
+            // Rango del mes para filtrar por updated_at (más eficiente que traer todos los registros)
+            const [yr, mo] = persistMonthKey.split('-').map(Number);
+            const monthStart = new Date(yr, mo - 1, 1).toISOString();
+            const monthEnd   = new Date(yr, mo, 3).toISOString(); // +3 días cubre UTC offset
             
             const payload = {
                 company_id: additionalData?.company || activeCompany || user?.company || 'TYM',
@@ -575,15 +598,38 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     ...additionalData, 
                     brand: persistBrand,
                     period: persistPeriod,
-                    // Marcar como manual solo si es carga de datos (no cambio de meta/frecuencia)
                     ...(additionalData?.type !== 'META_UPDATE' ? { manual: true } : {})
                 },
                 value: isFinite(value) ? value : 0,
                 cargo: user?.cargo || 'Sistema'
             };
 
-            console.log("💾 Enviando a Supabase:", JSON.stringify(payload, null, 2));
-            const { error } = await supabase.from('kpi_updates').insert(payload);
+            // Buscar registro del mismo mes (filtrado por updated_at del mes)
+            const { data: existingRows } = await supabase
+                .from('kpi_updates')
+                .select('id, additional_data')
+                .eq('company_id', payload.company_id)
+                .eq('kpi_id', payload.kpi_id)
+                .filter('additional_data->>brand', 'eq', persistBrand)
+                .filter('additional_data->>type', 'neq', 'META_UPDATE')
+                .gte('updated_at', monthStart)
+                .lte('updated_at', monthEnd);
+
+            // Encontrar el que tenga el mismo mes normalizado
+            const existing = existingRows?.find(row => {
+                const rowPeriod = row.additional_data?.period || '';
+                return (toMonthKey(rowPeriod) || rowPeriod) === persistMonthKey;
+            });
+
+            let error;
+            if (existing?.id) {
+                ({ error } = await supabase
+                    .from('kpi_updates')
+                    .update({ value: payload.value, additional_data: payload.additional_data, cargo: payload.cargo })
+                    .eq('id', existing.id));
+            } else {
+                ({ error } = await supabase.from('kpi_updates').insert(payload));
+            }
             
             if (error) {
                 console.error("❌ Detalle Error Supabase:", error.message, error.details, error.hint);
@@ -650,16 +696,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 const startISO = twelveMonthsAgo;
                 const { end } = getMonthDateRange();
 
-                console.log(`📅 Cargando datos históricos desde ${startISO} hasta ${end}`);
-
+                console.log(`📅 Cargando datos históricos desde ${startISO}`);
                 // Apply a reasonable limit to the query to avoid huge payloads
                 let query = supabase
                     .from('kpi_updates')
                     .select('*')
                     .gte('updated_at', startISO)
-                    .lte('updated_at', end)
                     .order('updated_at', { ascending: true })
-                    .limit(5000); // Adjust as needed based on typical data volume
+                    .limit(5000);
 
                 // Solo filtramos si no es el rol de Gerente, para que el Gerente pueda ver la comparativa completa
                 if (currentUser?.role !== 'Gerente') {
@@ -694,19 +738,21 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 let newFrecuencia = kpi.frecuencia;
                                 if (d.newFrecuencia && d.newFrecuencia !== kpi.frecuencia) {
                                     newFrecuencia = d.newFrecuencia;
-                                    console.log(`🔄 Frecuencia restaurada desde DB: ${kpi.id} → ${newFrecuencia}`);
                                 }
                                 let newMeta = kpi.meta;
-                                if (d.newMeta !== undefined) {
+                                // Solo aplicar si newMeta es un número válido (no undefined, null, ni string vacío)
+                                const rawMeta = d.newMeta;
+                                const parsedMeta = typeof rawMeta === 'string' ? parseFloat(rawMeta) : rawMeta;
+                                if (rawMeta !== undefined && rawMeta !== null && rawMeta !== '' && !isNaN(parsedMeta)) {
                                     const scope = d.brand;
                                     if (!scope || scope === 'Global' || scope === 'global') {
                                         const base = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
-                                        newMeta = { ...base, [upd.company_id]: d.newMeta };
+                                        newMeta = { ...base, [upd.company_id]: parsedMeta };
                                     } else {
                                         const base = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
-                                        newMeta = { ...base, [scope]: d.newMeta };
+                                        newMeta = { ...base, [scope]: parsedMeta };
                                     }
-                                    console.log(`🎯 Meta restaurada desde DB: ${kpi.id} ${scope || 'global'} → ${d.newMeta}`);
+                                    console.log(`🎯 Meta restaurada desde DB: ${kpi.id} ${d.brand || 'global'} → ${parsedMeta}`);
                                 }
                                 return { ...kpi, frecuencia: newFrecuencia, meta: newMeta };
                             });
@@ -724,7 +770,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         const frequency = kpiDef?.frecuencia || 'MENSUAL';
                         
                         const date = new Date(upd.updated_at || upd.created_at);
-                        const periodKey = upd.additional_data?.period || getPeriodIndex(date, frequency);
+                        // Mantener el período granular original para comparaciones de isFromCurrentPeriod
+                        const rawPeriod = upd.additional_data?.period || getPeriodIndex(date, frequency);
+                        // periodKey normalizado a YYYY-MM solo para agrupar (evitar duplicados de quincena/semana)
+                        const periodKey = toMonthKey(rawPeriod) || rawPeriod;
                         
                         const groupKey = `${kpiId}-${companyId}-${brand}-${periodKey}`;
 
@@ -762,15 +811,21 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 const freq = (kpi.frecuencia || kpiDef.frecuencia || 'MENSUAL').toUpperCase();
                                 const currentPeriodKey = getReportablePeriod(freq);
                                 const strictCurrentPeriod = getPeriodIndex(new Date(), freq);
+                                // Mes actual en YYYY-MM (para comparación independiente de granularidad)
+                                const currentMonthKey = toMonthKey(currentPeriodKey) || currentPeriodKey;
+                                const groupMonthKey = toMonthKey(group.periodKey) || group.periodKey;
 
                                 const recordMonth = periodToMonth(group.periodKey);
                                 const currentMonth = periodToMonth(currentPeriodKey);
                                 const isCrossPeriodMatch = (freq === 'MENSUAL' || freq === 'BIMESTRAL' || freq === 'SEMESTRAL') && 
                                                            recordMonth && recordMonth === currentMonth;
 
+                                // isFromCurrentPeriod: compara por mes (YYYY-MM) para que quincenal/semanal/diario
+                                // también marquen hasData cuando pertenecen al mes actual
                                 const isFromCurrentPeriod =
                                     group.periodKey === currentPeriodKey ||
                                     group.periodKey === strictCurrentPeriod ||
+                                    groupMonthKey === currentMonthKey ||
                                     isCrossPeriodMatch ||
                                     (freq === 'BIMESTRAL' && isSameBimonthlyPeriod(group.periodKey, currentPeriodKey));
 
@@ -822,8 +877,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                     else semaphore = 'red';
                                 }
 
+                                const normalizedMK = toMonthKey(group.periodKey) || group.periodKey;
                                 const historyPoint = {
-                                    month: monthName, year: parseInt(year), monthKey: group.periodKey,
+                                    month: monthName, year: parseInt(year), monthKey: normalizedMK,
                                     [currentCompany]: upd.value,
                                     [`${currentCompany}-${currentBrand.toUpperCase()}`]: upd.value,
                                     [`${currentCompany}-${currentBrand.toUpperCase()}-COMP`]: compliance,
@@ -834,7 +890,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 };
 
                                 const history = [...(kpi.history || [])];
-                                const hIdx = history.findIndex(h => h.monthKey === group.periodKey);
+                                const hIdx = history.findIndex(h => toMonthKey(h.monthKey) === normalizedMK);
                                 if (hIdx >= 0) history[hIdx] = { ...history[hIdx], ...historyPoint };
                                 else history.push(historyPoint);
 
@@ -843,11 +899,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 const brandValues = { ...(kpi.brandValues || {}) };
                                 const oldBrandEntry = brandValues[dataKey] || {};
                                 brandValues[dataKey] = {
-                                    // Preserve previous entry's currentValue unless this record is from the current period
                                     currentValue: isFromCurrentPeriod ? upd.value : (oldBrandEntry.currentValue ?? upd.value),
                                     compliance: isFromCurrentPeriod ? compliance : (oldBrandEntry.compliance ?? compliance),
                                     semaphore: isFromCurrentPeriod ? semaphore : (oldBrandEntry.semaphore ?? semaphore),
-                                    // Only mark as "ready" (hasData) when the record matches the current period
+                                    // Marcar hasData:true si el dato es del periodo actual (cualquier granularidad)
                                     hasData: isFromCurrentPeriod ? true : (oldBrandEntry.hasData || false),
                                     additionalData: {
                                         ...(upd.additional_data || {}),
@@ -856,46 +911,16 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                     }
                                 };
 
-                                // Consolidado de marcas para el KPI base (Priorizar marcas específicas sobre nivel entidad)
-                                const allEntityKeys = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
-                                const brandsOfEntity = kpiDef.meta && typeof kpiDef.meta === 'object' 
-                                    ? Object.keys(kpiDef.meta).filter(b => (BRAND_TO_ENTITY[b] === currentCompany || b === currentCompany) && b !== currentCompany)
-                                    : [];
-                                
-                                const brandSpecificKeys = brandsOfEntity.length > 0
-                                    ? brandsOfEntity.map(b => `${currentCompany}-${b}`).filter(k => brandValues[k]?.hasData)
-                                    : [];
-                                
-                                const keysToAggregate = brandSpecificKeys.length > 0
-                                    ? brandSpecificKeys
-                                    : allEntityKeys.filter(k => brandValues[k]?.hasData);
-
-                                let sumVal = 0, sumComp = 0, count = 0;
-                                keysToAggregate.forEach(k => {
-                                    if (brandValues[k].hasData) {
-                                        sumVal += brandValues[k].currentValue;
-                                        sumComp += brandValues[k].compliance;
-                                        count++;
-                                    }
-                                });
-
-                                const finalValue = count > 0 ? sumVal / count : 0;
-                                const finalComp = count > 0 ? sumComp / count : 0;
-                                let finalSem = 'gray';
-                                if (count > 0) {
-                                    const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpi.id);
-                                    if (finalComp >= (isStrict ? 100 : 95)) finalSem = 'green';
-                                    else if (finalComp >= (isStrict ? 100 : 85)) finalSem = 'yellow';
-                                    else finalSem = 'red';
-                                }
-
                                 // ── SIEMPRE actualizamos brandValues con el dato más reciente de cada periodo ──
                                 // (periodos pasados O actuales - ambos persisten en brandValues para que el
                                 //  gerente y el tablero puedan ver el historial completo al recargar)
 
-                                // Determinar el estado del KPI base usando TODOS los brandValues disponibles
-                                // Priorizamos las claves de marcas específicas sobre el nivel entidad
-                                const finalBrandSpecificKeys = brandsOfEntity.length > 0
+                                 // Determinar el estado del KPI base usando TODOS los brandValues disponibles
+                                 const allEntityKeys = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
+                                 const brandsOfEntity = kpiDef.meta && typeof kpiDef.meta === 'object' 
+                                     ? Object.keys(kpiDef.meta).filter(b => (BRAND_TO_ENTITY[b] === currentCompany || b === currentCompany) && b !== currentCompany)
+                                     : [];
+                                 const finalBrandSpecificKeys = brandsOfEntity.length > 0
                                     ? brandsOfEntity.map(b => `${currentCompany}-${b}`).filter(k => brandValues[k]?.hasData)
                                     : [];
                                 const finalKeysToAggregate = finalBrandSpecificKeys.length > 0
@@ -911,10 +936,18 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                     }
                                 });
 
-                                const aggFinalValue = fCount > 0 ? fSumVal / fCount : 0;
-                                const aggFinalComp  = fCount > 0 ? fSumComp / fCount : 0;
+                                // Para KPIs sin marcas (meta es número), usar el valor directo
+                                const isNoMarcas = !kpiDef.meta || typeof kpiDef.meta !== 'object';
+                                const aggFinalValue = isNoMarcas
+                                    ? upd.value
+                                    : (fCount > 0 ? fSumVal / fCount : 0);
+                                const aggFinalComp = isNoMarcas
+                                    ? compliance
+                                    : (fCount > 0 ? fSumComp / fCount : 0);
+                                
+                                // Calcular semáforo para ambos casos (con y sin marcas)
                                 let aggFinalSem = 'gray';
-                                if (fCount > 0) {
+                                if (isNoMarcas || fCount > 0) {
                                     const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpi.id);
                                     if (aggFinalComp >= (isStrict ? 100 : 95)) aggFinalSem = 'green';
                                     else if (aggFinalComp >= (isStrict ? 100 : 85)) aggFinalSem = 'yellow';
@@ -948,7 +981,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                         ? { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at }
                                         : (kpi.additionalData || { ...(upd.additional_data || {}), period: group.periodKey }),
                                     history: history
-                                        .map(h => h.monthKey === group.periodKey
+                                        .map(h => toMonthKey(h.monthKey) === normalizedMK
                                             ? { ...h, [currentCompany]: isFromCurrentPeriod ? aggFinalValue : upd.value, compliance: isFromCurrentPeriod ? aggFinalComp : compliance }
                                             : h
                                         )
@@ -991,7 +1024,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     },
                     false
                 );
-                if (onToast) onToast('info', `📊 KPI actualizado`);
+                // Solo notificar si el cambio fue hecho por OTRO usuario (no por el actual)
+                const isSelfUpdate = p.new.cargo && currentUser?.cargo && p.new.cargo === currentUser.cargo
+                    && p.new.company_id === activeCompany;
+                if (onToast && !isSelfUpdate) {
+                    onToast('info', `📊 KPI actualizado por ${p.new.cargo || 'otro usuario'}`);
+                }
             }).subscribe();
 
         return () => { supabase.removeChannel(channel); };

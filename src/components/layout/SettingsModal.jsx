@@ -13,12 +13,10 @@ import {
     Database,
     AlertTriangle
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
 import KPIDataForm from '../forms/KPIDataForm';
 
 const SettingsModal = ({ currentUser, kpiData, onUpdateKPI, theme, onToggleTheme, onClose }) => {
     const [activeTab, setActiveTab] = useState('general');
-    const [localKPIs, setLocalKPIs] = useState([...kpiData]);
     const [saveStatus, setSaveStatus] = useState('');
     const [editingKPIId, setEditingKPIId] = useState(null);
 

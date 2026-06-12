@@ -7,59 +7,169 @@ import { ChevronRight, BarChart3, AlertTriangle, Target, Search, Filter } from '
 import { areas } from '../../data/areas';
 import { isInverseKPI } from '../../utils/kpiCalculations';
 
-// Aggregate compliance by area for a given company
-const getAreaScoreByMonth = (kpis, areaId, company) => {
-    const areaKpis = kpis.filter(k => k.area === areaId && k.history && k.history.length > 0);
-    if (areaKpis.length === 0) return [];
+const MONTH_NAMES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-    const months = areaKpis[0].history.map(h => h.month);
-    return months.map(month => {
-        let total = 0;
-        let count = 0;
-        areaKpis.forEach(kpi => {
-            const point = kpi.history.find(h => h.month === month);
-            const val = point?.[company]; // Lee TYM o TAT
-            if (val === null || val === undefined || !kpi.targetMeta) return;
-            const isInverse = isInverseKPI(kpi.id);
-
-            const meta = (kpi.meta && typeof kpi.meta === 'object')
-                ? (kpi.meta[company] || Object.values(kpi.meta)[0])
-                : kpi.meta;
-            if (!meta) return;
-            const compliance = isInverse
-                ? Math.min((meta / val) * 100, 100)
-                : Math.min((val / meta) * 100, 100);
-            if (!isNaN(compliance)) { total += compliance; count++; }
-        });
-        return { month, score: count > 0 ? Math.round(total / count) : null };
-    });
+// Normaliza cualquier período granular (YYYY-MM-Q1, YYYY-Wxx, YYYY-MM-DD) a YYYY-MM
+const toMonthKey = (periodOrKey) => {
+    if (!periodOrKey) return null;
+    const s = String(periodOrKey);
+    // Ya es YYYY-MM
+    if (/^\d{4}-\d{2}$/.test(s)) return s;
+    // YYYY-MM-Qx, YYYY-MM-DD → tomar primeros 7 chars
+    if (/^\d{4}-\d{2}[-_]/.test(s)) return s.substring(0, 7);
+    // YYYY-Wxx → convertir semana ISO a mes
+    const weekMatch = s.match(/^(\d{4})-W(\d{1,2})$/);
+    if (weekMatch) {
+        const year = parseInt(weekMatch[1]);
+        const week = parseInt(weekMatch[2]);
+        const simple = new Date(year, 0, 1 + (week - 1) * 7);
+        const dow = simple.getDay();
+        const isoStart = new Date(simple);
+        if (dow <= 4) isoStart.setDate(simple.getDate() - simple.getDay() + 1);
+        else isoStart.setDate(simple.getDate() + 8 - simple.getDay());
+        isoStart.setDate(isoStart.getDate() + 3);
+        return `${isoStart.getFullYear()}-${String(isoStart.getMonth() + 1).padStart(2, '0')}`;
+    }
+    // Fallback: primeros 7 chars si son YYYY-MM
+    if (s.length >= 7 && /^\d{4}-\d{2}/.test(s)) return s.substring(0, 7);
+    return null;
 };
 
-// Get overall score per month for a company
-const getOverallByMonth = (kpis, company) => {
-    const companyAreas = areas.map(a => a.id);
-    const months = kpis.find(k => k.history?.length)?.history.map(h => h.month) || [];
-    return months.map(month => {
-        let total = 0; let count = 0;
-        companyAreas.forEach(aId => {
-            const areaKpis = kpis.filter(k => k.area === aId && k.history?.length);
-            areaKpis.forEach(kpi => {
-                const point = kpi.history.find(h => h.month === month);
-                const val = point?.[company]; // Lee TYM o TAT
-                if (val === null || val === undefined || !kpi.targetMeta) return;
-                const isInverse = isInverseKPI(kpi.id);
+// Aggregate compliance by area for a given company — siempre agrupado por MES (YYYY-MM)
+const getAreaScoreByMonth = (kpis, areaId, company) => {
+    const areaKpis = kpis.filter(k => k.area === areaId);
+    if (areaKpis.length === 0) return [];
+
+    // Acumular por mes normalizado
+    const monthAccum = {}; // { 'YYYY-MM': { total, count } }
+
+    areaKpis.forEach(kpi => {
+        (kpi.history || []).forEach(h => {
+            const mk = toMonthKey(h.monthKey || h.month);
+            if (!mk) return;
+
+            if (!monthAccum[mk]) monthAccum[mk] = { total: 0, count: 0 };
+
+            // Buscar compliance de marcas del company
+            const brandKeys = Object.keys(h).filter(k =>
+                k.startsWith(`${company}-`) && !k.endsWith('-COMP') && !k.endsWith('-SEM') && !k.endsWith('-UPDATED')
+            );
+
+            let complianceSum = 0;
+            let complianceCount = 0;
+
+            if (brandKeys.length > 0) {
+                brandKeys.forEach(bk => {
+                    const compKey = `${bk}-COMP`;
+                    if (h[compKey] !== undefined && h[compKey] !== null) {
+                        complianceSum += h[compKey];
+                        complianceCount++;
+                    } else if (h[bk] !== undefined && h[bk] !== null) {
+                        const brandName = bk.split('-').slice(1).join('-');
+                        const meta = (kpi.meta && typeof kpi.meta === 'object')
+                            ? (kpi.meta[brandName] || kpi.meta[company] || Object.values(kpi.meta)[0])
+                            : kpi.meta;
+                        if (meta) {
+                            const val = h[bk];
+                            const isInverse = isInverseKPI(kpi.id);
+                            const c = isInverse
+                                ? (val === 0 ? 100 : Math.min((meta / val) * 100, 100))
+                                : Math.min((val / meta) * 100, 100);
+                            if (!isNaN(c)) { complianceSum += c; complianceCount++; }
+                        }
+                    }
+                });
+            } else if (h[company] !== undefined && h[company] !== null) {
+                const val = h[company];
                 const meta = (kpi.meta && typeof kpi.meta === 'object')
                     ? (kpi.meta[company] || Object.values(kpi.meta)[0])
                     : kpi.meta;
-                if (!meta) return;
-                const compliance = isInverse
-                    ? Math.min((meta / val) * 100, 100)
-                    : Math.min((val / meta) * 100, 100);
-                if (!isNaN(compliance)) { total += compliance; count++; }
-            });
+                if (meta) {
+                    const isInverse = isInverseKPI(kpi.id);
+                    const c = isInverse
+                        ? (val === 0 ? 100 : Math.min((meta / val) * 100, 100))
+                        : Math.min((val / meta) * 100, 100);
+                    if (!isNaN(c)) { complianceSum += c; complianceCount++; }
+                }
+            }
+
+            if (complianceCount > 0) {
+                // Promedio de marcas para este KPI en este mes
+                monthAccum[mk].total += complianceSum / complianceCount;
+                monthAccum[mk].count++;
+            }
         });
-        return { month, score: count > 0 ? Math.round(total / count) : null };
     });
+
+    return Object.entries(monthAccum)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([mk, { total, count }]) => {
+            const monthNum = parseInt(mk.split('-')[1]);
+            return {
+                month: MONTH_NAMES_ES[monthNum - 1] || mk,
+                monthKey: mk,
+                score: count > 0 ? Math.round(total / count) : null
+            };
+        });
+};
+
+// Overall score per month para una empresa — agrupado por YYYY-MM
+const getOverallByMonth = (kpis, company) => {
+    const monthAccum = {}; // { 'YYYY-MM': { total, count } }
+
+    kpis.forEach(kpi => {
+        (kpi.history || []).forEach(h => {
+            const mk = toMonthKey(h.monthKey || h.month);
+            if (!mk) return;
+
+            if (!monthAccum[mk]) monthAccum[mk] = { total: 0, count: 0 };
+
+            const brandKeys = Object.keys(h).filter(k =>
+                k.startsWith(`${company}-`) && !k.endsWith('-COMP') && !k.endsWith('-SEM') && !k.endsWith('-UPDATED')
+            );
+
+            let complianceSum = 0;
+            let complianceCount = 0;
+
+            if (brandKeys.length > 0) {
+                brandKeys.forEach(bk => {
+                    const compKey = `${bk}-COMP`;
+                    if (h[compKey] !== undefined && h[compKey] !== null) {
+                        complianceSum += h[compKey];
+                        complianceCount++;
+                    }
+                });
+            } else if (h[company] !== undefined && h[company] !== null) {
+                const val = h[company];
+                const meta = (kpi.meta && typeof kpi.meta === 'object')
+                    ? (kpi.meta[company] || Object.values(kpi.meta)[0])
+                    : kpi.meta;
+                if (meta) {
+                    const isInverse = isInverseKPI(kpi.id);
+                    const c = isInverse
+                        ? (val === 0 ? 100 : Math.min((meta / val) * 100, 100))
+                        : Math.min((val / meta) * 100, 100);
+                    if (!isNaN(c)) { complianceSum += c; complianceCount++; }
+                }
+            }
+
+            if (complianceCount > 0) {
+                monthAccum[mk].total += complianceSum / complianceCount;
+                monthAccum[mk].count++;
+            }
+        });
+    });
+
+    return Object.entries(monthAccum)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([mk, { total, count }]) => {
+            const monthNum = parseInt(mk.split('-')[1]);
+            return {
+                month: MONTH_NAMES_ES[monthNum - 1] || mk,
+                monthKey: mk,
+                score: count > 0 ? Math.round(total / count) : null
+            };
+        });
 };
 
 const semColor = (score) => {
@@ -108,14 +218,27 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
     const [logMonthFilter, setLogMonthFilter] = useState(new Date().toISOString().substring(0, 7)); // YYYY-MM
     const [searchQuery, setSearchQuery] = useState('');
 
-    const months = useMemo(() => kpiData.find(k => k.history?.length)?.history.map(h => h.month) || [], [kpiData]);
-
     const tymOverall = useMemo(() => getOverallByMonth(kpiData, 'TYM'), [kpiData]);
     const tatOverall = useMemo(() => getOverallByMonth(kpiData, 'TAT'), [kpiData]);
 
-    const comparisonData = useMemo(() => tymOverall.map((p, i) => ({
-        month: p.month, TYM: p.score, TAT: tatOverall[i]?.score ?? 0
-    })), [tymOverall, tatOverall]);
+    const months = useMemo(() => {
+        // Recopilar todos los meses únicos de TYM + TAT ordenados cronológicamente
+        const allMonths = new Map();
+        [...tymOverall, ...tatOverall].forEach(p => {
+            if (p.monthKey && !allMonths.has(p.monthKey)) {
+                allMonths.set(p.monthKey, p.month);
+            }
+        });
+        return [...allMonths.entries()]
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([monthKey, month]) => ({ monthKey, month }));
+    }, [tymOverall, tatOverall]);
+
+    const comparisonData = useMemo(() => months.map(({ month, monthKey }) => {
+        const tym = tymOverall.find(p => p.monthKey === monthKey);
+        const tat = tatOverall.find(p => p.monthKey === monthKey);
+        return { month, TYM: tym?.score ?? null, TAT: tat?.score ?? null };
+    }), [months, tymOverall, tatOverall]);
 
     // Heatmap data: area × month for each company
     const heatmapTYM = useMemo(() =>
@@ -132,27 +255,30 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
 
     // Area KPI bar chart
     const areaBarData = useMemo(() => {
-        const lastMonth = months[months.length - 1];
         return ['TYM', 'TAT'].map(company => {
+            const heatmap = company === 'TYM' ? heatmapTYM : heatmapTAT;
             const areaScores = areas.map(a => {
-                const monthData = (company === 'TYM' ? heatmapTYM : heatmapTAT)
-                    .find(x => x.id === a.id)
-                    ?.months.find(m => m.month === lastMonth);
-                return { area: a.name, score: monthData?.score ?? 0 };
+                const areaMonths = heatmap.find(x => x.id === a.id)?.months || [];
+                // Último mes con dato real
+                const lastPoint = [...areaMonths].reverse().find(m => m.score !== null);
+                return { area: a.name, score: lastPoint?.score ?? 0 };
             });
             return { company, areaScores };
         });
-    }, [months, heatmapTYM, heatmapTAT]);
+    }, [heatmapTYM, heatmapTAT]);
 
     // Determinar el último mes que tiene datos reales (para no mostrar Abril si está vacío)
     const lastMonthWithData = useMemo(() => {
-        const availableMonths = [...months].reverse();
-        return availableMonths.find(m => {
-            const tymIdx = tymOverall.find(o => o.month === m);
-            const tatIdx = tatOverall.find(o => o.month === m);
-            return (tymIdx && tymIdx.score !== null) || (tatIdx && tatIdx.score !== null);
-        }) || months[months.length - 1];
+        const reversed = [...months].reverse();
+        const found = reversed.find(({ monthKey }) => {
+            const t = tymOverall.find(o => o.monthKey === monthKey);
+            const ta = tatOverall.find(o => o.monthKey === monthKey);
+            return (t && t.score !== null) || (ta && ta.score !== null);
+        });
+        return found?.month || months[months.length - 1]?.month;
     }, [months, tymOverall, tatOverall]);
+
+    const lastMonthKey = months.find(m => m.month === lastMonthWithData)?.monthKey;
 
     const tymLast = tymOverall.find(m => m.month === lastMonthWithData)?.score ?? null;
     const tatLast = tatOverall.find(m => m.month === lastMonthWithData)?.score ?? null;
@@ -175,7 +301,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                             <p style={{ margin: '0.25rem 0 0', fontSize: '2rem', fontWeight: 900, color: co.score !== null ? semColor(co.score) : '#cbd5e1' }}>
                                 {co.score !== null ? `${co.score}%` : '0%'}
                             </p>
-                            <p style={{ margin: '0.1rem 0 0', fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>{co.score !== null ? `${lastMonthWithData} 2026` : 'PENDIENTE DE CARGA'}</p>
+                            <p style={{ margin: '0.1rem 0 0', fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>{co.score !== null ? `${lastMonthWithData} ${lastMonthKey ? lastMonthKey.substring(0, 4) : new Date().getFullYear()}` : 'PENDIENTE DE CARGA'}</p>
                         </div>
                         <div style={{
                             width: 60, height: 60, borderRadius: '50%',
@@ -252,9 +378,9 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                 <tr>
                                     <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', color: '#64748b', fontWeight: 700, borderBottom: '1px solid #f1f5f9', whiteSpace: 'nowrap' }}>Área</th>
                                     <th style={{ textAlign: 'center', padding: '0.5rem 0.5rem', color: '#64748b', fontWeight: 700, borderBottom: '1px solid #f1f5f9' }}>Empresa</th>
-                                    {months.map(m => (
-                                        <th key={m} style={{ textAlign: 'center', padding: '0.5rem 0.5rem', color: '#64748b', fontWeight: 700, borderBottom: '1px solid #f1f5f9', whiteSpace: 'nowrap', minWidth: 72 }}>
-                                            {m.substring(0, 3)}
+                                    {months.map(({ month, monthKey }) => (
+                                        <th key={monthKey} style={{ textAlign: 'center', padding: '0.5rem 0.5rem', color: '#64748b', fontWeight: 700, borderBottom: '1px solid #f1f5f9', whiteSpace: 'nowrap', minWidth: 72 }}>
+                                            {month.substring(0, 3)}
                                         </th>
                                     ))}
                                 </tr>
@@ -283,19 +409,22 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                                             fontWeight: 700, color: co === 'TYM' ? '#3b82f6' : '#f59e0b',
                                                             fontSize: '0.75rem'
                                                         }}>{co}</td>
-                                                        {row?.months.map((m, mi) => (
-                                                            <td key={mi} style={{ textAlign: 'center', padding: '0.4rem 0.25rem', borderBottom: ci === 1 ? '2px solid #f1f5f9' : '1px dashed #f1f5f9' }}>
-                                                                <div style={{
-                                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                                    width: 48, height: 28, borderRadius: 6,
-                                                                    background: m.score !== null ? `${semColor(m.score)}20` : '#f8fafc',
-                                                                    color: semColor(m.score),
-                                                                    fontWeight: 800, fontSize: '0.75rem'
-                                                                }}>
-                                                                    {m.score !== null ? `${m.score}%` : '—'}
-                                                                </div>
-                                                            </td>
-                                                        ))}
+                                                        {months.map(({ month, monthKey }) => {
+                                                                const m = row?.months.find(x => x.monthKey === monthKey);
+                                                                return (
+                                                                    <td key={monthKey} style={{ textAlign: 'center', padding: '0.4rem 0.25rem', borderBottom: ci === 1 ? '2px solid #f1f5f9' : '1px dashed #f1f5f9' }}>
+                                                                        <div style={{
+                                                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                                            width: 48, height: 28, borderRadius: 6,
+                                                                            background: m?.score !== null && m?.score !== undefined ? `${semColor(m.score)}20` : '#f8fafc',
+                                                                            color: semColor(m?.score),
+                                                                            fontWeight: 800, fontSize: '0.75rem'
+                                                                        }}>
+                                                                            {m?.score !== null && m?.score !== undefined ? `${m.score}%` : '—'}
+                                                                        </div>
+                                                                    </td>
+                                                                );
+                                                            })}
                                                     </tr>
                                                 );
                                             })}
@@ -461,9 +590,20 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                 }}
                             >
                                 <option value="all">Histórico Completo</option>
-                                {['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'].map(m => (
-                                    <option key={m} value={m}>{m}</option>
-                                ))}
+                                {(() => {
+                                    // Generar meses dinámicamente desde los datos reales
+                                    const monthsInLogs = new Set();
+                                    rawUpdates.forEach(log => {
+                                        const period = log.additional_data?.period || log.updated_at || log.created_at;
+                                        if (period) {
+                                            const m = typeof period === 'string' ? period.substring(0, 7) : new Date(period).toISOString().substring(0, 7);
+                                            if (/^\d{4}-\d{2}$/.test(m)) monthsInLogs.add(m);
+                                        }
+                                    });
+                                    return [...monthsInLogs].sort().reverse().map(m => (
+                                        <option key={m} value={m}>{m}</option>
+                                    ));
+                                })()}
                             </select>
                         </div>
 

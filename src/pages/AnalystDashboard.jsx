@@ -75,28 +75,23 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
 
     // Project KPIs to selected target month
     const projectedKPIs = React.useMemo(() => {
+        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
+        const isCurrentMonth = targetMonth === currentMonthName;
+
         return companyKPIsRaw.map(kpi => {
             const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
-            if (isNonMonthly) {
-                return kpi; // Keep live status for daily/weekly/quincenal KPIs on the Analyst Dashboard
-            }
 
-            // Find history entry for selected month
+            // KPIs no-mensuales Y KPIs del mes actual con dato vivo: usar directamente
+            if (isNonMonthly) return kpi;
+
+            // Si el mes seleccionado es el actual y el KPI ya tiene dato cargado → usar valor vivo
+            if (isCurrentMonth && kpi.hasData) return kpi;
+
+            // Buscar en historial para meses pasados
             const historyEntry = kpi.history?.find(h => h.month === targetMonth);
             let val = historyEntry ? historyEntry[currentUser.company] : null;
 
-            // FALLBACK: Si es el mes actual y no hay historial todavía, usar el valor vivo SOLO si pertenece a targetMonth
-            const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-            if ((val === null || val === undefined) && targetMonth === currentMonthName) {
-                if (kpi.hasData) {
-                    const periodStr = kpi.additionalData?.period;
-                    const liveMonth = getMonthFromPeriod(periodStr);
-                    if (liveMonth === targetMonth) {
-                        return kpi; // Usar el objeto base que ya tiene los datos vivos
-                    }
-                }
-            }
-
+            // Sin dato en historial ni en vivo → sin datos
             if (val === null || val === undefined) {
                 return { 
                     ...kpi, 
@@ -105,11 +100,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                     currentValue: 0, 
                     semaphore: 'gray', 
                     brandValues: {},
-                    additionalData: {
-                        ...kpi.additionalData,
-                        updatedAt: null,
-                        period: null
-                    }
+                    additionalData: { ...kpi.additionalData, updatedAt: null, period: null }
                 };
             }
 

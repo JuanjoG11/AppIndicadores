@@ -1,7 +1,7 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
-const TrendChart = ({ data, kpiName, unit, target }) => {
+const TrendChart = ({ data, kpiName, target }) => {
     return (
         <div className="card">
             <div className="card-header">

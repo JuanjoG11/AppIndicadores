@@ -111,7 +111,7 @@ const AppInner = () => {
 
     // Para carga de datos: verificar que el área del KPI está en las áreas autorizadas del usuario
     if (!isMetaUpdate && !isManager) {
-      const userAreas = currentUser?.allowedAreas || [];
+      const userAreas = currentUser?.authorizedAreas || currentUser?.allowedAreas || [];
       const hasAreaAccess = userAreas.includes('all') || userAreas.includes(kpi.area);
       // Fallback: permitir si el cargo coincide con el responsable (para casos especiales)
       const effectiveResponsable = getKPIResponsable(kpi, currentUser);

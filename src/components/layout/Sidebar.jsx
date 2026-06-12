@@ -2,7 +2,6 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Logo from '../common/Logo';
 import { areas } from '../../data/areas';
-import { exportToPDF } from '../../utils/ExportService';
 import {
     Home,
     LogOut,
@@ -160,11 +159,11 @@ const Sidebar = ({ currentUser, onLogout, isOpen, onClose, kpiData = [], activeC
                     {/* Exportar PDF (solo Gerente) */}
                     {currentUser.role === 'Gerente' && (
                         <button
-                            onClick={() => exportToPDF(
-                                kpiData,
-                                activeCompany,
-                                activeCompany === 'TYM' ? 'Tiendas y Marcas' : 'TAT Distribuciones'
-                            )}
+                            onClick={() => {
+                                import('../../utils/ExportService').then(m => {
+                                    m.exportToPDF(kpiData, activeCompany, activeCompany === 'TYM' ? 'Tiendas y Marcas' : 'TAT Distribuciones');
+                                });
+                            }}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',

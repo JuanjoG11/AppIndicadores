@@ -7,76 +7,29 @@ import { calculateOverallScore, calculateAreaScore } from '../../data/mockData';
 import { areas } from '../../data/areas';
 import { Activity, Target, ShieldCheck, AlertTriangle } from 'lucide-react';
 
-const MetricSummary = ({ kpiData, horizontal }) => {
-    const kpisWithData = kpiData.filter(kpi => kpi.hasData);
-    const overallScore = calculateOverallScore(kpiData);
-    const overallScoreColor = overallScore >= 95 ? 'var(--success)' : overallScore >= 80 ? 'var(--warning)' : 'var(--danger)';
+const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div style={{
+                background: 'white',
+                padding: '0.75rem',
+                border: '1px solid var(--border-soft)',
+                borderRadius: '8px',
+                boxShadow: 'var(--shadow-md)'
+            }}>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>{payload[0].payload.name}</p>
+                <p style={{ margin: 0, color: 'var(--brand)', fontSize: '1.1rem', fontWeight: 800 }}>{payload[0].value}%</p>
+            </div>
+        );
+    }
+    return null;
+};
 
-    // Prepare chart data for area comparison
-    const chartData = areas.map(area => ({
-        name: area.name,
-        score: calculateAreaScore(kpiData, area.id),
-        color: area.color
-    })).sort((a, b) => b.score - a.score);
-
-    // Stable history based on real data or current value
-    const getStabilizedHistory = (baseValue, kpiId) => {
-        // If we want to show a trend, we should use actual history if available
-        // For now, if no history, we show a stable line to avoid "demo" feeling of random jumps
-        return Array.from({ length: 6 }, (_, i) => ({
-            value: baseValue
-        }));
-    };
-
-    const metrics = [
-        {
-            title: 'Cumplimiento Total',
-            value: overallScore ? `${overallScore}%` : '0%',
-            color: overallScoreColor,
-            icon: <Activity size={18} />,
-            history: getStabilizedHistory(overallScore || 0, 'total')
-        },
-        {
-            title: 'KPIs en Verde',
-            value: kpiData.filter(k => k.semaphore === 'green').length,
-            color: 'var(--success)',
-            icon: <ShieldCheck size={18} />,
-            history: getStabilizedHistory(kpiData.filter(k => k.semaphore === 'green').length, 'green')
-        },
-        {
-            title: 'KPIs en Rojo',
-            value: kpiData.filter(k => k.semaphore === 'red').length,
-            color: 'var(--danger)',
-            icon: <AlertTriangle size={18} />,
-            history: getStabilizedHistory(kpiData.filter(k => k.semaphore === 'red').length, 'red')
-        }
-    ];
-
-    const radialData = [
-        { name: 'Total', value: overallScore, fill: 'var(--brand)' }
-    ];
-
-    const CustomTooltip = ({ active, payload }) => {
-        if (active && payload && payload.length) {
-            return (
-                <div style={{
-                    background: 'white',
-                    padding: '0.75rem',
-                    border: '1px solid var(--border-soft)',
-                    borderRadius: '8px',
-                    boxShadow: 'var(--shadow-md)'
-                }}>
-                    <p style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>{payload[0].payload.name}</p>
-                    <p style={{ margin: 0, color: 'var(--brand)', fontSize: '1.1rem', fontWeight: 800 }}>{payload[0].value}%</p>
-                </div>
-            );
-        }
-        return null;
-    };
-
-    const Sparkline = ({ data, color }) => (
+const Sparkline = ({ data, color }) => {
+    if (!data || data.length < 2) return <div style={{ height: '30px', width: '80px' }} />;
+    return (
         <div style={{ height: '30px', width: '80px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <AreaChart data={data}>
                     <Area
                         type="monotone"
@@ -91,6 +44,52 @@ const MetricSummary = ({ kpiData, horizontal }) => {
             </ResponsiveContainer>
         </div>
     );
+};
+
+const getStabilizedHistory = (baseValue) => {
+    return Array.from({ length: 6 }, () => ({
+        value: baseValue
+    }));
+};
+
+const MetricSummary = ({ kpiData, horizontal }) => {
+    const overallScore = calculateOverallScore(kpiData);
+    const overallScoreColor = overallScore >= 95 ? 'var(--success)' : overallScore >= 80 ? 'var(--warning)' : 'var(--danger)';
+
+    // Prepare chart data for area comparison
+    const chartData = areas.map(area => ({
+        name: area.name,
+        score: calculateAreaScore(kpiData, area.id),
+        color: area.color
+    })).sort((a, b) => b.score - a.score);
+
+    const metrics = [
+        {
+            title: 'Cumplimiento Total',
+            value: overallScore ? `${overallScore}%` : '0%',
+            color: overallScoreColor,
+            icon: <Activity size={18} />,
+            history: getStabilizedHistory(overallScore || 0)
+        },
+        {
+            title: 'KPIs en Verde',
+            value: kpiData.filter(k => k.semaphore === 'green' && k.hasData).length,
+            color: 'var(--success)',
+            icon: <ShieldCheck size={18} />,
+            history: getStabilizedHistory(kpiData.filter(k => k.semaphore === 'green' && k.hasData).length)
+        },
+        {
+            title: 'KPIs en Rojo',
+            value: kpiData.filter(k => k.semaphore === 'red' && k.hasData).length,
+            color: 'var(--danger)',
+            icon: <AlertTriangle size={18} />,
+            history: getStabilizedHistory(kpiData.filter(k => k.semaphore === 'red' && k.hasData).length)
+        }
+    ];
+
+    const radialData = [
+        { name: 'Total', value: overallScore, fill: 'var(--brand)' }
+    ];
 
     if (horizontal) {
         return (

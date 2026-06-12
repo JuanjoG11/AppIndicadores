@@ -34,15 +34,14 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
     const [modalBrand, setModalBrand] = useState('all');
     const [selectedMonthBrand, setSelectedMonthBrand] = useState(null); // filter inside expanded month
 
-    if (!kpi) return null;
-
     const availableBrands = useMemo(() => {
-        if (!kpi.meta || typeof kpi.meta !== 'object') return [];
+        if (!kpi || !kpi.meta || typeof kpi.meta !== 'object') return [];
         return Object.keys(kpi.meta).filter(b => b !== 'TAT' && b !== 'TYM' && b !== 'Global');
-    }, [kpi.meta]);
+    }, [kpi]);
 
     // Filter and process logs for this KPI
     const kpiLogs = useMemo(() => {
+        if (!kpi) return {};
         const logs = [...rawUpdates]
             .filter(log => log.kpi_id === kpi.id)
             .filter(log => {
@@ -64,10 +63,11 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
         });
         
         return grouped;
-    }, [rawUpdates, kpi.id]);
+    }, [rawUpdates, kpi?.id, modalBrand]);
 
     // Format individual points for the detailed chart
     const detailedData = useMemo(() => {
+        if (!kpi) return [];
         return [...rawUpdates]
             .filter(log => log.kpi_id === kpi.id)
             .filter(log => {
@@ -83,7 +83,10 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
                 period: log.additional_data?.period,
                 brand: log.additional_data?.brand
             }));
-    }, [rawUpdates, kpi.id, modalBrand]);
+    }, [rawUpdates, kpi?.id, modalBrand]);
+
+    // ── Early return DESPUÉS de todos los hooks (regla de React) ──
+    if (!kpi) return null;
 
     const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('gasto') || 
                       kpi.id.includes('horas-extras') || kpi.id.includes('mal-estado') ||
@@ -346,7 +349,7 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
                                     <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Estado</span>
                                 </div>
                                 <div style={{ fontSize: '1.75rem', fontWeight: 950 }}>
-                                    {kpi.compliance >= 95 ? 'SOBRESALIENTE' : (kpi.compliance >= 85 ? 'CUMPLIENDO' : 'EN RIESGO')}
+                                    {!kpi.hasData ? 'SIN DATOS' : (kpi.compliance >= 95 ? 'SOBRESALIENTE' : (kpi.compliance >= 85 ? 'CUMPLIENDO' : 'EN RIESGO'))}
                                 </div>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 700, marginTop: '0.5rem', opacity: 0.9 }}>
                                     Corte: {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}

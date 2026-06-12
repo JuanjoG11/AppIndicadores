@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCriticalAlerts } from '../../data/mockData';
 import { Bell, Settings, X, CheckCircle2, AlertCircle, LogOut, Menu, Search, Wifi, WifiOff, Command, Calendar } from 'lucide-react';
 
-const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuToggle, onLogout, onOpenCommandPalette, lastSyncTime, selectedMonth, setSelectedMonth }) => {
+const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuToggle, onLogout, lastSyncTime, selectedMonth, setSelectedMonth }) => {
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -93,7 +93,7 @@ const TopBar = ({ currentUser, kpiData, activeCompany, onOpenSettings, onMenuTog
                             }}
                         >
                             {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map(m => (
-                                <option key={m} value={m}>{m} 2026</option>
+                                <option key={m} value={m}>{m} {new Date().getFullYear()}</option>
                             ))}
                         </select>
                     </div>

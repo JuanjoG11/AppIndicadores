@@ -241,6 +241,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [formError, setFormError] = useState('');
 
 
     // Mapeo de iconos por área para el diseño
@@ -619,6 +620,18 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         const dataToSave = isMetaMode
             ? { ...cleanedData, type: 'META_UPDATE' }
             : { ...cleanedData, type: 'DATA_UPDATE' };
+
+        // En modo meta: validar que newMeta sea un número válido antes de guardar
+        if (isMetaMode) {
+            const rawMeta = cleanedData.newMeta;
+            const parsed = typeof rawMeta === 'string' ? parseFloat(rawMeta) : rawMeta;
+            if (rawMeta === '' || rawMeta === undefined || rawMeta === null || isNaN(parsed)) {
+                setFormError('Ingresa un valor numérico válido para la meta antes de guardar.');
+                return;
+            }
+        }
+        setFormError('');
+
         onSave(kpi.id, dataToSave);
 
         const msgString = formData.brand;
@@ -761,6 +774,24 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                         }}>
                             <CheckCircle2 size={24} />
                             {successMessage || '¡DATOS GUARDADOS CON ÉXITO!'}
+                        </div>
+                    )}
+                    {formError && (
+                        <div style={{
+                            marginBottom: '1.5rem',
+                            padding: '1rem',
+                            background: '#fef2f2',
+                            borderRadius: '16px',
+                            border: '1px solid #ef4444',
+                            color: '#b91c1c',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            fontSize: '0.9rem',
+                            fontWeight: 700
+                        }}>
+                            <AlertTriangle size={20} />
+                            {formError}
                         </div>
                     )}
                     <form onSubmit={handleSubmit}>

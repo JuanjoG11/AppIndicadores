@@ -59,8 +59,7 @@ export const exportToPDF = (kpiData, company = 'TYM', companyFull = 'Tiendas y M
         ? Math.round(dataKPIs.reduce((s, k) => s + (k.hasData ? (k.compliance || 0) : 0), 0) / dataKPIs.length)
         : 0;
 
-    const semLabel = { green: '🟢 Verde', yellow: '🟡 Amarillo', red: '🔴 Rojo', gray: '⚪ Pendiente' };
-    const semColor = { green: '#10b981', yellow: '#f59e0b', red: '#ef4444', gray: '#cbd5e1' };
+
 
     const areaLabels = {
         'logistica': 'Logística',
