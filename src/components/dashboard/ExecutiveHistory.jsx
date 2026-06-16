@@ -633,10 +633,12 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                         const filtered = [...rawUpdates].reverse().filter(log => {
                             const kpi = kpiData.find(k => k.id === log.kpi_id);
                             const matchesArea = logAreaFilter === 'all' || kpi?.area === logAreaFilter;
-                            const matchesCompany = logCompanyFilter === 'all' || log.company_id === logCompanyFilter;
-                            const dateSource = log.updated_at || log.created_at || log.period || log.additional_data?.period;
-                            const itemPeriodFull = dateSource ? (typeof dateSource === 'string' ? dateSource.substring(0, 10) : new Date(dateSource).toISOString().substring(0, 10)) : null;
-                            const itemPeriodMonth = (itemPeriodFull && typeof itemPeriodFull === 'string') ? itemPeriodFull.substring(0, 7) : null;
+                            const matchesCompany = logCompanyFilter === 'all' || (log.additional_data?.company || 'TYM') === logCompanyFilter;
+                            // Usar period de additional_data primero (más confiable), luego updated_at
+                            const periodStr = log.additional_data?.period || '';
+                            const periodMonth = periodStr ? (toMonthKey(periodStr) || periodStr.substring(0, 7)) : null;
+                            const updatedMonth = (log.updated_at || log.created_at || '').substring(0, 7);
+                            const itemPeriodMonth = periodMonth || updatedMonth || null;
                             const matchesMonth = logMonthFilter === 'all' || itemPeriodMonth === logMonthFilter;
                             const matchesSearch = !searchQuery || (kpi?.name || log.kpi_id).toLowerCase().includes(searchQuery);
                             return matchesArea && matchesCompany && matchesMonth && matchesSearch;
@@ -728,7 +730,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                                                 const isInverse = kpi ? isInverseKPI(kpi.id) : false;
 
                                                                 const meta = (kpi?.meta && typeof kpi.meta === 'object')
-                                                                    ? (kpi.meta[brand] || kpi.meta[log.company_id] || Object.values(kpi.meta)[0])
+                                                                    ? (kpi.meta[brand] || kpi.meta[log.additional_data?.company || 'TYM'] || Object.values(kpi.meta)[0])
                                                                     : kpi?.meta;
                                                                 
                                                                 let compliance = null;
@@ -775,7 +777,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                                                             
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                                                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600 }}>
-                                                                                    Sede: <span style={{ color: 'var(--text-muted)' }}>{log.company_id}</span>
+                                                                                    Sede: <span style={{ color: 'var(--text-muted)' }}>{log.additional_data?.company || 'TYM'}</span>
                                                                                 </span>
                                                                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600 }}>
                                                                                     Marca: <span style={{ color: 'var(--brand)', fontWeight: 800 }}>{brand}</span>

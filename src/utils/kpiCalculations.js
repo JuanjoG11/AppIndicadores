@@ -205,7 +205,7 @@ export const calculateKPIValue = (kpiId, rawData) => {
 
       // CONTABILIDAD EXTRA
       case 'dias-cierre':
-        newValue = (d.diasReporte / (d.totalDiasCierre || 1)) * 100;
+        newValue = parseFloat(d.totalDiasCierre || 0);
         break;
       case 'ajustes-posteriores':
         newValue = parseFloat(d.ajustesPosteriores || 0);
@@ -319,7 +319,8 @@ export const isInverseKPI = (kpiId) => {
     'valor-cartera-venta',
     'rotacion-cxc',
     'rotacion-cxp',
-    'error-facturacion'
+    'error-facturacion',
+    'dias-cierre'
   ];
 
   return inverseKPIs.includes(kpiId) || kpiId.includes('vencida') || kpiId.includes('ajustes');

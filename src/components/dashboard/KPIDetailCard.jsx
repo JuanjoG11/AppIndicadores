@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatKPIValue, formatNumber, formatDateTime, formatDeadline, formatPeriod, getKPIDeadline, checkIsUrgent, checkIsExpired } from '../../utils/formatters';
+import { formatKPIValue, formatNumber, formatDateTime, formatDeadline, formatPeriod, getKPIDeadline, checkIsUrgent, checkIsExpired, getCurrentPeriodKey } from '../../utils/formatters';
 import { ResponsiveContainer, Area, AreaChart, Tooltip } from 'recharts';
 import {
     Edit2,
@@ -18,28 +18,41 @@ import {
 import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
 import { isInverseKPI } from '../../utils/kpiCalculations';
 
-const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selectedBrand, onViewHistory }) => {
+const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selectedBrand, onViewHistory, selectedMonth }) => {
 
     // Simplificado para usar valores consolidados o marca específica
     const isBrandFocus = selectedBrand && selectedBrand !== 'all';
     const entity = activeCompany || 'TYM';
 
-    let displayValue = kpi.currentValue;
+    const currentPeriodKey = getCurrentPeriodKey(kpi.frecuencia);
+    const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
+    const isCurrentMonth = selectedMonth === currentMonthName;
+
+    let displayHasData = false;
+    if (isBrandFocus) {
+        const dataKey = `${entity}-${selectedBrand}`;
+        const bData = kpi.brandValues?.[dataKey];
+        displayHasData = bData?.hasData && (!isCurrentMonth || bData.additionalData?.period === currentPeriodKey);
+    } else {
+        displayHasData = kpi.hasData && (!isCurrentMonth || kpi.additionalData?.period === currentPeriodKey);
+    }
+
+    let displayValue = displayHasData ? kpi.currentValue : null;
     let displayTarget = kpi.targetMeta;
-    let displayCompliance = kpi.compliance;
+    let displayCompliance = displayHasData ? kpi.compliance : null;
 
     if (isBrandFocus) {
         const dataKey = `${entity}-${selectedBrand}`;
         const bData = kpi.brandValues?.[dataKey];
-        displayValue = bData?.currentValue || 0;
+        displayValue = displayHasData ? (bData?.currentValue || 0) : null;
         displayTarget = kpi.meta[selectedBrand] || 0;
-        displayCompliance = bData?.compliance;
+        displayCompliance = displayHasData ? bData?.compliance : null;
     }
 
-    const isSuccess = kpi.semaphore === 'green';
-    const isWarning = kpi.semaphore === 'yellow';
-    const color = isSuccess ? '#059669' : (isWarning ? '#f59e0b' : '#ef4444');
-    const bgColor = isSuccess ? '#ecfdf5' : (isWarning ? '#fffbeb' : '#fef2f2');
+    const isSuccess = displayHasData && kpi.semaphore === 'green';
+    const isWarning = displayHasData && kpi.semaphore === 'yellow';
+    const color = displayHasData ? (isSuccess ? '#059669' : (isWarning ? '#f59e0b' : '#ef4444')) : '#94a3b8';
+    const bgColor = displayHasData ? (isSuccess ? '#ecfdf5' : (isWarning ? '#fffbeb' : '#fef2f2')) : '#f1f5f9';
 
     const isManager = currentUser?.role === 'Gerente';
 

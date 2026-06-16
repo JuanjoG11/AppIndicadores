@@ -67,9 +67,8 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
         return baseCompanyKPIs.map(kpi => {
             const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
 
-            // KPIs no-mensuales Y KPIs del mes actual con dato vivo: usar directamente
-            if (isNonMonthly) return kpi;
-            if (isCurrentMonth && kpi.hasData) return kpi;
+            // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)
+            if (isCurrentMonth) return kpi;
 
             // Buscar en historial para meses pasados
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
@@ -787,6 +786,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                                             activeCompany={activeCompany}
                                             selectedBrand={selectedBrand}
                                             onViewHistory={onViewHistory}
+                                            selectedMonth={selectedMonth}
                                         />
                                     ))}
                                 </React.Fragment>
@@ -804,6 +804,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                             activeCompany={activeCompany}
                             selectedBrand={selectedBrand}
                             onViewHistory={onViewHistory}
+                            selectedMonth={selectedMonth}
                         />
                     ))
                 )}

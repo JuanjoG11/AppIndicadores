@@ -18,7 +18,7 @@ import {
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, BRAND_TO_ENTITY, getEntityBrands, getKPIResponsable } from '../utils/kpiHelpers';
 import { isInverseKPI } from '../utils/kpiCalculations';
-import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue, getMonthFromPeriod } from '../utils/formatters';
+import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue, getMonthFromPeriod, getCurrentPeriodKey } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) => {
@@ -73,19 +73,18 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
         return months[targetDate.getMonth()];
     }, []);
 
+    const isCurrentMonth = React.useMemo(() => {
+        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
+        return targetMonth === currentMonthName;
+    }, [targetMonth]);
+
     // Project KPIs to selected target month
     const projectedKPIs = React.useMemo(() => {
-        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-        const isCurrentMonth = targetMonth === currentMonthName;
-
         return companyKPIsRaw.map(kpi => {
             const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
 
-            // KPIs no-mensuales Y KPIs del mes actual con dato vivo: usar directamente
-            if (isNonMonthly) return kpi;
-
-            // Si el mes seleccionado es el actual y el KPI ya tiene dato cargado → usar valor vivo
-            if (isCurrentMonth && kpi.hasData) return kpi;
+            // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)
+            if (isCurrentMonth) return kpi;
 
             // Buscar en historial para meses pasados
             const historyEntry = kpi.history?.find(h => h.month === targetMonth);
@@ -165,7 +164,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                 }
             };
         });
-    }, [companyKPIsRaw, targetMonth, currentUser.company]);
+    }, [companyKPIsRaw, targetMonth, currentUser.company, isCurrentMonth]);
 
     // Filter helper: check user permissions for authorized areas
     const myAccessKPIs = projectedKPIs.filter(kpi => {
@@ -183,17 +182,33 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
         const effectiveResponsable = getKPIResponsable(k, currentUser);
         if (effectiveResponsable !== currentUser.cargo) return false;
 
-        // Si no tiene desgloses por marca, solo chequear hasData
-        if (!k.meta || typeof k.meta !== 'object') return !k.hasData;
+        const currentPeriodKey = getCurrentPeriodKey(k.frecuencia);
+
+        // Si no tiene desgloses por marca, solo chequear hasData y period (solo si es el mes actual)
+        if (!k.meta || typeof k.meta !== 'object') {
+            if (isCurrentMonth) {
+                return !k.hasData || k.additionalData?.period !== currentPeriodKey;
+            }
+            return !k.hasData;
+        }
 
         // Si tiene marcas, ver si la(s) marca(s) efectiva(s) del usuario faltan
         const effectiveBrands = getEffectiveBrands(k);
-        if (effectiveBrands.length === 0) return !k.hasData;
+        if (effectiveBrands.length === 0) {
+            if (isCurrentMonth) {
+                return !k.hasData || k.additionalData?.period !== currentPeriodKey;
+            }
+            return !k.hasData;
+        }
 
         return effectiveBrands.some(brand => {
             const dataKey = `${currentUser.company}-${brand}`;
             const brandData = k.brandValues?.[dataKey];
-            return !brandData || brandData.hasData === false;
+            if (!brandData || brandData.hasData === false) return true;
+            if (isCurrentMonth) {
+                return brandData.additionalData?.period !== currentPeriodKey;
+            }
+            return false;
         });
     });
 
@@ -248,19 +263,24 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
             const effectiveResponsable = getKPIResponsable(k, currentUser);
             return effectiveResponsable === currentUser.cargo;
         }).forEach(k => {
+            const currentPeriodKey = getCurrentPeriodKey(k.frecuencia);
+            const hasData = k.hasData && (!isCurrentMonth || k.additionalData?.period === currentPeriodKey);
+
             if (!k.meta || typeof k.meta !== 'object') {
                 total++;
-                if (k.hasData) done++;
+                if (hasData) done++;
             } else {
                 const effectiveBrands = getEffectiveBrands(k);
                 if (effectiveBrands.length === 0) {
                     total++;
-                    if (k.hasData) done++;
+                    if (hasData) done++;
                 } else {
                     effectiveBrands.forEach(brand => {
                         total++;
                         const dataKey = `${currentUser.company}-${brand}`;
-                        if (k.brandValues?.[dataKey]?.hasData) done++;
+                        const brandData = k.brandValues?.[dataKey];
+                        const brandHasData = brandData?.hasData && (!isCurrentMonth || brandData.additionalData?.period === currentPeriodKey);
+                        if (brandHasData) done++;
                     });
                 }
             }
@@ -282,18 +302,30 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
     const renderKPICard = (kpi, idx, isMonitoring = false) => {
         const effectiveResponsable = getKPIResponsable(kpi, currentUser);
         const isMine = effectiveResponsable === currentUser.cargo;
-        let isReady = kpi.hasData;
+        const currentPeriodKey = getCurrentPeriodKey(kpi.frecuencia);
+        const cardHasData = kpi.hasData && (!isCurrentMonth || kpi.additionalData?.period === currentPeriodKey);
+        
+        let isReady = false;
         let pendingBrandsList = [];
 
-        if (isMine && kpi.meta && typeof kpi.meta === 'object') {
+        if (kpi.meta && typeof kpi.meta === 'object') {
             const effectiveBrands = getEffectiveBrands(kpi);
             if (effectiveBrands.length > 0) {
                 pendingBrandsList = effectiveBrands.filter(brand => {
                     const dataKey = `${currentUser.company}-${brand}`;
-                    return !kpi.brandValues?.[dataKey]?.hasData;
+                    const brandData = kpi.brandValues?.[dataKey];
+                    if (!brandData || !brandData.hasData) return true;
+                    if (isCurrentMonth) {
+                        return brandData.additionalData?.period !== currentPeriodKey;
+                    }
+                    return false;
                 });
                 isReady = pendingBrandsList.length === 0;
+            } else {
+                isReady = cardHasData;
             }
+        } else {
+            isReady = cardHasData;
         }
 
         const deadline = getKPIDeadline(kpi.frecuencia);
@@ -427,7 +459,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                             .map(brand => {
                                 const dataKey = `${currentUser.company}-${brand}`;
                                 const bData = kpi.brandValues?.[dataKey];
-                                const hasData = bData?.hasData;
+                                const hasData = bData?.hasData && (!isCurrentMonth || bData.additionalData?.period === currentPeriodKey);
                                 const compColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : '#f59e0b')) : '#94a3b8';
                                 const valColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : (bData.semaphore === 'yellow' ? '#f59e0b' : 'var(--brand)'))) : '#94a3b8';
                                 
@@ -477,7 +509,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                                 {isInverseKPI(kpi.id) ? '≤ ' : '≥ '}{kpi.meta && typeof kpi.meta === 'object' ? formatKPIValue(kpi.targetMeta, kpi.unit) : formatKPIValue(kpi.meta, kpi.unit)}
                             </div>
                         </div>
-                        {kpi.hasData && (
+                        {cardHasData && (
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Logro %</div>
                                 <div style={{
@@ -494,11 +526,11 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                             <div style={{
                                 fontSize: '1rem',
                                 fontWeight: 800,
-                                color: kpi.hasData
+                                color: cardHasData
                                     ? (kpi.semaphore === 'green' ? '#059669' : (kpi.semaphore === 'red' ? '#ef4444' : (kpi.semaphore === 'yellow' ? '#f59e0b' : 'var(--brand)')))
                                     : '#cbd5e1'
                             }}>
-                                {kpi.hasData ? formatKPIValue(kpi.currentValue, kpi.unit) : '--'}
+                                {cardHasData ? formatKPIValue(kpi.currentValue, kpi.unit) : '--'}
                             </div>
                         </div>
                     </div>

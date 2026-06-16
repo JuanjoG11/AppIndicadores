@@ -29,7 +29,6 @@ import {
 import { formatKPIValue, formatDateTime } from '../../utils/formatters';
 
 const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
-    const [chartMode, setChartMode] = useState('summary'); // 'summary' (months) | 'detailed' (all points)
     const [expandedMonth, setExpandedMonth] = useState(new Date().toLocaleString('es-ES', { month: 'long' }));
     const [modalBrand, setModalBrand] = useState('all');
     const [selectedMonthBrand, setSelectedMonthBrand] = useState(null); // filter inside expanded month
@@ -65,25 +64,7 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
         return grouped;
     }, [rawUpdates, kpi?.id, modalBrand]);
 
-    // Format individual points for the detailed chart
-    const detailedData = useMemo(() => {
-        if (!kpi) return [];
-        return [...rawUpdates]
-            .filter(log => log.kpi_id === kpi.id)
-            .filter(log => {
-                if (modalBrand === 'all') return true;
-                const logBrand = log.additional_data?.brand || log.brand;
-                return logBrand === modalBrand;
-            })
-            .sort((a, b) => new Date(a.updated_at || a.created_at) - new Date(b.updated_at || b.created_at))
-            .map(log => ({
-                date: new Date(log.updated_at || log.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
-                fullDate: formatDateTime(log.updated_at || log.created_at),
-                value: log.value,
-                period: log.additional_data?.period,
-                brand: log.additional_data?.brand
-            }));
-    }, [rawUpdates, kpi?.id, modalBrand]);
+
 
     // ── Early return DESPUÉS de todos los hooks (regla de React) ──
     if (!kpi) return null;
@@ -114,6 +95,12 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
         } else if (period && period.split('-').length === 3 && !period.includes('Q') && !period.includes('W')) {
             // Diario con fecha exacta: 2026-04-21 → 'Día 21'
             periodLabel = `Día ${new Date(period + 'T12:00:00').getDate()}`;
+        } else if (period && /^\d{4}-\d{2}$/.test(period)) {
+            // Mensual: 2026-05 → 'Mayo'
+            const [, mPart] = period.split('-');
+            const monthIdx = parseInt(mPart, 10) - 1;
+            const shortMonths = ['Ene', 'Feb', 'Mar', 'Abr', 'Mayo', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            periodLabel = shortMonths[monthIdx] || period;
         } else if (isMeta) {
             // Actualización de meta
             periodLabel = 'Actualización de Meta';
@@ -191,7 +178,7 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                         <User size={11} color="#cbd5e1" />
                         <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700 }}>
-                            {log.cargo || 'Sistema'} · {log.company_id}
+                            {log.cargo || 'Sistema'} · {log.additional_data?.company || 'TYM'}
                         </span>
                     </div>
                 </div>

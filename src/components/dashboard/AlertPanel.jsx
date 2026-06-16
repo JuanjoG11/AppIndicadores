@@ -57,7 +57,7 @@ const AlertPanel = ({ kpiData, activeCompany = 'TYM' }) => {
             const trend = getTrend(k.id);
             return trend === 'declining';
         }).slice(0, 3);
-    }, [kpiData, activeCompany]);
+    }, [kpiData, activeCompany, getTrend]);
 
     return (
         <div className="card fade-in" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

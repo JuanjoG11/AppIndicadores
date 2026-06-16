@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { areas } from '../../data/areas';
 import { calculateAreaScore } from '../../data/mockData';
-import { isInverseKPI } from '../../utils/kpiCalculations';
+
 import {
     ResponsiveContainer,
     Area,

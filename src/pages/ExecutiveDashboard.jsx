@@ -23,9 +23,9 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
         return baseKPIs.map(kpi => {
             const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
 
-            // KPIs no-mensuales Y KPIs del mes actual con dato vivo: usar directamente
-            if (isNonMonthly) return kpi;
-            if (isCurrentMonth && kpi.hasData) return kpi;
+            // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)
+            // Esto evita que un hasData:false incorrectamente oculte datos del mes actual
+            if (isCurrentMonth) return kpi;
 
             const historyEntry = kpi.history?.find(h => h.month === selectedMonth);
             let val = historyEntry ? historyEntry[activeCompany] : null;

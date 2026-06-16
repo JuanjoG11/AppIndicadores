@@ -239,3 +239,30 @@ export const getMonthFromPeriod = (periodStr) => {
     return null;
 };
 
+export const getCurrentPeriodKey = (frequency) => {
+    const today = new Date();
+    const freq = frequency?.toUpperCase() || 'MENSUAL';
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    const monthStr = month.toString().padStart(2, '0');
+
+    if (freq.includes('DIARI')) {
+        return `${year}-${monthStr}-${day.toString().padStart(2, '0')}`;
+    }
+    if (freq.includes('SEMANAL')) {
+        const d = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+        const dow = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dow);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+    }
+    if (freq.includes('QUINCENAL')) {
+        const fortnight = day <= 15 ? 'Q1' : 'Q2';
+        return `${year}-${monthStr}-${fortnight}`;
+    }
+    return `${year}-${monthStr}`; // MENSUAL
+};
+
+
