@@ -614,7 +614,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
 
                     {/* ACTIVITY SUMMARY STATS */}
                     {(() => {
-                        const filtered = [...rawUpdates].reverse().filter(log => {
+                        const filtered = [...rawUpdates].sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at)).filter(log => {
                             const kpi = kpiData.find(k => k.id === log.kpi_id);
                             const matchesArea = logAreaFilter === 'all' || kpi?.area === logAreaFilter;
                             const matchesCompany = logCompanyFilter === 'all' || (log.additional_data?.company || 'TYM') === logCompanyFilter;
