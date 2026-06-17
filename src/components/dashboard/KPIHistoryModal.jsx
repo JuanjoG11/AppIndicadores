@@ -29,7 +29,10 @@ import {
 import { formatKPIValue, formatDateTime } from '../../utils/formatters';
 
 const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
-    const [expandedMonth, setExpandedMonth] = useState(new Date().toLocaleString('es-ES', { month: 'long' }));
+    const [expandedMonth, setExpandedMonth] = useState(() => {
+        const m = new Date().toLocaleString('es-ES', { month: 'long' });
+        return m.charAt(0).toUpperCase() + m.slice(1);
+    });
     const [modalBrand, setModalBrand] = useState('all');
     const [selectedMonthBrand, setSelectedMonthBrand] = useState(null); // filter inside expanded month
 
@@ -41,7 +44,7 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
     // Filter and process logs for this KPI
     const kpiLogs = useMemo(() => {
         if (!kpi) return {};
-        const logs = [...rawUpdates]
+        const sortedLogs = [...rawUpdates]
             .filter(log => log.kpi_id === kpi.id)
             .filter(log => {
                 if (modalBrand === 'all') return true;
@@ -49,12 +52,70 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
                 return logBrand === modalBrand;
             })
             .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+
+        const logs = [];
+        const seen = new Set();
+        sortedLogs.forEach(log => {
+            const brand = log.additional_data?.brand || log.brand || 'Global';
+            const period = log.additional_data?.period || log.period;
+            const isMeta = log.additional_data?.type === 'META_UPDATE';
+            const key = isMeta 
+                ? `meta-${brand}-${log.updated_at}`
+                : `${brand}-${period}`;
+            
+            if (!seen.has(key)) {
+                seen.add(key);
+                logs.push(log);
+            }
+        });
         
-        // Group logs by Month
+        // Group logs by target Period Month
         const grouped = {};
         logs.forEach(log => {
-            const date = new Date(log.updated_at || log.created_at);
-            const monthName = date.toLocaleString('es-ES', { month: 'long' });
+            const period = log.additional_data?.period || log.period;
+            let dateToUse = new Date(log.updated_at || log.created_at);
+            
+            if (period) {
+                if (period.includes('-Q')) {
+                    // Quincenal: YYYY-MM-Q1 or YYYY-MM-Q2
+                    const parts = period.split('-');
+                    if (parts.length >= 2) {
+                        const year = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10) - 1;
+                        if (!isNaN(year) && !isNaN(month)) {
+                            dateToUse = new Date(year, month, 1);
+                        }
+                    }
+                } else if (period.includes('-W')) {
+                    // Semanal: YYYY-Www
+                    const parts = period.split('-W');
+                    if (parts.length === 2) {
+                        const year = parseInt(parts[0], 10);
+                        if (!isNaN(year)) {
+                            dateToUse = new Date(year, dateToUse.getMonth(), dateToUse.getDate());
+                        }
+                    }
+                } else if (period.split('-').length === 3 && !period.includes('Q') && !period.includes('W')) {
+                    // Diario: YYYY-MM-DD
+                    const parts = period.split('-');
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    const day = parseInt(parts[2], 10);
+                    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                        dateToUse = new Date(year, month, day);
+                    }
+                } else if (/^\d{4}-\d{2}$/.test(period)) {
+                    // Mensual: YYYY-MM
+                    const parts = period.split('-');
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    if (!isNaN(year) && !isNaN(month)) {
+                        dateToUse = new Date(year, month, 1);
+                    }
+                }
+            }
+
+            const monthName = dateToUse.toLocaleString('es-ES', { month: 'long' });
             const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
             
             if (!grouped[capitalizedMonth]) grouped[capitalizedMonth] = [];
@@ -96,11 +157,16 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
             // Diario con fecha exacta: 2026-04-21 → 'Día 21'
             periodLabel = `Día ${new Date(period + 'T12:00:00').getDate()}`;
         } else if (period && /^\d{4}-\d{2}$/.test(period)) {
-            // Mensual: 2026-05 → 'Mayo'
-            const [, mPart] = period.split('-');
-            const monthIdx = parseInt(mPart, 10) - 1;
-            const shortMonths = ['Ene', 'Feb', 'Mar', 'Abr', 'Mayo', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            periodLabel = shortMonths[monthIdx] || period;
+            // Mensual: 2026-05 → 'Mayo' (si la frecuencia es diaria, mostramos el día de subida como fallback para evitar confusión)
+            const freq = kpi.frecuencia?.toUpperCase() || 'DIARIO';
+            if (freq.includes('DIARIO')) {
+                periodLabel = `Día ${logDate.getDate()}`;
+            } else {
+                const [, mPart] = period.split('-');
+                const monthIdx = parseInt(mPart, 10) - 1;
+                const shortMonths = ['Ene', 'Feb', 'Mar', 'Abr', 'Mayo', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                periodLabel = shortMonths[monthIdx] || period;
+            }
         } else if (isMeta) {
             // Actualización de meta
             periodLabel = 'Actualización de Meta';
@@ -562,8 +628,25 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
                         
                         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
                             {Object.keys(kpiLogs).length > 0 ? (
-                                Object.entries(kpiLogs).map(([month, logs]) => (
-                                    <div key={month} style={{ marginBottom: '2rem' }}>
+                                Object.entries(kpiLogs)
+                                    .sort((a, b) => {
+                                        const parseLogDate = (log) => {
+                                            const p = log.additional_data?.period || log.period;
+                                            if (p) {
+                                                if (p.split('-').length === 3 && !p.includes('Q') && !p.includes('W')) {
+                                                    return new Date(p);
+                                                } else if (/^\d{4}-\d{2}$/.test(p)) {
+                                                    return new Date(p + '-01');
+                                                } else if (p.includes('-Q')) {
+                                                    return new Date(p.split('-').slice(0, 2).join('-') + '-01');
+                                                }
+                                            }
+                                            return new Date(log.updated_at || log.created_at);
+                                        };
+                                        return parseLogDate(b[1][0]) - parseLogDate(a[1][0]);
+                                    })
+                                    .map(([month, logs]) => (
+                                        <div key={month} style={{ marginBottom: '2rem' }}>
                                         {/* Month header - clean, no brand pills */}
                                         <button 
                                             onClick={() => {
