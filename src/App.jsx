@@ -14,7 +14,7 @@ import { DashboardSkeleton, AnalystSkeleton } from './components/common/Skeleton
 import { ToastProvider, useToast } from './context/ToastContext';
 import { useAuth } from './hooks/useAuth';
 import { useKPIs } from './hooks/useKPIs';
-import { filterKPIsByEntity, getKPIResponsable } from './utils/kpiHelpers';
+import { getKPIResponsable } from './utils/kpiHelpers';
 import './index.css';
 import './App.css';
 

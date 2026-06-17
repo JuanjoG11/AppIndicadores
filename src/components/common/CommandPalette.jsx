@@ -73,8 +73,10 @@ const CommandPalette = ({ kpiData = [], isOpen, onClose, currentUser }) => {
     // Focus al abrir
     useEffect(() => {
         if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 50);
-            setQuery('');
+            setTimeout(() => {
+                inputRef.current?.focus();
+                setQuery('');
+            }, 50);
         }
     }, [isOpen]);
 

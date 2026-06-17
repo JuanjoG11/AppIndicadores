@@ -62,7 +62,7 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
         });
         
         return grouped;
-    }, [rawUpdates, kpi?.id, modalBrand]);
+    }, [rawUpdates, kpi, modalBrand]);
 
 
 

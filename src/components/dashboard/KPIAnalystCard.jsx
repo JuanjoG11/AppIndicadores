@@ -9,7 +9,7 @@ import {
     TrendingDown,
     Minus
 } from 'lucide-react';
-import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../../utils/formatters';
+import { getKPIDeadline, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../../utils/formatters';
 import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
 
 const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false }) => {
@@ -38,7 +38,6 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
     }
 
     const deadline = getKPIDeadline(kpi.frecuencia);
-    const isUrgent = checkIsUrgent(deadline);
     const isExpired = checkIsExpired(deadline) && !isReady;
 
     // Calculate Trend

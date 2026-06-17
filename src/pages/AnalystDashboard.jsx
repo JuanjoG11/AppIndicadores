@@ -18,7 +18,7 @@ import {
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, BRAND_TO_ENTITY, getEntityBrands, getKPIResponsable } from '../utils/kpiHelpers';
 import { isInverseKPI } from '../utils/kpiCalculations';
-import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue, getMonthFromPeriod, getCurrentPeriodKey } from '../utils/formatters';
+import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue, getCurrentPeriodKey } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
 
 const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) => {
@@ -81,8 +81,6 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
     // Project KPIs to selected target month
     const projectedKPIs = React.useMemo(() => {
         return companyKPIsRaw.map(kpi => {
-            const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
-
             // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)
             if (isCurrentMonth) return kpi;
 

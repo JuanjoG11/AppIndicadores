@@ -65,8 +65,6 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
         const isCurrentMonth = selectedMonth === currentMonthName;
         
         return baseCompanyKPIs.map(kpi => {
-            const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
-
             // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)
             if (isCurrentMonth) return kpi;
 

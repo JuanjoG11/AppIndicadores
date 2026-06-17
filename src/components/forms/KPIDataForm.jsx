@@ -18,8 +18,17 @@ import {
     Calendar
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
-import { BRAND_TO_ENTITY, getBrandEntity } from '../../utils/kpiHelpers';
-import { formatNumber, formatKPIValue } from '../../utils/formatters';
+import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
+import { formatNumber } from '../../utils/formatters';
+
+// Helper: compute the expected period prefix for the current KPI frequency
+const getPeriodPrefix = (freq) => {
+    const d = new Date();
+    if (freq === 'SEMANAL' || freq === 'semanal') return `${d.getFullYear()}-W`;
+    if (freq === 'QUINCENAL' || freq === 'quincenal') return d.toISOString().substring(0, 7);
+    if (freq === 'DIARIO' || freq === 'diaria' || freq === 'DIARIA') return d.toISOString().substring(0, 7);
+    return d.toISOString().substring(0, 7); // MENSUAL default
+};
 
 const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initialBrand, defaultPeriod }) => {
     const isMetaMode = mode === 'meta';
@@ -146,14 +155,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     });
 
 
-    // Helper: compute the expected period prefix for the current KPI frequency
-    const getPeriodPrefix = (freq) => {
-        const d = new Date();
-        if (freq === 'SEMANAL' || freq === 'semanal') return `${d.getFullYear()}-W`;
-        if (freq === 'QUINCENAL' || freq === 'quincenal') return d.toISOString().substring(0, 7);
-        if (freq === 'DIARIO' || freq === 'diaria' || freq === 'DIARIA') return d.toISOString().substring(0, 7);
-        return d.toISOString().substring(0, 7); // MENSUAL default
-    };
+
 
     // Load persisted drafts from localStorage on mount, filtering stale period formats
     useEffect(() => {
@@ -180,7 +182,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 drafts.current = {};
             }
         }
-    }, []);
+    }, [kpi.id, kpi.frecuencia]);
 
     // Ref para detectar cambio de marca y evitar guardar datos de una marca en el borrador de otra
     // Se inicializa con defaultBrand para que el primer draft se guarde correctamente
@@ -202,7 +204,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             }
         }
         prevBrandPeriodRef.current = currentKey;
-    }, [formData]);
+    }, [formData, kpi.id]);
 
     // EFECTO: Pre-cargar datos cuando cambia la marca o el periodo
     useEffect(() => {
@@ -639,7 +641,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         // Limpiar borradores en memoria Y en localStorage
         drafts.current = {};
         if (typeof window !== 'undefined') {
-            try { window.localStorage.removeItem(`kpi_drafts_${kpi.id}`); } catch (_) {}
+            try { window.localStorage.removeItem(`kpi_drafts_${kpi.id}`); } catch { /* ignore error */ }
         }
 
         if (isMetaMode) {
@@ -936,11 +938,14 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                                 minWidth: '220px', background: '#f8fafc', cursor: 'pointer'
                                             }}
                                         >
-                                            {[...Array(52)].map((_, i) => (
-                                                <option key={i+1} value={`${new Date().getFullYear()}-W${i+1}`}>
-                                                    Semana {i+1} ({new Date().getFullYear()})
-                                                </option>
-                                            ))}
+                                            {[...Array(53)].map((_, i) => {
+                                                const weekNumStr = String(i + 1).padStart(2, '0');
+                                                return (
+                                                    <option key={i+1} value={`${new Date().getFullYear()}-W${weekNumStr}`}>
+                                                        Semana {i + 1} ({new Date().getFullYear()})
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     )}
 

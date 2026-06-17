@@ -6,7 +6,7 @@ import { filterKPIsByEntity } from '../utils/kpiHelpers';
 import { calculateOverallScore } from '../data/mockData';
 import { isInverseKPI } from '../utils/kpiCalculations';
 import { LayoutGrid, TrendingUp, Calendar, Clock, FileText, ChevronDown, Activity, ArrowRight } from 'lucide-react';
-import { getMonthFromPeriod } from '../utils/formatters';
+
 
 const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory, selectedMonth }) => {
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'trend'
@@ -21,8 +21,6 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
         const isCurrentMonth = selectedMonth === currentMonthName;
 
         return baseKPIs.map(kpi => {
-            const isNonMonthly = kpi.frecuencia && ['diario', 'semanal', 'quincenal'].includes(kpi.frecuencia.toLowerCase());
-
             // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)
             // Esto evita que un hasData:false incorrectamente oculte datos del mes actual
             if (isCurrentMonth) return kpi;

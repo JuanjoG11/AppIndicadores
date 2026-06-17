@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, AlertTriangle, TrendingDown, TrendingUp, Clock, Zap } from 'lucide-react';
 import { getCriticalAlerts, getWarningAlerts } from '../../data/mockData';
@@ -20,7 +20,7 @@ const AlertPanel = ({ kpiData, activeCompany = 'TYM' }) => {
      * Analiza la tendencia de un KPI basado en su historial.
      * Retorna: 'improving' | 'declining' | 'stable' | null
      */
-    const getTrend = (kpiId) => {
+    const getTrend = useCallback((kpiId) => {
         const kpi = kpiData.find(k => k.id === kpiId);
         if (!kpi || !kpi.history) return null;
 
@@ -35,7 +35,7 @@ const AlertPanel = ({ kpiData, activeCompany = 'TYM' }) => {
         if (delta > 3) return 'improving';
         if (delta < -3) return 'declining';
         return 'stable';
-    };
+    }, [kpiData, activeCompany]);
 
     /**
      * Genera un insight de texto basado en el cumplimiento actual.
@@ -57,7 +57,7 @@ const AlertPanel = ({ kpiData, activeCompany = 'TYM' }) => {
             const trend = getTrend(k.id);
             return trend === 'declining';
         }).slice(0, 3);
-    }, [kpiData, activeCompany, getTrend]);
+    }, [kpiData, getTrend]);
 
     return (
         <div className="card fade-in" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

@@ -42,7 +42,7 @@ const mockActivities = [
 ];
 
 const ActivityFeed = () => {
-    const getIcon = (type, status) => {
+    const getIcon = (type) => {
         switch (type) {
             case 'update': return <CheckCircle2 size={16} color="var(--success)" />;
             case 'target': return <Database size={16} color="var(--brand)" />;
@@ -86,7 +86,7 @@ const ActivityFeed = () => {
                             justifyContent: 'center',
                             flexShrink: 0
                         }}>
-                            {getIcon(act.type, act.status)}
+                            {getIcon(act.type)}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                             <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 600, lineHeight: 1.4 }}>

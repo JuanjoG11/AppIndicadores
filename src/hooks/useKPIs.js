@@ -6,7 +6,7 @@ import { mockKPIData as initialMockData } from '../data/mockData';
 import { supabase } from '../lib/supabase';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 import { calculateKPIValue, isInverseKPI } from '../utils/kpiCalculations';
-import { getCurrentPeriodKey } from '../utils/formatters';
+
 
 // Normaliza cualquier período granular (quincenal, semanal, diario) a YYYY-MM
 const toMonthKey = (periodOrKey) => {
@@ -481,7 +481,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 compliance: shouldShowInDashboard ? compliance : (oldBrandData.compliance || 0),
                 semaphore: shouldShowInDashboard ? semaphore : (oldBrandData.semaphore || 'gray'),
                 additionalData: shouldShowInDashboard ? d : (oldBrandData.additionalData || d),
-                hasData: (isFromCurrentPeriod || isManualUpdate) ? true : (oldBrandData.hasData || false)
+                hasData: isFromCurrentPeriod ? true : (oldBrandData.hasData || false)
             };
 
             // ── CONSOLIDACIÓN DE VALORES PARA EL HISTORIAL ──
@@ -599,14 +599,19 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const liveKpi = kpiDataRef.current.find(k => k.id === kpiId);
             const frequency = (liveKpi?.frecuencia || kpiDefinitions.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL').toUpperCase();
             const persistPeriod = additionalData?.period || getPeriodIndex(new Date(), frequency);
+            
+            // ── FIX: Para frecuencias granulares, preservar el periodo exacto (YYYY-MM-DD, YYYY-Www, YYYY-MM-Qx).
+            // Solo normalizar a YYYY-MM para frecuencias mensual/bimestral.
+            const granular = isGranularFrequency(frequency);
+            const periodToStore = granular ? persistPeriod : (toMonthKey(persistPeriod) || persistPeriod);
+            
             const payload = {
                 company_id: additionalData?.company || activeCompany || user?.company || 'TYM',
                 kpi_id: kpiId,
                 additional_data: {
                     ...additionalData,
                     brand: persistBrand,
-                    // Normalizamos el periodo para que siempre sea "YYYY-MM"
-                    period: toMonthKey(persistPeriod) || persistPeriod,
+                    period: periodToStore,
                     ...(additionalData?.type !== 'META_UPDATE' ? { manual: true } : {})
                 },
                 value: isFinite(value) ? value : 0,
@@ -627,10 +632,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 .neq('additional_data->>type', 'META_UPDATE');
             console.log('Existing rows found:', existingRows?.length || 0);
 
-            // Encontrar el que tenga el mismo mes (ya normalizado)
+            // Encontrar el registro coincidente (comparación exacta para granulares, nivel mes para no-granulares)
             const existing = existingRows?.find(row => {
                 const rowPeriod = row.additional_data?.period || '';
-                return (toMonthKey(rowPeriod) || rowPeriod) === payload.additional_data.period;
+                const matchGranular = granular && rowPeriod === payload.additional_data.period;
+                const matchCoarse = !granular && (toMonthKey(rowPeriod) || rowPeriod) === payload.additional_data.period;
+                return matchGranular || matchCoarse;
             });
 
             let error;

@@ -253,19 +253,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
             months: getAreaScoreByMonth(kpiData, a.id, 'TAT')
         })), [kpiData]);
 
-    // Area KPI bar chart
-    const areaBarData = useMemo(() => {
-        return ['TYM', 'TAT'].map(company => {
-            const heatmap = company === 'TYM' ? heatmapTYM : heatmapTAT;
-            const areaScores = areas.map(a => {
-                const areaMonths = heatmap.find(x => x.id === a.id)?.months || [];
-                // Último mes con dato real
-                const lastPoint = [...areaMonths].reverse().find(m => m.score !== null);
-                return { area: a.name, score: lastPoint?.score ?? 0 };
-            });
-            return { company, areaScores };
-        });
-    }, [heatmapTYM, heatmapTAT]);
+
 
     // Determinar el último mes que tiene datos reales (para no mostrar Abril si está vacío)
     const lastMonthWithData = useMemo(() => {
@@ -386,7 +374,7 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                 </tr>
                             </thead>
                             <tbody>
-                                {areas.map((area, ai) => {
+                                {areas.map((area) => {
                                     const tymRow = heatmapTYM.find(x => x.id === area.id);
                                     const tatRow = heatmapTAT.find(x => x.id === area.id);
                                     return (
@@ -409,8 +397,8 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                                                             fontWeight: 700, color: co === 'TYM' ? '#3b82f6' : '#f59e0b',
                                                             fontSize: '0.75rem'
                                                         }}>{co}</td>
-                                                        {months.map(({ month, monthKey }) => {
-                                                                const m = row?.months.find(x => x.monthKey === monthKey);
+                                                        {months.map(({ monthKey }) => {
+                                                                 const m = row?.months.find(x => x.monthKey === monthKey);
                                                                 return (
                                                                     <td key={monthKey} style={{ textAlign: 'center', padding: '0.4rem 0.25rem', borderBottom: ci === 1 ? '2px solid #f1f5f9' : '1px dashed #f1f5f9' }}>
                                                                         <div style={{
@@ -455,7 +443,6 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
 
                     {/* Linechart por empresa para el área seleccionada */}
                     {['TYM', 'TAT'].map(co => {
-                        const areaColor = areas.find(a => a.id === selectedArea)?.color || '#3b82f6';
                         const coColor = co === 'TYM' ? '#3b82f6' : '#f59e0b';
                         const heatmap = co === 'TYM' ? heatmapTYM : heatmapTAT;
                         const chartData = heatmap.find(x => x.id === selectedArea)?.months || [];
@@ -591,14 +578,11 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                             >
                                 <option value="all">Histórico Completo</option>
                                 {(() => {
-                                    // Generar meses dinámicamente desde los datos reales
                                     const monthsInLogs = new Set();
                                     rawUpdates.forEach(log => {
-                                        const period = log.additional_data?.period || log.updated_at || log.created_at;
-                                        if (period) {
-                                            const m = typeof period === 'string' ? period.substring(0, 7) : new Date(period).toISOString().substring(0, 7);
-                                            if (/^\d{4}-\d{2}$/.test(m)) monthsInLogs.add(m);
-                                        }
+                                        const period = log.additional_data?.period || log.period || log.updated_at || log.created_at;
+                                        const mk = period ? toMonthKey(period) : null;
+                                        if (mk) monthsInLogs.add(mk);
                                     });
                                     return [...monthsInLogs].sort().reverse().map(m => (
                                         <option key={m} value={m}>{m}</option>
@@ -634,11 +618,8 @@ const ExecutiveHistory = ({ kpiData, rawUpdates = [], onViewHistory, activeTab, 
                             const kpi = kpiData.find(k => k.id === log.kpi_id);
                             const matchesArea = logAreaFilter === 'all' || kpi?.area === logAreaFilter;
                             const matchesCompany = logCompanyFilter === 'all' || (log.additional_data?.company || 'TYM') === logCompanyFilter;
-                            // Usar period de additional_data primero (más confiable), luego updated_at
-                            const periodStr = log.additional_data?.period || '';
-                            const periodMonth = periodStr ? (toMonthKey(periodStr) || periodStr.substring(0, 7)) : null;
-                            const updatedMonth = (log.updated_at || log.created_at || '').substring(0, 7);
-                            const itemPeriodMonth = periodMonth || updatedMonth || null;
+                            const periodStr = log.additional_data?.period || log.period || log.updated_at || log.created_at;
+                            const itemPeriodMonth = periodStr ? toMonthKey(periodStr) : null;
                             const matchesMonth = logMonthFilter === 'all' || itemPeriodMonth === logMonthFilter;
                             const matchesSearch = !searchQuery || (kpi?.name || log.kpi_id).toLowerCase().includes(searchQuery);
                             return matchesArea && matchesCompany && matchesMonth && matchesSearch;
