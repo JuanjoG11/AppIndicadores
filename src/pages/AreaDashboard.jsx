@@ -39,7 +39,7 @@ import {
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 import { isInverseKPI } from '../utils/kpiCalculations';
 
-const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onViewHistory, selectedMonth }) => {
+const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpdateKPI, onViewHistory, selectedMonth }) => {
     const { areaId } = useParams();
     const navigate = useNavigate();
     const area = getAreaById(areaId);
@@ -819,6 +819,7 @@ const AreaDashboard = ({ kpiData, activeCompany, currentUser, onUpdateKPI, onVie
                         onCancel={() => setEditingKPIId(null)}
                         mode={editMode}
                         initialBrand={initialBrand}
+                        rawUpdates={rawUpdates}
                     />
                 </ErrorBoundary>
             )}

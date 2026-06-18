@@ -221,6 +221,7 @@ const AppInner = () => {
                 element={
                   <AreaDashboard 
                     kpiData={kpiData} 
+                    rawUpdates={rawUpdates}
                     activeCompany={activeCompany} 
                     currentUser={currentUser} 
                     onUpdateKPI={handleUpdateKPI} 
@@ -231,7 +232,7 @@ const AppInner = () => {
               />
               <Route
                 path="/mis-indicadores"
-                element={<AnalystDashboard kpiData={kpiData} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} onViewHistory={handleViewHistory} />}
+                element={<AnalystDashboard kpiData={kpiData} rawUpdates={rawUpdates} currentUser={currentUser} onUpdateKPI={handleUpdateKPI} onViewHistory={handleViewHistory} />}
               />
               <Route
                 path="/presentacion"

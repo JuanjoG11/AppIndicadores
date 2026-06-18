@@ -21,7 +21,7 @@ import { isInverseKPI } from '../utils/kpiCalculations';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue, getCurrentPeriodKey } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
 
-const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) => {
+const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onViewHistory }) => {
     const [editingKPIId, setEditingKPIId] = useState(null);
     
     const getDisplayPeriod = () => {
@@ -799,6 +799,7 @@ const AnalystDashboard = ({ kpiData, currentUser, onUpdateKPI, onViewHistory }) 
                     onSave={handleSaveKPI}
                     onCancel={() => setEditingKPIId(null)}
                     mode={editMode}
+                    rawUpdates={rawUpdates}
                     defaultPeriod={
                         editingKPI.frecuencia === 'MENSUAL'
                             ? (() => {

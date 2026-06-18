@@ -21,6 +21,11 @@ import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
 import { formatNumber } from '../../utils/formatters';
 
+const MONTH_NAMES = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
 // Helper: compute the expected period prefix for the current KPI frequency
 const getPeriodPrefix = (freq) => {
     const d = new Date();
@@ -30,7 +35,7 @@ const getPeriodPrefix = (freq) => {
     return d.toISOString().substring(0, 7); // MENSUAL default
 };
 
-const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initialBrand, defaultPeriod }) => {
+const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initialBrand, defaultPeriod, rawUpdates = [] }) => {
     const isMetaMode = mode === 'meta';
     const hasMultipleMetas = kpi.meta && typeof kpi.meta === 'object';
     const userEntity = currentUser?.company || 'TYM';
@@ -88,6 +93,26 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         if (!brandName) return {};
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
         const period = targetPeriod || new Date().toISOString().substring(0, 7); // YYYY-MM
+        
+        // 1. Buscar en rawUpdates para cualquier periodo (histórico o actual)
+        if (rawUpdates && Array.isArray(rawUpdates)) {
+            const match = rawUpdates.find(upd => 
+                upd.kpi_id === kpi.id &&
+                (upd.company_id === userEntity || upd.additional_data?.company === userEntity) &&
+                (upd.additional_data?.brand?.toUpperCase() === brandName.toUpperCase()) &&
+                (upd.additional_data?.period === period || (upd.additional_data?.period && upd.additional_data.period.startsWith(period))) &&
+                upd.additional_data?.type !== 'META_UPDATE'
+            );
+            if (match && match.additional_data) {
+                const cleaned = { ...match.additional_data };
+                delete cleaned.updatedAt;
+                delete cleaned.period;
+                delete cleaned.timestamp;
+                return cleaned;
+            }
+        }
+
+        // 2. Fallback a los brandValues actuales
         const data = kpi.brandValues?.[dataKey]?.additionalData ||
                     (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
 
@@ -928,103 +953,169 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                                         />
                                     )}
 
-                                    {kpi.frecuencia === 'SEMANAL' && (
-                                        <select 
-                                            value={formData.period}
-                                            onChange={(e) => handleChange('period', e.target.value)}
-                                            style={{
-                                                padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
-                                                fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
-                                                minWidth: '220px', background: '#f8fafc', cursor: 'pointer'
-                                            }}
-                                        >
-                                            {[...Array(53)].map((_, i) => {
-                                                const weekNumStr = String(i + 1).padStart(2, '0');
-                                                return (
-                                                    <option key={i+1} value={`${new Date().getFullYear()}-W${weekNumStr}`}>
-                                                        Semana {i + 1} ({new Date().getFullYear()})
-                                                    </option>
-                                                );
-                                            })}
-                                        </select>
-                                    )}
-
-                                    {kpi.frecuencia === 'QUINCENAL' && (
-                                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                            <select 
-                                                value={formData.period?.substring(0, 7)}
-                                                onChange={(e) => {
-                                                    const currentQ = formData.period?.split('-').pop() || 'Q1';
-                                                    handleChange('period', `${e.target.value}-${currentQ}`);
-                                                }}
-                                                style={{
-                                                    padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
-                                                    fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
-                                                    background: '#f8fafc', cursor: 'pointer'
-                                                }}
-                                            >
-                                                {(() => {
-                                                    const options = [];
-                                                    const d = new Date();
-                                                    for (let i = 0; i < 4; i++) {
-                                                        const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
-                                                        const label = m.toLocaleString('es-ES', { month: 'long' }).toUpperCase();
-                                                        const value = m.toISOString().substring(0, 7);
-                                                        options.push(<option key={value} value={value}>{label} {m.getFullYear()}</option>);
-                                                    }
-                                                    return options;
-                                                })()}
-                                            </select>
-                                            
-                                            <div style={{ display: 'flex', gap: '0.4rem' }}>
-                                                {['Q1', 'Q2'].map(q => {
-                                                    const currentMonthPrefix = formData.period?.substring(0, 7) || new Date().toISOString().substring(0, 7);
-                                                    const quincenaKey = `${currentMonthPrefix}-${q}`;
-                                                    const isActive = formData.period === quincenaKey;
-                                                    return (
-                                                        <button
-                                                            key={q}
-                                                            type="button"
-                                                            onClick={() => handleChange('period', quincenaKey)}
-                                                            style={{
-                                                                padding: '0.75rem 1.25rem', borderRadius: '14px', fontSize: '0.9rem', fontWeight: 800,
-                                                                border: isActive ? '2px solid var(--brand)' : '2px solid #e2e8f0',
-                                                                background: isActive ? 'var(--brand-bg)' : 'white',
-                                                                color: isActive ? 'var(--brand)' : '#64748b',
-                                                                cursor: 'pointer', transition: 'all 0.2s'
-                                                            }}
-                                                        >
-                                                            {q}
-                                                        </button>
-                                                    );
-                                                })}
+                                    {kpi.frecuencia === 'SEMANAL' && (() => {
+                                        const yMatch = (formData.period || '').match(/^\d{4}/);
+                                        const currentYear = yMatch ? yMatch[0] : new Date().getFullYear().toString();
+                                        const wMatch = (formData.period || '').match(/W(\d{2})/);
+                                        const currentWeek = wMatch ? wMatch[1] : '01';
+                                        return (
+                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                                <select 
+                                                    value={currentYear}
+                                                    onChange={(e) => {
+                                                        const newYear = e.target.value;
+                                                        handleChange('period', `${newYear}-W${currentWeek}`);
+                                                    }}
+                                                    style={{
+                                                        padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                        fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                        background: '#f8fafc', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                                                    <option value={(new Date().getFullYear() - 1).toString()}>{new Date().getFullYear() - 1}</option>
+                                                </select>
+                                                <select 
+                                                    value={currentWeek}
+                                                    onChange={(e) => {
+                                                        const newWeek = e.target.value;
+                                                        handleChange('period', `${currentYear}-W${newWeek}`);
+                                                    }}
+                                                    style={{
+                                                        padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                        fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                        background: '#f8fafc', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {[...Array(53)].map((_, i) => {
+                                                        const weekNumStr = String(i + 1).padStart(2, '0');
+                                                        return (
+                                                            <option key={i+1} value={weekNumStr}>
+                                                                Semana {i + 1}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
                                             </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
 
-                                    {kpi.frecuencia === 'MENSUAL' && (
-                                        <select 
-                                            value={formData.period}
-                                            onChange={(e) => handleChange('period', e.target.value)}
-                                            style={{
-                                                padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
-                                                fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
-                                                minWidth: '220px', background: '#f8fafc', cursor: 'pointer'
-                                            }}
-                                        >
-                                            {(() => {
-                                                const months = [];
-                                                const d = new Date();
-                                                for (let i = 0; i < 6; i++) {
-                                                    const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
-                                                    const label = m.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
-                                                    const value = m.toISOString().substring(0, 7);
-                                                    months.push(<option key={value} value={value}>{label}</option>);
-                                                }
-                                                return months;
-                                            })()}
-                                        </select>
-                                    )}
+                                    {kpi.frecuencia === 'QUINCENAL' && (() => {
+                                        const yMatch = (formData.period || '').match(/^\d{4}/);
+                                        const currentYear = yMatch ? yMatch[0] : new Date().getFullYear().toString();
+                                        const mMatch = (formData.period || '').match(/(?:^\d{4}-)(\d{2})/);
+                                        const currentMonth = mMatch ? mMatch[1] : '01';
+                                        const fMatch = (formData.period || '').match(/Q[12]/);
+                                        const currentFortnight = fMatch ? fMatch[0] : 'Q1';
+                                        return (
+                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                                <select 
+                                                    value={currentYear}
+                                                    onChange={(e) => {
+                                                        const newYear = e.target.value;
+                                                        handleChange('period', `${newYear}-${currentMonth}-${currentFortnight}`);
+                                                    }}
+                                                    style={{
+                                                        padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                        fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                        background: '#f8fafc', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                                                    <option value={(new Date().getFullYear() - 1).toString()}>{new Date().getFullYear() - 1}</option>
+                                                </select>
+                                                <select 
+                                                    value={currentMonth}
+                                                    onChange={(e) => {
+                                                        const newMonth = e.target.value;
+                                                        handleChange('period', `${currentYear}-${newMonth}-${currentFortnight}`);
+                                                    }}
+                                                    style={{
+                                                        padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                        fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                        background: '#f8fafc', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {MONTH_NAMES.map((name, i) => {
+                                                        const mVal = String(i + 1).padStart(2, '0');
+                                                        return (
+                                                            <option key={i+1} value={mVal}>
+                                                                {name.toUpperCase()}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                                    {['Q1', 'Q2'].map(q => {
+                                                        const isActive = currentFortnight === q;
+                                                        return (
+                                                            <button
+                                                                key={q}
+                                                                type="button"
+                                                                onClick={() => handleChange('period', `${currentYear}-${currentMonth}-${q}`)}
+                                                                style={{
+                                                                    padding: '0.75rem 1.25rem', borderRadius: '14px', fontSize: '0.9rem', fontWeight: 800,
+                                                                    border: isActive ? '2px solid var(--brand)' : '2px solid #e2e8f0',
+                                                                    background: isActive ? 'var(--brand-bg)' : 'white',
+                                                                    color: isActive ? 'var(--brand)' : '#64748b',
+                                                                    cursor: 'pointer', transition: 'all 0.2s'
+                                                                }}
+                                                            >
+                                                                {q === 'Q1' ? '1ra Quincena' : '2da Quincena'}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {kpi.frecuencia === 'MENSUAL' && (() => {
+                                        const yMatch = (formData.period || '').match(/^\d{4}/);
+                                        const currentYear = yMatch ? yMatch[0] : new Date().getFullYear().toString();
+                                        const mMatch = (formData.period || '').match(/(?:^\d{4}-)(\d{2})/);
+                                        const currentMonth = mMatch ? mMatch[1] : '01';
+                                        return (
+                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                                <select 
+                                                    value={currentYear}
+                                                    onChange={(e) => {
+                                                        const newYear = e.target.value;
+                                                        handleChange('period', `${newYear}-${currentMonth}`);
+                                                    }}
+                                                    style={{
+                                                        padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                        fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                        background: '#f8fafc', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                                                    <option value={(new Date().getFullYear() - 1).toString()}>{new Date().getFullYear() - 1}</option>
+                                                </select>
+                                                <select 
+                                                    value={currentMonth}
+                                                    onChange={(e) => {
+                                                        const newMonth = e.target.value;
+                                                        handleChange('period', `${currentYear}-${newMonth}`);
+                                                    }}
+                                                    style={{
+                                                        padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0',
+                                                        fontSize: '0.95rem', fontWeight: 800, outline: 'none', color: '#1e293b',
+                                                        background: '#f8fafc', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {MONTH_NAMES.map((name, i) => {
+                                                        const mVal = String(i + 1).padStart(2, '0');
+                                                        return (
+                                                            <option key={i+1} value={mVal}>
+                                                                {name.toUpperCase()}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                                 <p style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.6rem', fontWeight: 600 }}>
                                     Indica a qué fecha o periodo corresponden los datos que estás ingresando.
