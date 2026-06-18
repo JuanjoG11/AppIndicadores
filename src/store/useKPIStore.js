@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient';
 import { mockKPIData, getMonthKey } from '../data/mockData';
 import { calculateKPIValue, isInverseKPI } from '../utils/kpiCalculations';
 import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
+import { getPeriodKey } from '../utils/dateHelpers';
 
 const useKPIStore = create((set, get) => ({
     kpiData: mockKPIData,
@@ -37,15 +38,27 @@ const useKPIStore = create((set, get) => ({
 
     setShowSettings: (show) => set({ showSettings: show }),
 
+    // Helper to remove any fields that should not be sent to the backend
+    clearSensitiveData: (data) => {
+        const { company, period, ...rest } = data;
+        return rest;
+    },
+
     // KPI Actions
     applyKPIUpdate: (kpiId, newData, shouldPersist = true) => {
+        // Basic validation of incoming data
+        if (!newData || typeof newData !== 'object') {
+            console.error('applyKPIUpdate received invalid data');
+            return;
+        }
+        const sanitizedData = get().clearSensitiveData(newData);
         set((state) => ({
             kpiData: state.kpiData.map((oldKpi) => {
                 if (oldKpi.id === kpiId) {
                     const kpi = JSON.parse(JSON.stringify(oldKpi));
                     const updatedAdditionalData = {
                         ...kpi.additionalData,
-                        ...newData,
+                        ...sanitizedData,
                     };
 
                     const d = updatedAdditionalData;
@@ -163,21 +176,39 @@ const useKPIStore = create((set, get) => ({
 
     persistUpdate: async (kpiId, additionalData, value) => {
         const { currentUser } = get();
-        try {
-            await supabase.from('kpi_updates').insert({
-                kpi_id: kpiId,
-                additional_data: {
-                    ...additionalData,
-                    company: additionalData?.company || get().activeCompany || 'TYM',
-                    period: additionalData?.period || getMonthKey(new Date().toISOString()),
-                },
-                value: value,
-                cargo: currentUser?.cargo || 'Sistema',
-                company_id: additionalData?.company || get().activeCompany || 'TYM',
+        const payload = {
+            kpi_id: kpiId,
+            additional_data: {
+                ...additionalData,
+                company: additionalData?.company || get().activeCompany || 'TYM',
                 period: additionalData?.period || getMonthKey(new Date().toISOString()),
-            });
-        } catch (err) {
-            console.error('Error persistiendo en Supabase:', err);
+            },
+            value,
+            cargo: currentUser?.cargo || 'Sistema',
+            company_id: additionalData?.company || get().activeCompany || 'TYM',
+            period: additionalData?.period || getMonthKey(new Date().toISOString()),
+        };
+        const maxRetries = 3;
+        let attempt = 0;
+        const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+        while (attempt < maxRetries) {
+            try {
+                await supabase.from('kpi_updates').insert(payload);
+                return; // success
+            } catch (err) {
+                attempt++;
+                console.warn(`Persist attempt ${attempt} failed`, err);
+                if (attempt >= maxRetries) {
+                    // fallback to local storage queue
+                    const queue = JSON.parse(localStorage.getItem('kpi_update_queue') || '[]');
+                    queue.push({ kpiId, additionalData, value });
+                    localStorage.setItem('kpi_update_queue', JSON.stringify(queue));
+                    console.error('Persist failed after retries, queued locally');
+                    return;
+                }
+                // exponential backoff
+                await delay(500 * Math.pow(2, attempt));
+            }
         }
     },
 
@@ -195,16 +226,21 @@ const useKPIStore = create((set, get) => ({
         }
 
         const isMetaUpdate = data.type === 'META_UPDATE';
-        const isManager = currentUser?.role === 'Gerente';
+        const userRole = (currentUser?.role || '').toLowerCase();
+        const isManager = userRole === 'gerente' || userRole === 'sistema';
 
         if (isMetaUpdate && !isManager) {
-            console.error('Solo gerentes pueden actualizar metas');
+            // Show toast instead of alert
+            import('../components/Toast').then(({ showToast }) => {
+                showToast('Solo gerentes pueden actualizar metas');
+            });
             return;
         }
 
-        if (!isMetaUpdate && kpi.responsable !== currentUser?.cargo) {
-            // We might want to keep the alert here or move it to a notification system
-            alert(`No tienes permiso para actualizar este indicador.\n\nIndicador: ${kpi.name}\nResponsable: ${kpi.responsable}\nTu cargo: ${currentUser?.cargo}`);
+        if (!isMetaUpdate && kpi.responsable?.toLowerCase() !== currentUser?.cargo?.toLowerCase()) {
+            import('../components/Toast').then(({ showToast }) => {
+                showToast(`No tienes permiso para actualizar este indicador: ${kpi.name}`);
+            });
             return;
         }
 

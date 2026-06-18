@@ -39,12 +39,12 @@ const KPICard = ({ kpi, onClick }) => {
                     <span className="text-secondary">Cumplimiento</span>
                     <span className="font-semibold text-primary">{formatPercent(compliancePercent)}</span>
                 </div>
-                <div className="progress">
-                    <div
-                        className={`progress-bar progress-bar-${kpi.semaphore === 'green' ? 'success' : kpi.semaphore === 'yellow' ? 'warning' : 'danger'}`}
-                        style={{ width: `${Math.min(100, compliancePercent)}%` }}
-                    ></div>
-                </div>
+                    <div className="progress" role="progressbar" aria-valuenow={Math.min(100, compliancePercent)} aria-valuemin="0" aria-valuemax="100" aria-label="Progreso de cumplimiento">
+                        <div
+                            className={`progress-bar progress-bar-${kpi.semaphore === 'green' ? 'success' : kpi.semaphore === 'yellow' ? 'warning' : 'danger'}`}
+                            style={{ width: `${Math.min(100, compliancePercent)}%` }}
+                        ></div>
+                    </div>
             </div>
 
             {kpi.semaphore !== 'green' && (

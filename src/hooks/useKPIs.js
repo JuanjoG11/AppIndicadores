@@ -797,19 +797,24 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         return rebuilt;
                     });
 
-                    // 3c. Agrupar datos normales por KPI-Empresa-Marca-Periodo para tener el último dato de cada punto
+                    // 3c. Agrupar datos normales por KPI-Empresa-Marca-Periodo
+                    // Solo procesar registros que correspondan a la empresa del usuario (o Gerente ve todo)
                     const aggregatedData = {};
                     dataUpdates.forEach(upd => {
                         const kpiId = upd.kpi_id;
                         const companyId = upd.additional_data?.company || 'TYM';
+                        
+                        // Filtrar por empresa en memoria (excepto Gerente que ve todo)
+                        // Incluir registros sin empresa (legacy) solo si no hay conflicto
+                        const hasCompany = upd.additional_data?.company;
+                        if (currentUser?.role !== 'Gerente' && hasCompany && companyId !== activeCompany) return;
+                        
                         const brand = upd.additional_data?.brand || 'Global';
                         const kpiDef = kpiDefinitions.find(k => k.id === kpiId);
                         const frequency = kpiDef?.frecuencia || 'MENSUAL';
                         
                         const date = new Date(upd.updated_at || upd.created_at);
-                        // Mantener el período granular original para comparaciones de isFromCurrentPeriod
                         const rawPeriod = upd.additional_data?.period || getPeriodIndex(date, frequency);
-                        // periodKey normalizado a YYYY-MM solo para agrupar (evitar duplicados de quincena/semana)
                         const periodKey = toMonthKey(rawPeriod) || rawPeriod;
                         
                         const groupKey = `${kpiId}-${companyId}-${brand}-${periodKey}`;
