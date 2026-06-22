@@ -697,7 +697,9 @@ const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpda
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-                        {kpiAlerts.slice(0, 4).map(k => (
+                        {kpiAlerts.slice(0, 4).map(k => {
+                            const isResponsibleForAlert = getKPIResponsable(k, currentUser) === currentUser?.cargo;
+                            return (
                             <div key={k.id} style={{
                                 background: 'white', padding: '1rem', borderRadius: '16px',
                                 border: `1px solid ${k.isExpired ? '#fda4af' : '#fde68a'}`,
@@ -713,6 +715,7 @@ const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpda
                                         {k.isExpired ? 'Vencido: ' : 'Plazo: '} {formatDeadline(k.deadline)}
                                     </div>
                                 </div>
+                                {isResponsibleForAlert && (
                                 <button
                                     onClick={() => handleStartEdit(k)}
                                     style={{
@@ -724,8 +727,10 @@ const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpda
                                 >
                                     Cargar
                                 </button>
+                                )}
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}

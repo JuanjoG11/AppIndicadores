@@ -10,10 +10,10 @@ import {
     Minus
 } from 'lucide-react';
 import { getKPIDeadline, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue } from '../../utils/formatters';
-import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
+import { BRAND_TO_ENTITY, getKPIResponsable } from '../../utils/kpiHelpers';
 
 const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false }) => {
-    const isMine = kpi.responsable === currentUser.cargo;
+    const isMine = getKPIResponsable(kpi, currentUser) === currentUser.cargo;
     let isReady = kpi.hasData;
     let pendingBrandsList = [];
 

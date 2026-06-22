@@ -165,11 +165,13 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
     }, [companyKPIsRaw, targetMonth, currentUser.company, isCurrentMonth]);
 
     // Filter helper: check user permissions for authorized areas
+    // Soporte para ambos nombres de campo: authorizedAreas (legado) y allowedAreas (actual)
+    const userAreas = currentUser.authorizedAreas || currentUser.allowedAreas || [];
     const myAccessKPIs = projectedKPIs.filter(kpi => {
         const effectiveResponsable = getKPIResponsable(kpi, currentUser);
-        return (currentUser.authorizedAreas?.includes('all') ||
-            currentUser.authorizedAreas?.includes(kpi.area) ||
-            kpi.visibleEnAreas?.some(a => currentUser.authorizedAreas?.includes(a)) ||
+        return (userAreas.includes('all') ||
+            userAreas.includes(kpi.area) ||
+            kpi.visibleEnAreas?.some(a => userAreas.includes(a)) ||
             effectiveResponsable === currentUser.cargo) &&
             kpi.isAutoFeed !== true;
     });

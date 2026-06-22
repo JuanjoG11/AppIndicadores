@@ -27,6 +27,7 @@ import {
     ReferenceLine
 } from 'recharts';
 import { formatKPIValue, formatDateTime } from '../../utils/formatters';
+import { isInverseKPI } from '../../utils/kpiCalculations';
 
 const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
     const [expandedMonth, setExpandedMonth] = useState(() => {
@@ -130,11 +131,7 @@ const KPIHistoryModal = ({ kpi, rawUpdates, onClose, activeCompany }) => {
     // ── Early return DESPUÉS de todos los hooks (regla de React) ──
     if (!kpi) return null;
 
-    const isInverse = kpi.id.includes('devueltos') || kpi.id.includes('gasto') || 
-                      kpi.id.includes('horas-extras') || kpi.id.includes('mal-estado') ||
-                      kpi.id.includes('vencida') || kpi.id === 'segundos-unidad-separada' ||
-                      kpi.id === 'notas-errores-venta' || kpi.id.includes('nomina') ||
-                      kpi.id === 'rotacion-personal' || kpi.id === 'ausentismo';
+    const isInverse = isInverseKPI(kpi.id);
 
     const color = kpi.semaphore === 'green' ? '#10b981' : (kpi.semaphore === 'yellow' ? '#f59e0b' : '#ef4444');
 

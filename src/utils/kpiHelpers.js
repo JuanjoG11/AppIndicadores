@@ -19,7 +19,11 @@ export const getBrandEntity = (brand) => BRAND_TO_ENTITY[brand?.toUpperCase()] |
 export const getKPIResponsable = (kpi, user) => {
     if (!kpi || !user) return null;
     if (user.company === 'TYM' && kpi.responsableTYM) return kpi.responsableTYM;
-    if (user.company === 'TAT' && kpi.responsableTAT) return kpi.responsableTAT;
+    if (user.company === 'TAT' && kpi.responsableTAT) {
+        // Si el usuario es el responsable alternativo TAT, devolver ese cargo
+        if (kpi.responsableTATAlt && kpi.responsableTATAlt === user.cargo) return kpi.responsableTATAlt;
+        return kpi.responsableTAT;
+    }
     return kpi.responsable;
 };
 
