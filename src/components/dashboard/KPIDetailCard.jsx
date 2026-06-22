@@ -147,7 +147,9 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                         // 2. User's cargo matches the KPI's responsible
                         // 3. Special case for Cristian/Juliana (Contadores) logic if needed
                         const userCargo = currentUser?.cargo || '';
-                        const isResponsible = kpi.responsable === userCargo || (kpi.responsableTYM && kpi.responsableTYM === userCargo);
+                        const isResponsible = kpi.responsable === userCargo ||
+                            (kpi.responsableTYM && kpi.responsableTYM === userCargo) ||
+                            (kpi.responsableTAT && kpi.responsableTAT === userCargo);
                         
                         return canEdit && isResponsible && (
                             <button
