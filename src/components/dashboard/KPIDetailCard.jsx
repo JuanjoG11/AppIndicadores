@@ -149,7 +149,8 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
                         const userCargo = currentUser?.cargo || '';
                         const isResponsible = kpi.responsable === userCargo ||
                             (kpi.responsableTYM && kpi.responsableTYM === userCargo) ||
-                            (kpi.responsableTAT && kpi.responsableTAT === userCargo);
+                            (kpi.responsableTAT && kpi.responsableTAT === userCargo) ||
+                            (kpi.responsableTATAlt && kpi.responsableTATAlt === userCargo);
                         
                         return canEdit && isResponsible && (
                             <button

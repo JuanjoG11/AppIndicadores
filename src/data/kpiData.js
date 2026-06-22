@@ -422,6 +422,7 @@ export const kpiDefinitions = [
         responsable: 'CAJA',
         responsableTYM: 'CRISTIAN',
         responsableTAT: 'CAJA',
+        responsableTATAlt: 'CONTADOR',
         formula: 'ARQUEOS REALIZADOS / ARQUEOS PROGRAMADOS (Incluye reporte de Sobras/Faltantes)',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
@@ -441,6 +442,7 @@ export const kpiDefinitions = [
         responsable: 'CAJA',
         responsableTYM: 'CRISTIAN',
         responsableTAT: 'CAJA',
+        responsableTATAlt: 'CONTADOR',
         formula: 'Número de arqueos con diferencia (Sobra - Faltante)',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD',
@@ -463,6 +465,7 @@ export const kpiDefinitions = [
         responsable: 'CAJA',
         responsableTYM: 'CRISTIAN',
         responsableTAT: 'CAJA',
+        responsableTATAlt: 'CONTADOR',
         formula: 'PLANILLAS CERRADAS / PLANILLAS GENERADAS',
         sustentacion: 'SEMANAL',
         fuente: 'CONTABILIDAD'
@@ -484,6 +487,7 @@ export const kpiDefinitions = [
         responsable: 'CAJA',
         responsableTYM: 'CRISTIAN',
         responsableTAT: 'CAJA',
+        responsableTATAlt: 'CONTADOR',
         formula: 'VALOR DE VALES / TOTAL CUADRE DE CAJA',
         sustentacion: 'VIERNES',
         fuente: 'CONTABILIDAD'
