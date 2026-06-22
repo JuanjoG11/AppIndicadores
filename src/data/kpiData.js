@@ -413,8 +413,11 @@ export const kpiDefinitions = [
         area: 'contabilidad',
         objetivo: 'Garantizar el control permanente del efectivo. Comisión: $100.000',
         meta: {
-            TYM: 4,
-            TAT: 4
+            ALPINA: 4,
+            ZENU: 4,
+            FLEISCHMANN: 4,
+            UNILEVER: 4,
+            FAMILIA: 4
         },
         brands: ['TYM', 'TAT'],
         unit: 'arqueos',
@@ -433,8 +436,11 @@ export const kpiDefinitions = [
         area: 'contabilidad',
         objetivo: 'Seguimiento de diferencias en arqueos de caja (Sobra - Faltante)',
         meta: {
-            TYM: 0,
-            TAT: 0
+            ALPINA: 0,
+            ZENU: 0,
+            FLEISCHMANN: 0,
+            UNILEVER: 0,
+            FAMILIA: 0
         },
         brands: ['TYM', 'TAT'],
         unit: 'arqueos',

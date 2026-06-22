@@ -37,9 +37,14 @@ export function periodToMonthName(period, fallbackDate) {
                 const year = parseInt(parts[0], 10);
                 const week = parseInt(parts[1], 10);
                 if (!isNaN(year) && !isNaN(week)) {
-                    // Aproximación: semana 1 empieza ~4 de enero
-                    const d = new Date(year, 0, 4 + (week - 1) * 7);
-                    return MONTH_NAMES[d.getMonth()];
+                    // Algoritmo ISO: el mes se determina por el jueves de la semana
+                    const simple = new Date(year, 0, 1 + (week - 1) * 7);
+                    const dow = simple.getDay();
+                    const isoStart = new Date(simple);
+                    if (dow <= 4) isoStart.setDate(simple.getDate() - simple.getDay() + 1);
+                    else isoStart.setDate(simple.getDate() + 8 - simple.getDay());
+                    isoStart.setDate(isoStart.getDate() + 3);
+                    return MONTH_NAMES[isoStart.getMonth()];
                 }
             }
         }
@@ -77,15 +82,21 @@ export function getPeriodKey(period, fallbackDate) {
             if (parts.length >= 2) return `${parts[0]}-${parts[1]}`;
         }
 
-        // Semanal: "2026-W25" → calcular mes
+        // Semanal: "2026-W25" → calcular mes ISO
         if (period.includes('-W')) {
             const parts = period.split('-W');
             if (parts.length === 2) {
                 const year = parseInt(parts[0], 10);
                 const week = parseInt(parts[1], 10);
                 if (!isNaN(year) && !isNaN(week)) {
-                    const d = new Date(year, 0, 4 + (week - 1) * 7);
-                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    // Algoritmo ISO: el mes se determina por el jueves de la semana
+                    const simple = new Date(year, 0, 1 + (week - 1) * 7);
+                    const dow = simple.getDay();
+                    const isoStart = new Date(simple);
+                    if (dow <= 4) isoStart.setDate(simple.getDate() - simple.getDay() + 1);
+                    else isoStart.setDate(simple.getDate() + 8 - simple.getDay());
+                    isoStart.setDate(isoStart.getDate() + 3);
+                    return `${isoStart.getFullYear()}-${String(isoStart.getMonth() + 1).padStart(2, '0')}`;
                 }
             }
         }
@@ -127,11 +138,13 @@ export function generateCurrentPeriod(frecuencia) {
     }
 
     if (freq.includes('SEMANAL')) {
-        // Calcular número de semana ISO
-        const startOfYear = new Date(y, 0, 1);
-        const days = Math.floor((now - startOfYear) / 86400000);
-        const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-        return `${y}-W${String(weekNum).padStart(2, '0')}`;
+        // Calcular número de semana ISO (mismo algoritmo que KPIDataForm)
+        const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+        const dow = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dow);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
     }
 
     if (freq.includes('QUINCENAL')) {
