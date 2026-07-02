@@ -20,7 +20,6 @@ import { isInverseKPI } from '../../utils/kpiCalculations';
 
 const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selectedBrand, onViewHistory, selectedMonth }) => {
 
-    // Simplificado para usar valores consolidados o marca específica
     const isBrandFocus = selectedBrand && selectedBrand !== 'all';
     const entity = activeCompany || 'TYM';
 

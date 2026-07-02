@@ -137,12 +137,15 @@ export const filterKPIsByEntity = (kpiData, entity) => {
                 else semaphore = 'red';
             }
 
-            // Usar el additionalData del brandValue con updatedAt más reciente
-            const mostRecentKey = entityKeys.reduce((best, key) => {
+            // Usar el additionalData del brandValue con hasData:true y updatedAt más reciente.
+            // Si ninguno tiene hasData, usar el más reciente de todos.
+            const keysWithData = entityKeys.filter(k => brandValues[k]?.hasData);
+            const keysForAdditional = keysWithData.length > 0 ? keysWithData : entityKeys;
+            const mostRecentKey = keysForAdditional.reduce((best, key) => {
                 const t = brandValues[key]?.additionalData?.updatedAt || 0;
                 const bestT = brandValues[best]?.additionalData?.updatedAt || 0;
                 return t > bestT ? key : best;
-            }, entityKeys[0]);
+            }, keysForAdditional[0]);
             const baseAdditionalData = brandValues[mostRecentKey]?.additionalData || {};
 
             // anyFilled: hay dato si alguna clave usada tiene datos

@@ -140,11 +140,8 @@ export const getKPIDeadline = (frequency) => {
             return mid;
         }
         case 'MENSUAL':
-            // Grace period: hasta el día 10 del mes siguiente para reportar el mes anterior
-            if (day <= 10) {
-                return new Date(today.getFullYear(), today.getMonth(), 0, 23, 59);
-            }
-            // Último día del mes corriente
+            // Deadline: siempre el último día del mes actual.
+            // El periodo que se carga es siempre el mes en curso.
             return new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59);
         case 'BIMESTRAL': {
             // Cada dos meses (pares)

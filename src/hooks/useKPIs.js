@@ -196,11 +196,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
     /**
      * Determina el periodo reportable "Actual".
-     * Ahora simplemente devuelve el mes actual sin aplicar ninguna gracia.
      */
     const getReportablePeriod = (frequency = 'MENSUAL') => {
         const now = new Date();
-        // Ignorar el día del mes y devolver siempre el periodo del mes actual
         const period = getPeriodIndex(now, frequency);
         return period;
     };
@@ -214,6 +212,19 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         const liveKpi = kpiDataRef.current.find(k => k.id === kpiId);
         const freq = (liveKpi?.frecuencia || kpiDef?.frecuencia || 'MENSUAL').toUpperCase();
         const isManualUpd = !newData.updatedAt;
+
+        // GUARDIA: si es una actualización manual (del form) y el periodo enviado no es del mes
+        // actual, corregirlo automáticamente. Previene que un borrador corrupto del mes pasado
+        // se guarde con period incorrecto, causando isFromCurrent=false → hasData=false.
+        const currentActualPeriod = getPeriodIndex(new Date(), freq);
+        if (isManualUpd && newData.period) {
+            const sentMonthKey = toMonthKey(String(newData.period)) || String(newData.period);
+            const currentMonthKey = toMonthKey(currentActualPeriod) || currentActualPeriod;
+            if (sentMonthKey !== currentMonthKey) {
+                console.warn(`⚠️ [applyKPIUpdate] Period mismatch en guardado manual: enviado=${newData.period}, actual=${currentActualPeriod}. Corrigiendo.`);
+                newData = { ...newData, period: currentActualPeriod };
+            }
+        }
 
         // Calcular fecha del registro
         let recDateObj;
@@ -313,13 +324,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const isCrossPeriodMatch = (frequency === 'MENSUAL' || frequency === 'BIMESTRAL' || frequency === 'SEMESTRAL') && 
                                        recordMonth && recordMonth === currentMonth;
 
-            // ── FIX: Para frecuencias granulares (diario/semanal/quincenal),
-            // isFromCurrentPeriod requiere coincidencia EXACTA del periodo granular.
-            // Solo para mensual/bimestral se compara a nivel de mes. ──
             const granular = isGranularFrequency(frequency);
             const isFromCurrentPeriod = !forceHistorical && (
                 granular
-                    ? isStrictCurrent  // Solo periodo exacto (hoy, esta semana, esta quincena)
+                    ? isStrictCurrent
                     : (
                         isStrictCurrent || 
                         isSameMonthNorm ||
@@ -328,8 +336,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         (frequency === 'BIMESTRAL' && isSameBimonthlyPeriod(recordPeriodIndex, currentReportablePeriod))
                     )
             );
-            // shouldShowInDashboard: para el dashboard siempre mostramos datos del mismo mes
-            // (independiente de granularidad) para que el valor se vea, pero hasData se controla aparte
             const shouldShowInDashboard = !forceHistorical && (
                 isStrictCurrent ||
                 isSameMonthNorm ||
@@ -487,10 +493,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 compliance: shouldShowInDashboard && newIsNewer ? compliance : (oldBrandData.compliance || 0),
                 semaphore: shouldShowInDashboard && newIsNewer ? semaphore : (oldBrandData.semaphore || 'gray'),
                 additionalData: shouldShowInDashboard && newIsNewer ? d : (oldBrandData.additionalData || d),
-                // Si el dato NO es del periodo actual, hasData es false para este brandValue.
-                // Esto evita que datos de meses anteriores queden marcados como "LISTO" en el mes actual.
                 hasData: isFromCurrentPeriod ? true : false
             };
+            console.log(`[applyKPIUpdate] ${kpiId} brand=${currentBrand} period=${recordPeriodIndex} isFromCurrent=${isFromCurrentPeriod} shouldShow=${shouldShowInDashboard} isNewer=${newIsNewer} → hasData=${isFromCurrentPeriod}`);
 
             // ── CONSOLIDACIÓN DE VALORES PARA EL HISTORIAL ──
             let historyValue = newValue;
@@ -649,16 +654,17 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             };
 
             // Buscar registro existente con la misma clave exacta (kpi+company+brand+period)
+            // IMPORTANTE: filtrar también por periodo en la query para evitar traer registros de otros meses
             const { data: existingRows } = await supabase
                 .from('kpi_updates')
                 .select('id, additional_data, updated_at')
                 .eq('kpi_id', payload.kpi_id)
                 .eq('company_id', payload.company_id)
                 .eq('additional_data->>brand', persistBrand)
+                .eq('additional_data->>period', periodToStore)
                 .neq('additional_data->>type', 'META_UPDATE');
 
-            // BUG FIX #3: Comparar periodo con tolerancia para registros legacy que tenían
-            // el periodo normalizado a YYYY-MM en lugar del granular exacto.
+            // Validar que el registro encontrado realmente corresponde al mismo periodo
             const existing = existingRows?.find(row => {
                 const rowPeriod = row.additional_data?.period || '';
                 if (granular) {
@@ -899,9 +905,6 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 const isCrossPeriodMatch = (freq === 'MENSUAL' || freq === 'BIMESTRAL' || freq === 'SEMESTRAL') && 
                                                            recordMonth && recordMonth === currentMonth;
 
-                                // ── FIX: Para frecuencias granulares, isFromCurrentPeriod
-                                // requiere coincidencia EXACTA del periodo (hoy, esta semana, esta quincena).
-                                // Para mensual/bimestral se compara a nivel de mes. ──
                                 const granular = isGranularFrequency(freq);
                                 const isFromCurrentPeriod = granular
                                     ? (group.periodKey === currentPeriodKey || group.periodKey === strictCurrentPeriod)
@@ -1022,7 +1025,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 else history.push(historyPoint);
 
                                 // Para dashboard: mostramos valor si es del mismo mes (shouldShowInDashboard)
-                                // Para hasData: solo true si es del periodo granular exacto
+                                // Para hasData: solo true si es del periodo actual exacto
                                 const shouldShowInDashboard = isFromCurrentPeriod || groupMonthKey === currentMonthKey;
                                 const brandValues = { ...(kpi.brandValues || {}) };
                                 const oldBrandEntry = brandValues[dataKey] || {};
@@ -1140,33 +1143,49 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
         const channel = supabase.channel(`realtime-kpi-sync-${activeCompany}-${currentPeriod}`)
             .on('postgres_changes', postgresFilter, (p) => {
-                if (!p.new?.kpi_id) return; // ignorar eventos mal formados
+                if (!p.new?.kpi_id) return;
+
                 setRawUpdates(prev => {
-                    // Evitar duplicados en rawUpdates (UPDATE trae el mismo id dos veces)
                     const exists = prev.some(r => r.id === p.new.id);
                     return exists ? prev.map(r => r.id === p.new.id ? p.new : r) : [...prev, p.new];
                 });
 
-                // Pasar el period explícitamente desde additional_data para que
-                // applyKPIUpdate no lo recalcule desde updated_at (que sería el mes actual
-                // aunque el dato sea de otro mes)
+                const realtimePeriod = p.new.additional_data?.period;
+                const kpiDef = kpiDefinitions.find(k => k.id === p.new.kpi_id);
+                const freq = (kpiDef?.frecuencia || 'MENSUAL').toUpperCase();
+                const currentP = getPeriodIndex(new Date(), freq);
+                const currentMonthP = toMonthKey(currentP) || currentP;
+                const recordMonthP = realtimePeriod ? (toMonthKey(realtimePeriod) || realtimePeriod) : currentMonthP;
+
+                // Solo aplicar al estado en vivo si el dato es del mes actual.
+                // Datos de meses anteriores se ignoraran para el dashboard — 
+                // ya están en el historial desde la carga inicial.
+                if (recordMonthP !== currentMonthP) {
+                    console.log(`[realtime] ignorando dato de ${realtimePeriod} para ${p.new.kpi_id} (mes actual: ${currentMonthP})`);
+                    return;
+                }
+
+                // Skip applying realtime updates that originated from the current user to avoid overwriting optimistic UI state
+                const isSelfUpdate = p.new.cargo && currentUser?.cargo && p.new.cargo === currentUser.cargo && (p.new.additional_data?.company || 'TYM') === activeCompany;
+                if (isSelfUpdate) {
+                    // Ignore self update; optimistic UI already reflects the change
+                    return;
+                }
+
+                // Apply update for other users
                 applyKPIUpdate(
                     p.new.kpi_id,
                     { 
                         ...p.new.additional_data,
                         company: p.new.additional_data?.company || p.new.company_id || 'TYM',
-                        // period viene de additional_data — NO recalcular desde updated_at
-                        period: p.new.additional_data?.period,
+                        period: realtimePeriod || currentP,
                         value: p.new.value,
                         updatedAt: p.new.updated_at 
                     },
-                    false // no persistir de vuelta
+                    false
                 );
 
-                // Notificar solo si el cambio fue de OTRO usuario
-                const isSelfUpdate = p.new.cargo && currentUser?.cargo && p.new.cargo === currentUser.cargo
-                    && (p.new.additional_data?.company || 'TYM') === activeCompany;
-                if (onToast && !isSelfUpdate) {
+                if (onToast) {
                     onToast('info', `📊 KPI actualizado por ${p.new.cargo || 'otro usuario'}`);
                 }
             }).subscribe();

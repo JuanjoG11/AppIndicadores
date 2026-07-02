@@ -164,11 +164,14 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 initialPeriod = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${quincena}`;
             } else if (kpi.frecuencia === 'MENSUAL') {
                 initialPeriod = d.toISOString().substring(0, 7);
+            } else if (kpi.frecuencia === 'BIMESTRAL') {
+                initialPeriod = d.toISOString().substring(0, 7);
             }
         }
         const savedDraft = drafts.current[`${defaultBrand}-${initialPeriod}`];
         if (savedDraft) {
-            return savedDraft;
+            // Siempre forzar el period correcto aunque el draft guardado tenga uno viejo
+            return { ...savedDraft, period: initialPeriod };
         }
         return {
             brand: (defaultBrand || userEntity),
@@ -244,11 +247,16 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         }
 
         const draftKey = `${formData.brand}-${formData.period}`;
-        const brandData = drafts.current[draftKey] || getInitialBrandData(formData.brand, formData.period);
+        const rawDraft = drafts.current[draftKey];
+        // Al restaurar un draft, siempre forzar el period actual para evitar que un borrador
+        // corrupto con period del mes pasado sobreescriba el periodo correcto del form.
+        const safeDraft = rawDraft ? { ...rawDraft, period: formData.period } : null;
+        const brandData = safeDraft || getInitialBrandData(formData.brand, formData.period);
         if (brandData && Object.keys(brandData).length > 1) {
             setFormData(prev => ({
                 ...prev,
-                ...brandData
+                ...brandData,
+                period: prev.period  // Siempre preservar el period del estado actual
             }));
         } else {
             // No hay datos previos para esta marca/periodo: limpiar solo los campos de fórmula
@@ -646,16 +654,27 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             return cleaned;
         };
 
-        // SOLO guardar el formulario actual (evitar que borradores viejos de otros periodos
-        // se cuelen como datos del periodo actual)
+        // SOLO guardar el formulario actual
         const currentDraftKey = `${formData.brand}-${formData.period}`;
         drafts.current[currentDraftKey] = formData;
 
-        // Solo enviar el registro actual — no iterar drafts viejos
         const cleanedData = cleanNumericFields(formData);
         const dataToSave = isMetaMode
             ? { ...cleanedData, type: 'META_UPDATE' }
             : { ...cleanedData, type: 'DATA_UPDATE' };
+
+        // Validar que al menos un campo de fórmula tiene valor (evita guardar registros vacíos)
+        if (!isMetaMode) {
+            const formulaFields = getFormulaFields().map(f => f.name);
+            const hasAtLeastOneField = formulaFields.some(fname => {
+                const v = cleanedData[fname];
+                return v !== undefined && v !== null && v !== '' && !isNaN(Number(v));
+            });
+            if (!hasAtLeastOneField) {
+                setFormError('Ingresa al menos un valor antes de guardar.');
+                return;
+            }
+        }
 
         // En modo meta: validar que newMeta sea un número válido antes de guardar
         if (isMetaMode) {
@@ -712,7 +731,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             }
 
             if (fieldName === 'brand') {
-                const brandData = drafts.current[`${value}-${formData.period}`] || getInitialBrandData(value, formData.period);
+                const rawBrandDraft = drafts.current[`${value}-${formData.period}`];
+                const safeBrandDraft = rawBrandDraft ? { ...rawBrandDraft, period: formData.period } : null;
+                const brandData = safeBrandDraft || getInitialBrandData(value, formData.period);
                 const newCompany = (value === 'TYM' || value === 'TAT') ? value : (BRAND_TO_ENTITY[value] || userEntity);
                 
                 if (isMetaMode) {
@@ -720,6 +741,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                         ...brandData,
                         brand: value,
                         company: newCompany,
+                        period: prev.period,  // Preservar period actual
                         newMeta: '',
                         newFrecuencia: kpi.frecuencia
                     };
@@ -728,7 +750,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 return {
                     ...brandData,
                     brand: value,
-                    company: newCompany
+                    company: newCompany,
+                    period: prev.period   // Preservar period actual
                 };
             }
 

@@ -14,8 +14,6 @@ import { BRAND_TO_ENTITY, getKPIResponsable } from '../../utils/kpiHelpers';
 
 const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false }) => {
     const isMine = getKPIResponsable(kpi, currentUser) === currentUser.cargo;
-    let isReady = kpi.hasData;
-    let pendingBrandsList = [];
 
     const lockedBrand = currentUser?.activeBrand || null;
     const getEffectiveBrands = (k) => {
@@ -26,12 +24,26 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
         return all;
     };
 
+    // Validar que el dato del KPI corresponde al periodo actual (no a un mes pasado)
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const kpiPeriod = kpi.additionalData?.period || '';
+    // El dato es válido si su periodo corresponde al mes actual (cubre MENSUAL, QUINCENAL, SEMANAL, DIARIO)
+    const isCurrentPeriodData = kpiPeriod.startsWith(currentMonthKey) || kpiPeriod === currentMonthKey;
+    const baseHasData = kpi.hasData && isCurrentPeriodData;
+
+    let isReady = baseHasData;
+    let pendingBrandsList = [];
+
     if (isMine && kpi.meta && typeof kpi.meta === 'object') {
         const effectiveBrands = getEffectiveBrands(kpi);
         if (effectiveBrands.length > 0) {
             pendingBrandsList = effectiveBrands.filter(brand => {
                 const dataKey = `${currentUser.company}-${brand}`;
-                return !kpi.brandValues?.[dataKey]?.hasData;
+                const brandData = kpi.brandValues?.[dataKey];
+                const bPeriod = brandData?.additionalData?.period || '';
+                const brandCurrentPeriod = bPeriod.startsWith(currentMonthKey) || bPeriod === currentMonthKey;
+                return !brandData?.hasData || !brandCurrentPeriod;
             });
             isReady = pendingBrandsList.length === 0;
         }

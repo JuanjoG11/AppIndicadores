@@ -14,6 +14,8 @@ import { isInverseKPI } from '../utils/kpiCalculations';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue, getCurrentPeriodKey } from '../utils/formatters';
 import { Clock, Calendar } from 'lucide-react';
 
+
+
 const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onViewHistory }) => {
     const [editingKPIId, setEditingKPIId] = useState(null);
     
@@ -166,33 +168,23 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
         const effectiveResponsable = getKPIResponsable(k, currentUser);
         if (effectiveResponsable !== currentUser.cargo) return false;
 
-        const currentPeriodKey = getCurrentPeriodKey(k.frecuencia);
-
-        // Si no tiene desgloses por marca, solo chequear hasData y period (solo si es el mes actual)
+        // Si no tiene desgloses por marca, solo chequear hasData (ya refleja periodo actual)
         if (!k.meta || typeof k.meta !== 'object') {
-            if (isCurrentMonth) {
-                return !k.hasData || k.additionalData?.period !== currentPeriodKey;
-            }
             return !k.hasData;
         }
 
-        // Si tiene marcas, ver si la(s) marca(s) efectiva(s) del usuario faltan
+        // Con marcas, evaluar cada marca efectiva
         const effectiveBrands = getEffectiveBrands(k);
         if (effectiveBrands.length === 0) {
-            if (isCurrentMonth) {
-                return !k.hasData || k.additionalData?.period !== currentPeriodKey;
-            }
             return !k.hasData;
         }
 
+        const currentPeriodKey = getCurrentPeriodKey(k.frecuencia);
         return effectiveBrands.some(brand => {
             const dataKey = `${currentUser.company}-${brand}`;
             const brandData = k.brandValues?.[dataKey];
-            if (!brandData || brandData.hasData === false) return true;
-            if (isCurrentMonth) {
-                return brandData.additionalData?.period !== currentPeriodKey;
-            }
-            return false;
+            // Pendiente si no hay datos o los datos del periodo actual no están marcados como hasData
+            return !brandData || (brandData.additionalData?.period === currentPeriodKey && brandData.hasData !== true);
         });
     });
 
@@ -247,24 +239,21 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
             const effectiveResponsable = getKPIResponsable(k, currentUser);
             return effectiveResponsable === currentUser.cargo;
         }).forEach(k => {
-            const currentPeriodKey = getCurrentPeriodKey(k.frecuencia);
-            const hasData = k.hasData && (!isCurrentMonth || k.additionalData?.period === currentPeriodKey);
-
             if (!k.meta || typeof k.meta !== 'object') {
                 total++;
-                if (hasData) done++;
+                if (k.hasData) done++;
             } else {
                 const effectiveBrands = getEffectiveBrands(k);
                 if (effectiveBrands.length === 0) {
                     total++;
-                    if (hasData) done++;
+                    if (k.hasData) done++;
                 } else {
                     effectiveBrands.forEach(brand => {
                         total++;
                         const dataKey = `${currentUser.company}-${brand}`;
                         const brandData = k.brandValues?.[dataKey];
-                        const brandHasData = brandData?.hasData && (!isCurrentMonth || brandData.additionalData?.period === currentPeriodKey);
-                        if (brandHasData) done++;
+                        // hasData=true ya significa que es del periodo actual
+                        if (brandData?.hasData === true) done++;
                     });
                 }
             }
@@ -298,18 +287,19 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                 pendingBrandsList = effectiveBrands.filter(brand => {
                     const dataKey = `${currentUser.company}-${brand}`;
                     const brandData = kpi.brandValues?.[dataKey];
-                    if (!brandData || !brandData.hasData) return true;
-                    if (isCurrentMonth) {
-                        return brandData.additionalData?.period !== currentPeriodKey;
-                    }
-                    return false;
+                    // Validar también que el periodo del dato coincide con el periodo actual
+                    const brandHasData = brandData?.hasData === true &&
+                        (!isCurrentMonth || brandData?.additionalData?.period === currentPeriodKey);
+                    return !brandHasData;
                 });
                 isReady = pendingBrandsList.length === 0;
             } else {
-                isReady = cardHasData;
+                // Usar cardHasData que ya valida el periodo, no solo kpi.hasData
+                isReady = cardHasData === true;
             }
         } else {
-            isReady = cardHasData;
+            // Usar cardHasData que ya valida el periodo, no solo kpi.hasData
+            isReady = cardHasData === true;
         }
 
         const deadline = getKPIDeadline(kpi.frecuencia);
