@@ -1140,21 +1140,30 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
         const channel = supabase.channel(`realtime-kpi-sync-${activeCompany}-${currentPeriod}`)
             .on('postgres_changes', postgresFilter, (p) => {
-                // Aplicar TODAS las actualizaciones en tiempo real (no solo las del mes actual)
-                // para que el gerente reciba los datos inmediatamente sin importar el período cargado
-                setRawUpdates(prev => [...prev, p.new]);
-                console.log("⚡ Cambio en tiempo real detectado:", p.new);
+                if (!p.new?.kpi_id) return; // ignorar eventos mal formados
+                setRawUpdates(prev => {
+                    // Evitar duplicados en rawUpdates (UPDATE trae el mismo id dos veces)
+                    const exists = prev.some(r => r.id === p.new.id);
+                    return exists ? prev.map(r => r.id === p.new.id ? p.new : r) : [...prev, p.new];
+                });
+
+                // Pasar el period explícitamente desde additional_data para que
+                // applyKPIUpdate no lo recalcule desde updated_at (que sería el mes actual
+                // aunque el dato sea de otro mes)
                 applyKPIUpdate(
                     p.new.kpi_id,
                     { 
-                        ...p.new.additional_data, 
-                        company: p.new.additional_data?.company || 'TYM',
-                        value: p.new.value, 
+                        ...p.new.additional_data,
+                        company: p.new.additional_data?.company || p.new.company_id || 'TYM',
+                        // period viene de additional_data — NO recalcular desde updated_at
+                        period: p.new.additional_data?.period,
+                        value: p.new.value,
                         updatedAt: p.new.updated_at 
                     },
-                    false
+                    false // no persistir de vuelta
                 );
-                // Solo notificar si el cambio fue hecho por OTRO usuario (no por el actual)
+
+                // Notificar solo si el cambio fue de OTRO usuario
                 const isSelfUpdate = p.new.cargo && currentUser?.cargo && p.new.cargo === currentUser.cargo
                     && (p.new.additional_data?.company || 'TYM') === activeCompany;
                 if (onToast && !isSelfUpdate) {

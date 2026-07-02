@@ -137,7 +137,13 @@ export const filterKPIsByEntity = (kpiData, entity) => {
                 else semaphore = 'red';
             }
 
-            const baseAdditionalData = brandValues[entityKeys[entityKeys.length - 1]].additionalData || {};
+            // Usar el additionalData del brandValue con updatedAt más reciente
+            const mostRecentKey = entityKeys.reduce((best, key) => {
+                const t = brandValues[key]?.additionalData?.updatedAt || 0;
+                const bestT = brandValues[best]?.additionalData?.updatedAt || 0;
+                return t > bestT ? key : best;
+            }, entityKeys[0]);
+            const baseAdditionalData = brandValues[mostRecentKey]?.additionalData || {};
 
             // anyFilled: hay dato si alguna clave usada tiene datos
             const anyFilled = keysToAggregate.length > 0;

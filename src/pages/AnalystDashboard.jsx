@@ -789,12 +789,9 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                     defaultPeriod={
                         editingKPI.frecuencia === 'MENSUAL'
                             ? (() => {
+                                  // Siempre el mes actual — consistente con getCurrentPeriodKey
                                   const now = new Date();
-                                  const day = now.getDate();
-                                  const targetDate = day <= 10 
-                                      ? new Date(now.getFullYear(), now.getMonth() - 1, 15) 
-                                      : new Date(now.getFullYear(), now.getMonth(), 15);
-                                  return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
+                                  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
                               })()
                             : undefined
                     }

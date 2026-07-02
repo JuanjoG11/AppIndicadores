@@ -113,9 +113,11 @@ const AppInner = () => {
     if (!isMetaUpdate && !isManager) {
       const userAreas = currentUser?.authorizedAreas || currentUser?.allowedAreas || [];
       const hasAreaAccess = userAreas.includes('all') || userAreas.includes(kpi.area);
-      // Fallback: permitir si el cargo coincide con el responsable (para casos especiales)
+      // Fallback: permitir si el cargo coincide con el responsable (normalizar para evitar
+      // bloqueos por diferencias de capitalización, espacios o tildes)
+      const normalize = (s) => (s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const effectiveResponsable = getKPIResponsable(kpi, currentUser);
-      const hasCargoAccess = effectiveResponsable === currentUser?.cargo;
+      const hasCargoAccess = normalize(effectiveResponsable) === normalize(currentUser?.cargo);
 
       if (!hasAreaAccess && !hasCargoAccess) {
         addToast('error', `⛔ Sin permiso para: ${kpi.name}`);
