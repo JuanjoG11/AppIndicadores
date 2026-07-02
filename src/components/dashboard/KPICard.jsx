@@ -1,5 +1,18 @@
 import React from 'react';
-import { formatKPIValue, formatPercent, getSemaphoreClass, getSemaphoreEmoji, getTrendArrow, getTrendClass } from '../../utils/formatters';
+import { formatKPIValue, formatPercent, getSemaphoreClass, getSemaphoreEmoji } from '../../utils/formatters';
+
+// Helper functions for trend display (not in formatters)
+const getTrendArrow = (trend) => {
+    if (trend === 'up') return '↑';
+    if (trend === 'down') return '↓';
+    return '→';
+};
+
+const getTrendClass = (trend, inverse) => {
+    if (!trend || trend === 'neutral') return 'trend-neutral';
+    const isPositive = inverse ? trend === 'down' : trend === 'up';
+    return isPositive ? 'trend-up' : 'trend-down';
+};
 
 const KPICard = ({ kpi, onClick }) => {
     const compliancePercent = kpi.compliance;

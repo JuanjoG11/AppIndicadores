@@ -3,7 +3,7 @@
  * Soporta CSV y PDF (sin dependencias externas)
  */
 
-import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
+import { BRAND_TO_ENTITY } from './kpiHelpers';
 
 // ─── CSV Export ──────────────────────────────────────────────────────────────
 export const exportToCSV = (data, fileName = 'export_kpis') => {
@@ -92,7 +92,7 @@ export const exportToPDF = (kpiData, company = 'TYM', companyFull = 'Tiendas y M
                     const dataKey = `${company}-${brand}`;
                     const bData = k.brandValues?.[dataKey] || {};
                     const compl = bData.compliance || 0;
-                    const val = bData.value ?? '--';
+                    const val = bData.currentValue ?? '--';
                     const target = k.meta[brand] ?? '--';
                     const sem = bData.semaphore || 'gray';
                     const color = sem === 'green' ? '#10b981' : sem === 'red' ? '#ef4444' : sem === 'yellow' ? '#f59e0b' : '#cbd5e1';
@@ -142,7 +142,7 @@ export const exportToPDF = (kpiData, company = 'TYM', companyFull = 'Tiendas y M
                 const bData = isBrandSpecific ? (k.brandValues?.[dataKey] || {}) : {};
 
                 const compl = isBrandSpecific ? (bData.compliance || 0) : (k.hasData ? (k.compliance || 0) : 0);
-                const currentVal = isBrandSpecific ? (bData.value ?? '--') : (k.hasData ? `${k.currentValue} ${k.unit || ''}` : '--');
+                const currentVal = isBrandSpecific ? (bData.currentValue ?? '--') : (k.hasData ? `${k.currentValue} ${k.unit || ''}` : '--');
                 const metaVal = isBrandSpecific ? (k.meta[selectedBrand] ?? '--') : (k.targetMeta ?? k.meta ?? '--');
                 const sem = isBrandSpecific ? (bData.semaphore || 'gray') : k.semaphore;
                 const color = sem === 'green' ? '#10b981' : sem === 'red' ? '#ef4444' : sem === 'yellow' ? '#f59e0b' : '#cbd5e1';

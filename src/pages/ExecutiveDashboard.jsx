@@ -5,7 +5,7 @@ import ExecutiveHistory from '../components/dashboard/ExecutiveHistory';
 import { filterKPIsByEntity } from '../utils/kpiHelpers';
 import { calculateOverallScore } from '../data/mockData';
 import { isInverseKPI } from '../utils/kpiCalculations';
-import { LayoutGrid, TrendingUp, Calendar, Clock, FileText, ChevronDown, Activity, ArrowRight } from 'lucide-react';
+import { LayoutGrid, TrendingUp, Clock, FileText, Activity, ArrowRight } from 'lucide-react';
 
 
 const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory, selectedMonth }) => {

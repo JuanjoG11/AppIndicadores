@@ -94,13 +94,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
         const period = targetPeriod || new Date().toISOString().substring(0, 7); // YYYY-MM
         
-        // 1. Buscar en rawUpdates para cualquier periodo (histórico o actual)
+        // 1. Buscar en rawUpdates por periodo EXACTO (Bug Fix #6: evitar startsWith que matchea otros periodos)
         if (rawUpdates && Array.isArray(rawUpdates)) {
             const match = rawUpdates.find(upd => 
                 upd.kpi_id === kpi.id &&
                 (upd.company_id === userEntity || upd.additional_data?.company === userEntity) &&
                 (upd.additional_data?.brand?.toUpperCase() === brandName.toUpperCase()) &&
-                (upd.additional_data?.period === period || (upd.additional_data?.period && upd.additional_data.period.startsWith(period))) &&
+                upd.additional_data?.period === period &&
                 upd.additional_data?.type !== 'META_UPDATE'
             );
             if (match && match.additional_data) {
@@ -212,6 +212,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     // Ref para detectar cambio de marca y evitar guardar datos de una marca en el borrador de otra
     // Se inicializa con defaultBrand para que el primer draft se guarde correctamente
     const prevBrandPeriodRef = useRef(`${defaultBrand}-${formData.period}`);
+    // BUG FIX #7: Distinguir la carga inicial del formulario de un cambio intencional del usuario.
+    // En la carga inicial NO se deben limpiar campos (el useState ya los inicializó correctamente).
+    const isInitialLoadRef = useRef(true);
 
     // Guardar borrador SOLO cuando la marca O el periodo NO cambiaron
     // Guardar borrador SOLO cuando el actual se guarde en borradores
@@ -233,6 +236,13 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     // EFECTO: Pre-cargar datos cuando cambia la marca o el periodo
     useEffect(() => {
+        // BUG FIX #7: Saltar la primera ejecución (carga inicial).
+        // El useState ya inicializó formData correctamente; ejecutar aquí limpia los campos.
+        if (isInitialLoadRef.current) {
+            isInitialLoadRef.current = false;
+            return;
+        }
+
         const draftKey = `${formData.brand}-${formData.period}`;
         const brandData = drafts.current[draftKey] || getInitialBrandData(formData.brand, formData.period);
         if (brandData && Object.keys(brandData).length > 1) {
@@ -241,8 +251,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 ...brandData
             }));
         } else {
-            // Nueva marca sin datos previos: limpiar campos numéricos para no heredar valores de la marca anterior
-            // No existing data for this brand/period: reset all KPI fields to empty values
+            // No hay datos previos para esta marca/periodo: limpiar solo los campos de fórmula
+            // para no heredar valores de la marca/periodo anterior.
             const emptyFields = {};
             getFormulaFields().forEach(f => {
                 emptyFields[f.name] = '';
@@ -250,7 +260,6 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             setFormData(prev => ({
                 ...prev,
                 ...emptyFields,
-                // Preserve brand, company, period, newFrecuencia
             }));
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps

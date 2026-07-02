@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
 import {
-    ChevronRight,
     Info,
     AlertCircle,
     CheckCircle2,
-    LayoutGrid,
-    TrendingUp,
-    Target,
     Activity,
     Box,
-    Truck,
-    DollarSign,
-    Users,
-    Shield as ShieldIcon,
-    Settings
+    ShieldIcon,
+    LayoutGrid
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import { filterKPIsByEntity, BRAND_TO_ENTITY, getEntityBrands, getKPIResponsable } from '../utils/kpiHelpers';
@@ -26,12 +19,7 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
     
     const getDisplayPeriod = () => {
         const now = new Date();
-        const day = now.getDate();
-        // targetDate es el mes M-1 si estamos en los primeros 10 días, de lo contrario es el mes en curso (M)
-        const targetDate = day <= 10 
-            ? new Date(now.getFullYear(), now.getMonth() - 1, 15) 
-            : new Date(now.getFullYear(), now.getMonth(), 15);
-        return targetDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+        return now.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
     };
     const displayPeriod = getDisplayPeriod();
     const [editMode, setEditMode] = useState('data');
@@ -64,19 +52,15 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
     const companyKPIsRaw = filterKPIsByEntity(kpiData, currentUser.company);
 
     const targetMonth = React.useMemo(() => {
+        // Siempre mostrar el mes actual para cargas.
+        // El analista carga datos del mes en curso (julio), no del anterior.
+        // La "gracia" de 10 días aplica para el PLAZO, no para cambiar qué mes se muestra.
         const now = new Date();
-        const day = now.getDate();
-        const targetDate = day <= 10 
-            ? new Date(now.getFullYear(), now.getMonth() - 1, 15) 
-            : new Date(now.getFullYear(), now.getMonth(), 15);
         const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-        return months[targetDate.getMonth()];
+        return months[now.getMonth()];
     }, []);
 
-    const isCurrentMonth = React.useMemo(() => {
-        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-        return targetMonth === currentMonthName;
-    }, [targetMonth]);
+    const isCurrentMonth = true; // targetMonth siempre es el mes actual
 
     // Project KPIs to selected target month
     const projectedKPIs = React.useMemo(() => {

@@ -4,7 +4,7 @@ import { getAreaById } from '../data/areas';
 import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
 import ErrorBoundary from '../components/ErrorBoundary';
-import { filterKPIsByEntity, getKPIResponsable } from '../utils/kpiHelpers';
+import { filterKPIsByEntity, getKPIResponsable, BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 import { calculateAreaScore } from '../data/mockData';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, getMonthFromPeriod } from '../utils/formatters';
 import {
@@ -31,12 +31,9 @@ import {
     ShieldCheck,
     AlertCircle,
     Package,
-    Filter,
-    ChevronRight,
     Maximize2,
     X as XIcon
 } from 'lucide-react';
-import { BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 import { isInverseKPI } from '../utils/kpiCalculations';
 
 const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpdateKPI, onViewHistory, selectedMonth }) => {

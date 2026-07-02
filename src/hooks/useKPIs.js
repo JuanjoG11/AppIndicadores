@@ -472,16 +472,24 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 else semaphore = 'red';
             }
 
-            // Actualizar desglose por marca (SOLO si es del periodo actual o si no había datos)
+            // Actualizar desglose por marca.
+            // BUG FIX #4: Solo sobreescribir si el nuevo dato es más reciente que el existente,
+            // evitando que realtime desordenado reemplace datos del periodo actual con datos viejos.
             const oldBrandData = brandValues[dataKey] || {};
+            const oldUpdatedAt = oldBrandData.additionalData?.updatedAt || oldBrandData.updatedAt || 0;
+            const newUpdatedAt = d.updatedAt || new Date().toISOString();
+            const newIsNewer = !oldBrandData.additionalData?.updatedAt || newUpdatedAt >= oldUpdatedAt;
+
             brandValues[dataKey] = {
                 ...oldBrandData,
-                currentValue: shouldShowInDashboard ? newValue : (oldBrandData.currentValue || 0),
+                currentValue: shouldShowInDashboard && newIsNewer ? newValue : (oldBrandData.currentValue || 0),
                 meta: targetMeta,
-                compliance: shouldShowInDashboard ? compliance : (oldBrandData.compliance || 0),
-                semaphore: shouldShowInDashboard ? semaphore : (oldBrandData.semaphore || 'gray'),
-                additionalData: shouldShowInDashboard ? d : (oldBrandData.additionalData || d),
-                hasData: isFromCurrentPeriod ? true : (oldBrandData.hasData || false)
+                compliance: shouldShowInDashboard && newIsNewer ? compliance : (oldBrandData.compliance || 0),
+                semaphore: shouldShowInDashboard && newIsNewer ? semaphore : (oldBrandData.semaphore || 'gray'),
+                additionalData: shouldShowInDashboard && newIsNewer ? d : (oldBrandData.additionalData || d),
+                // Si el dato NO es del periodo actual, hasData es false para este brandValue.
+                // Esto evita que datos de meses anteriores queden marcados como "LISTO" en el mes actual.
+                hasData: isFromCurrentPeriod ? true : false
             };
 
             // ── CONSOLIDACIÓN DE VALORES PARA EL HISTORIAL ──
@@ -492,14 +500,19 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const [, monthNum] = (d.period || currentPeriod).split('-');
             const monthName = MONTH_NAMES[parseInt(monthNum) - 1];
             const periodKey = d.period || currentPeriod;
-            const normalizedMonthKey = toMonthKey(periodKey) || periodKey;
+            // BUG FIX #5: Para granulares usar el periodo exacto como key del historial.
+            // Antes se usaba siempre toMonthKey, que colapsaba Q1 y Q2 en la misma entrada.
+            const normalizedMonthKey = granular ? periodKey : (toMonthKey(periodKey) || periodKey);
             // Nombre del mes basado en el monthKey normalizado (más fiable que recordDateObj para histórico)
-            const histMonth = MONTH_NAMES[parseInt(normalizedMonthKey.split('-')[1]) - 1] || monthName;
+            const histMonth = MONTH_NAMES[parseInt((toMonthKey(periodKey) || periodKey).split('-')[1]) - 1] || monthName;
 
-            // Para KPIs con marcas: consolidar promedio de marcas del mismo mes
+            // Para KPIs con marcas: consolidar promedio de marcas del mismo periodo
             const hasMultiBrandMeta = kpi.meta && typeof kpi.meta === 'object';
             if (hasMultiBrandMeta) {
-                const existingEntry = (kpi.history || []).find(h => toMonthKey(h.monthKey) === normalizedMonthKey);
+                // BUG FIX #5: buscar entrada existente usando la misma clave normalizada (exacta para granulares)
+                const existingEntry = (kpi.history || []).find(h =>
+                    granular ? h.monthKey === normalizedMonthKey : toMonthKey(h.monthKey) === normalizedMonthKey
+                );
                 const allEntityKeys = Object.keys(kpi.meta).filter(b => b !== 'Global' && b !== 'TYM' && b !== 'TAT');
                 const brandsOfEntity = allEntityKeys.filter(b => BRAND_TO_ENTITY[b] === currentCompany || b === currentCompany);
                 
@@ -533,12 +546,15 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             let finalValue = shouldShowInDashboard ? historyValue : (kpi.currentValue || 0);
             let finalCompliance = shouldShowInDashboard ? historyCompliance : (kpi.compliance || 0);
             let finalSemaphore = shouldShowInDashboard ? historySemaphore : (kpi.semaphore || 'gray');
-            let finalHasData = isFromCurrentPeriod || kpi.hasData;
+            // hasData del KPI base: solo true si el dato es del periodo actual.
+            // Si es un dato histórico (otro mes), NO contaminar el estado "actual" del KPI.
+            const finalHasData = isFromCurrentPeriod;
 
             // ── ACTUALIZACIÓN DEL HISTORIAL ──
             const newHistory = [...(kpi.history || [])];
+            // BUG FIX #5: Para granulares comparar por clave exacta, no por mes normalizado
             const existingHistoryIdx = newHistory.findIndex(h =>
-                toMonthKey(h.monthKey) === normalizedMonthKey
+                granular ? h.monthKey === normalizedMonthKey : toMonthKey(h.monthKey) === normalizedMonthKey
             );
             
             const historyPoint = {
@@ -592,7 +608,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         }
     }, [activeCompany, currentUser, currentPeriod]);
 
+    // BUG FIX #8: Mutex para evitar race condition INSERT→INSERT duplicado.
+    // Clave: kpiId-companyId-brand-period
+    const persistInFlight = useRef(new Set());
+
     const persistUpdate = async (kpiId, additionalData, value, user) => {
+        let lockKey = null;
         try {
             const persistBrand = additionalData?.brand || (Array.isArray(user?.activeBrand) ? user.activeBrand[0] : user?.activeBrand) || 'Global';
             
@@ -600,13 +621,22 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const frequency = (liveKpi?.frecuencia || kpiDefinitions.find(k => k.id === kpiId)?.frecuencia || 'MENSUAL').toUpperCase();
             const persistPeriod = additionalData?.period || getPeriodIndex(new Date(), frequency);
             
-            // ── FIX: Para frecuencias granulares, preservar el periodo exacto (YYYY-MM-DD, YYYY-Www, YYYY-MM-Qx).
+            // Para frecuencias granulares, preservar el periodo exacto (YYYY-MM-DD, YYYY-Www, YYYY-MM-Qx).
             // Solo normalizar a YYYY-MM para frecuencias mensual/bimestral.
             const granular = isGranularFrequency(frequency);
             const periodToStore = granular ? persistPeriod : (toMonthKey(persistPeriod) || persistPeriod);
+            const companyId = additionalData?.company || activeCompany || user?.company || 'TYM';
+            
+            // BUG FIX #8: Lock por clave para evitar race condition de doble INSERT.
+            lockKey = `${kpiId}-${companyId}-${persistBrand}-${periodToStore}`;
+            if (persistInFlight.current.has(lockKey)) {
+                console.log('🔒 persistUpdate ignorado (ya en vuelo):', lockKey);
+                return;
+            }
+            persistInFlight.current.add(lockKey);
             
             const payload = {
-                company_id: additionalData?.company || activeCompany || user?.company || 'TYM',
+                company_id: companyId,
                 kpi_id: kpiId,
                 additional_data: {
                     ...additionalData,
@@ -618,26 +648,24 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 cargo: user?.cargo || 'Sistema'
             };
 
-            // Buscar registro del mismo mes/periodo sin depender de updated_at para evitar problemas de desfase temporal
-            console.log('PersistUpdate payload:', payload);
-
-            // Use proper Supabase JSON field queries con el periodo normalizado
+            // Buscar registro existente con la misma clave exacta (kpi+company+brand+period)
             const { data: existingRows } = await supabase
                 .from('kpi_updates')
-                .select('id, additional_data')
+                .select('id, additional_data, updated_at')
                 .eq('kpi_id', payload.kpi_id)
                 .eq('company_id', payload.company_id)
                 .eq('additional_data->>brand', persistBrand)
-                .eq('additional_data->>period', payload.additional_data.period)
                 .neq('additional_data->>type', 'META_UPDATE');
-            console.log('Existing rows found:', existingRows?.length || 0);
 
-            // Encontrar el registro coincidente (comparación exacta para granulares, nivel mes para no-granulares)
+            // BUG FIX #3: Comparar periodo con tolerancia para registros legacy que tenían
+            // el periodo normalizado a YYYY-MM en lugar del granular exacto.
             const existing = existingRows?.find(row => {
                 const rowPeriod = row.additional_data?.period || '';
-                const matchGranular = granular && rowPeriod === payload.additional_data.period;
-                const matchCoarse = !granular && (toMonthKey(rowPeriod) || rowPeriod) === payload.additional_data.period;
-                return matchGranular || matchCoarse;
+                if (granular) {
+                    return rowPeriod === periodToStore ||
+                        (rowPeriod.length === 7 && rowPeriod === toMonthKey(periodToStore));
+                }
+                return (toMonthKey(rowPeriod) || rowPeriod) === periodToStore;
             });
 
             let error;
@@ -658,6 +686,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         } catch (err) {
             console.error("❌ Error persistiendo en Supabase:", err);
             if (onToast) onToast('error', `Error: ${err.message || 'Error al guardar'}`);
+        } finally {
+            // Liberar el lock siempre (éxito o error) usando la misma clave calculada al inicio
+            if (lockKey) persistInFlight.current.delete(lockKey);
         }
     };
 
@@ -798,16 +829,19 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     });
 
                     // 3c. Agrupar datos normales por KPI-Empresa-Marca-Periodo
-                    // Solo procesar registros que correspondan a la empresa del usuario (o Gerente ve todo)
+                    // Cada combinación kpi+company+brand+periodo es una entrada independiente.
+                    // Para frecuencias granulares se preserva el periodo exacto (Q1 ≠ Q2, W01 ≠ W02).
                     const aggregatedData = {};
                     dataUpdates.forEach(upd => {
                         const kpiId = upd.kpi_id;
-                        const companyId = upd.additional_data?.company || 'TYM';
+                        const companyId = upd.additional_data?.company || upd.company_id || 'TYM';
                         
                         // Filtrar por empresa en memoria (excepto Gerente que ve todo)
-                        // Incluir registros sin empresa (legacy) solo si no hay conflicto
-                        const hasCompany = upd.additional_data?.company;
+                        // Registros legacy sin company se asignan a TYM para evitar contaminación cruzada
+                        const hasCompany = !!upd.additional_data?.company;
                         if (currentUser?.role !== 'Gerente' && hasCompany && companyId !== activeCompany) return;
+                        // Registros legacy sin company: solo incluir si somos TYM (la empresa original)
+                        if (!hasCompany && activeCompany !== 'TYM' && currentUser?.role !== 'Gerente') return;
                         
                         const brand = upd.additional_data?.brand || 'Global';
                         const kpiDef = kpiDefinitions.find(k => k.id === kpiId);
@@ -815,7 +849,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         
                         const date = new Date(upd.updated_at || upd.created_at);
                         const rawPeriod = upd.additional_data?.period || getPeriodIndex(date, frequency);
-                        const periodKey = toMonthKey(rawPeriod) || rawPeriod;
+                        // BUG FIX #1/#2: Para frecuencias granulares preservar el periodo exacto.
+                        // toMonthKey colapsaría Q1 y Q2 al mismo key, perdiendo uno de los dos.
+                        const granularFreq = isGranularFrequency(frequency);
+                        const periodKey = granularFreq ? rawPeriod : (toMonthKey(rawPeriod) || rawPeriod);
                         
                         const groupKey = `${kpiId}-${companyId}-${brand}-${periodKey}`;
 
@@ -926,8 +963,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                     else semaphore = 'red';
                                 }
 
-                                const normalizedMK = toMonthKey(group.periodKey) || group.periodKey;
-                                const existingEntry = (kpi.history || []).find(h => toMonthKey(h.monthKey) === normalizedMK);
+                                // BUG FIX #5 (batch): Para granulares usar el periodo exacto como key del historial
+                                const batchGranular = isGranularFrequency(freq);
+                                const normalizedMK = batchGranular ? group.periodKey : (toMonthKey(group.periodKey) || group.periodKey);
+                                const existingEntry = (kpi.history || []).find(h =>
+                                    batchGranular ? h.monthKey === normalizedMK : toMonthKey(h.monthKey) === normalizedMK
+                                );
 
                                 // Calcular promedio consolidado de marcas para el historial si tiene marcas
                                 const brandsOfEntity = kpiDef.meta && typeof kpiDef.meta === 'object'
@@ -973,23 +1014,29 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 };
 
                                 const history = [...(kpi.history || [])];
-                                const hIdx = history.findIndex(h => toMonthKey(h.monthKey) === normalizedMK);
+                                // BUG FIX #5 (batch): comparación exacta para granulares
+                                const hIdx = history.findIndex(h =>
+                                    batchGranular ? h.monthKey === normalizedMK : toMonthKey(h.monthKey) === normalizedMK
+                                );
                                 if (hIdx >= 0) history[hIdx] = { ...history[hIdx], ...historyPoint };
                                 else history.push(historyPoint);
 
-                                // Actualizamos brandValues y el estado base SIEMPRE con el dato más reciente
-                                // (Como sortedGroups está ordenado por fecha, el último proceso siempre es el más nuevo)
                                 // Para dashboard: mostramos valor si es del mismo mes (shouldShowInDashboard)
                                 // Para hasData: solo true si es del periodo granular exacto
                                 const shouldShowInDashboard = isFromCurrentPeriod || groupMonthKey === currentMonthKey;
                                 const brandValues = { ...(kpi.brandValues || {}) };
                                 const oldBrandEntry = brandValues[dataKey] || {};
+                                // BUG FIX #4 (batch): solo sobreescribir si el nuevo dato es más reciente
+                                const batchOldUpdatedAt = oldBrandEntry.additionalData?.updatedAt || 0;
+                                const batchNewUpdatedAt = upd.updated_at || upd.created_at || 0;
+                                const batchIsNewer = !oldBrandEntry.additionalData?.updatedAt || batchNewUpdatedAt >= batchOldUpdatedAt;
                                 brandValues[dataKey] = {
-                                    currentValue: shouldShowInDashboard ? upd.value : (oldBrandEntry.currentValue ?? upd.value),
-                                    compliance: shouldShowInDashboard ? compliance : (oldBrandEntry.compliance ?? compliance),
-                                    semaphore: shouldShowInDashboard ? semaphore : (oldBrandEntry.semaphore ?? semaphore),
-                                    // hasData: SOLO true si el dato es del periodo granular exacto actual
-                                    hasData: isFromCurrentPeriod ? true : (oldBrandEntry.hasData || false),
+                                    currentValue: shouldShowInDashboard && batchIsNewer ? upd.value : (oldBrandEntry.currentValue ?? upd.value),
+                                    compliance: shouldShowInDashboard && batchIsNewer ? compliance : (oldBrandEntry.compliance ?? compliance),
+                                    semaphore: shouldShowInDashboard && batchIsNewer ? semaphore : (oldBrandEntry.semaphore ?? semaphore),
+                                    // hasData: SOLO true si el dato es del periodo actual exacto.
+                                    // Nunca preservar hasData de un dato de otro mes (evita mostrar mayo en julio).
+                                    hasData: isFromCurrentPeriod ? true : false,
                                     additionalData: {
                                         ...(upd.additional_data || {}),
                                         period: group.periodKey,
@@ -1035,27 +1082,30 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
                                 // Sincronizar el valor principal del KPI:
                                 // - Valores del dashboard: si es del mismo mes (shouldShowInDashboard)
-                                // - hasData: solo si es del periodo granular exacto (isFromCurrentPeriod)
+                                // - hasData: SOLO true si es del periodo actual exacto (isFromCurrentPeriod)
+                                //   Nunca preservar hasData de meses anteriores → evita mostrar mayo en julio
                                 const baseKpiUpdate = shouldShowInDashboard
                                     ? {
                                           currentValue: parseFloat(aggFinalValue.toFixed(2)),
                                           compliance: Math.round(aggFinalComp),
                                           semaphore: aggFinalSem,
-                                          hasData: isFromCurrentPeriod ? true : (kpi.hasData || false),
+                                          hasData: isFromCurrentPeriod,
                                           additionalData: { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at }
                                       }
                                     : {
                                           currentValue: kpi.currentValue,
                                           compliance: kpi.compliance,
                                           semaphore: kpi.semaphore,
-                                          hasData: kpi.hasData,
+                                          hasData: false, // dato de otro mes → no tiene datos del periodo actual
                                           additionalData: kpi.additionalData || { ...(upd.additional_data || {}), period: group.periodKey }
                                       };
 
                                 return {
                                     ...kpi,
                                     ...baseKpiUpdate,
-                                    hasData: kpi.hasData || isFromCurrentPeriod,
+                                    // hasData acumulativo: true si este dato es del periodo actual
+                                    // OR si ya había un dato del periodo actual de otra marca procesada antes
+                                    hasData: isFromCurrentPeriod || (kpi.hasData && !shouldShowInDashboard),
                                     brandValues,
                                     lastUpdate: new Date(upd.updated_at || upd.created_at) > new Date(kpi.lastUpdate || 0)
                                         ? (upd.updated_at || upd.created_at)
@@ -1085,7 +1135,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         if (kpiData.length > 0) fetchInitialData();
 
         // Sin filtro por company_id (la columna no existe) — filtramos en el handler
-        const postgresFilter = { event: 'INSERT', schema: 'public', table: 'kpi_updates' };
+        // BUG FIX #10: Escuchar INSERT y UPDATE para que correcciones de datos lleguen en tiempo real
+        const postgresFilter = { event: '*', schema: 'public', table: 'kpi_updates' };
 
         const channel = supabase.channel(`realtime-kpi-sync-${activeCompany}-${currentPeriod}`)
             .on('postgres_changes', postgresFilter, (p) => {
