@@ -28,12 +28,22 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
     const now = new Date();
     const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const kpiPeriod = kpi.additionalData?.period || '';
-    // El dato es válido si su periodo corresponde al mes actual (cubre MENSUAL, QUINCENAL, SEMANAL, DIARIO)
     const isCurrentPeriodData = kpiPeriod.startsWith(currentMonthKey) || kpiPeriod === currentMonthKey;
     const baseHasData = kpi.hasData && isCurrentPeriodData;
 
+    // Dato histórico: tiene data pero no del mes actual
+    const hasHistoricalData = kpi.hasData && !baseHasData;
+    const historicalMonthName = (() => {
+        if (!hasHistoricalData || !kpiPeriod) return '';
+        const m = kpiPeriod.match(/^\d{4}-(\d{2})/);
+        if (!m) return kpiPeriod;
+        const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        return months[parseInt(m[1]) - 1] || kpiPeriod;
+    })();
+
     let isReady = baseHasData;
     let pendingBrandsList = [];
+    let historicalBrandsList = [];
 
     if (isMine && kpi.meta && typeof kpi.meta === 'object') {
         const effectiveBrands = getEffectiveBrands(kpi);
@@ -44,6 +54,10 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
                 const bPeriod = brandData?.additionalData?.period || '';
                 const brandCurrentPeriod = bPeriod.startsWith(currentMonthKey) || bPeriod === currentMonthKey;
                 return !brandData?.hasData || !brandCurrentPeriod;
+            });
+            historicalBrandsList = pendingBrandsList.filter(brand => {
+                const dataKey = `${currentUser.company}-${brand}`;
+                return kpi.brandValues?.[dataKey]?.hasData === true;
             });
             isReady = pendingBrandsList.length === 0;
         }
@@ -104,17 +118,23 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
                         borderRadius: '10px',
                         fontSize: '0.65rem',
                         fontWeight: 800,
-                        background: isReady ? 'var(--success-bg)' : 'var(--warning-bg)',
-                        color: isReady ? 'var(--success)' : 'var(--warning)',
+                        background: isReady ? 'var(--success-bg)' : (hasHistoricalData || historicalBrandsList.length > 0 ? 'rgba(59,130,246,0.1)' : 'var(--warning-bg)'),
+                        color: isReady ? 'var(--success)' : (hasHistoricalData || historicalBrandsList.length > 0 ? '#3b82f6' : 'var(--warning)'),
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.4rem'
                     }}>
                         {isReady ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
                         <span style={{ whiteSpace: 'normal' }}>
-                            {isReady ? 'LISTO' : (pendingBrandsList.length > 0
-                                ? `FALTA CARGAR: ${pendingBrandsList.join(', ')}`
-                                : 'FALTA CARGAR')}
+                            {isReady
+                                ? 'LISTO'
+                                : pendingBrandsList.length > 0
+                                    ? historicalBrandsList.length > 0
+                                        ? `FALTA MES ACTUAL: ${pendingBrandsList.join(', ')}`
+                                        : `FALTA CARGAR: ${pendingBrandsList.join(', ')}`
+                                    : hasHistoricalData
+                                        ? `CARGADO (${historicalMonthName}) · FALTA MES ACTUAL`
+                                        : 'FALTA CARGAR'}
                         </span>
                     </div>
                     <div style={{
@@ -176,7 +196,10 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
                     {getEffectiveBrands(kpi)
                         .map(brand => {
                             const bData = kpi.brandValues?.[`${currentUser.company}-${brand}`];
-                            const hasData = bData?.hasData;
+                            // Validar que el dato de la marca es del mes actual
+                            const bPeriod = bData?.additionalData?.period || '';
+                            const bCurrentPeriod = bPeriod.startsWith(currentMonthKey) || bPeriod === currentMonthKey;
+                            const hasData = bData?.hasData && bCurrentPeriod;
                             const compColor = hasData ? (bData.semaphore === 'green' ? 'var(--success)' : (bData.semaphore === 'red' ? 'var(--danger)' : 'var(--warning)')) : 'var(--border-medium)';
                             const valColor = hasData ? (bData.semaphore === 'green' ? 'var(--success)' : (bData.semaphore === 'red' ? 'var(--danger)' : (bData.semaphore === 'yellow' ? 'var(--warning)' : 'var(--brand)'))) : 'var(--border-medium)';
                             return (
@@ -210,7 +233,7 @@ const KPIAnalystCard = ({ kpi, currentUser, onEdit, idx, isMonitoring = false })
                             {formatKPIValue(kpi.targetMeta || kpi.meta, kpi.unit)}
                         </div>
                     </div>
-                    {kpi.hasData && (
+                    {kpi.hasData && kpi.semaphore !== 'gray' && baseHasData && (
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-light)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Cump.</div>
                             <div style={{

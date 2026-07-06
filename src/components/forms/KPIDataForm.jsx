@@ -18,7 +18,7 @@ import {
     Calendar
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
-import { BRAND_TO_ENTITY } from '../../utils/kpiHelpers';
+import { BRAND_TO_ENTITY, getKPIFormulaFields, resolveSharedFieldValue, ALL_SHARED_FIELDS } from '../../utils/kpiHelpers';
 import { formatNumber } from '../../utils/formatters';
 
 const MONTH_NAMES = [
@@ -89,6 +89,37 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             : (commercialBrands.find(isBrandPending) || commercialBrands[0] || userEntity));
 
     // Obtener datos iniciales específicos de la marca si existen y son del periodo actual
+    // Campos que se comparten entre múltiples KPIs de la misma marca/periodo.
+    // Si el usuario ya llenó "ventaTotal" en otro KPI, aparece prellenado aquí.
+    const SHARED_FIELDS = ALL_SHARED_FIELDS;
+
+    const getSharedFieldValues = (brandName, targetPeriod) => {
+        if (!rawUpdates || !Array.isArray(rawUpdates)) return {};
+        const period = targetPeriod || new Date().toISOString().substring(0, 7);
+        const shared = {};
+
+        // Buscar en todos los KPIs del mismo periodo/marca/empresa
+        rawUpdates.forEach(upd => {
+            if (upd.kpi_id === kpi.id) return; // skip el propio KPI
+            if (upd.additional_data?.type === 'META_UPDATE') return;
+            const updPeriod = upd.additional_data?.period || '';
+            const updBrand = upd.additional_data?.brand?.toUpperCase() || '';
+            const updCompany = upd.additional_data?.company || upd.company_id || '';
+            // Mismo mes, misma marca, misma empresa
+            if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
+            if (updBrand !== brandName.toUpperCase()) return;
+            if (updCompany !== userEntity) return;
+            // Extraer campos compartidos usando resolución de alias
+            SHARED_FIELDS.forEach(field => {
+                const val = resolveSharedFieldValue(upd.additional_data, field);
+                if (val !== undefined && shared[field] === undefined) {
+                    shared[field] = val;
+                }
+            });
+        });
+        return shared;
+    };
+
     const getInitialBrandData = (brandName, targetPeriod = null) => {
         if (!brandName) return {};
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
@@ -117,13 +148,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                     (kpi.additionalData?.brand === brandName ? kpi.additionalData : null);
 
         if (data) {
-            // If the stored data does not contain a period, do not preload it (prevents cross-month bleed).
             const storedPeriod = data.period || '';
             if (!storedPeriod) return {};
-
-            // Accept exact month (YYYY-MM) or exact date that starts with the target month.
             const periodMatch = storedPeriod && (storedPeriod === period || storedPeriod.startsWith(period));
-
             if (periodMatch) {
                 const cleaned = { ...data };
                 delete cleaned.updatedAt;
@@ -132,7 +159,9 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 return cleaned;
             }
         }
-        return {};
+
+        // 3. Sin datos propios — intentar precargar campos compartidos de otros KPIs
+        return getSharedFieldValues(brandName, period);
     };
 
     // Inicializar con datos previos si existen
@@ -193,13 +222,34 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     const currentPrefix = getPeriodPrefix(kpi.frecuencia);
-                    // Only keep drafts whose period matches the current frequency format
+                    // Calcular el periodo actual exacto para filtrar drafts de quincenas/semanas pasadas
+                    const now = new Date();
+                    const exactCurrentPeriod = (() => {
+                        if (kpi.frecuencia === 'QUINCENAL') {
+                            const m = String(now.getMonth() + 1).padStart(2, '0');
+                            const q = now.getDate() <= 15 ? 'Q1' : 'Q2';
+                            return `${now.getFullYear()}-${m}-${q}`;
+                        }
+                        if (kpi.frecuencia === 'SEMANAL') {
+                            const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+                            const day = d.getUTCDay() || 7;
+                            d.setUTCDate(d.getUTCDate() + 4 - day);
+                            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                            const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                            return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+                        }
+                        return currentPrefix; // MENSUAL/BIMESTRAL: el prefijo ya es exacto
+                    })();
+
                     const valid = {};
                     Object.entries(parsed).forEach(([key, draft]) => {
                         const draftPeriod = draft?.period || '';
-                        if (draftPeriod.startsWith(currentPrefix)) {
-                            valid[key] = draft;
-                        }
+                        // Para granulares (QUINCENAL, SEMANAL): exigir periodo exacto
+                        // Para mensuales/bimestrales: basta con el prefijo del mes
+                        const isValid = kpi.frecuencia === 'QUINCENAL' || kpi.frecuencia === 'SEMANAL'
+                            ? draftPeriod === exactCurrentPeriod
+                            : draftPeriod.startsWith(currentPrefix);
+                        if (isValid) valid[key] = draft;
                     });
                     drafts.current = valid;
                 } else {
@@ -303,299 +353,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     // Determinar qué campos necesita el formulario basado en la fórmula
     const getFormulaFields = () => {
-        if (!kpi.formula) return [{ name: 'currentValue', label: 'Valor Actual', type: 'number' }];
-
-        const fieldMappings = {
-            'pedidos-devueltos': [
-                { name: 'pedidosFacturados', label: 'Pedidos Facturados', type: 'number', placeholder: 'Eje: 1500' },
-                { name: 'pedidosDevueltos', label: 'Pedidos Devueltos', type: 'number', placeholder: 'Eje: 25' }
-            ],
-            'promedio-pedidos-auxiliar': [
-                { name: 'numeroPedidos', label: 'Número de Pedidos', type: 'number', placeholder: 'Eje: 450' },
-                { name: 'auxiliares', label: 'Número de Auxiliares', type: 'number', placeholder: 'Eje: 6' }
-            ],
-            'promedio-pedidos-carro': [
-                { name: 'numeroPedidos', label: 'Número de Pedidos', type: 'number', placeholder: 'Eje: 450' },
-                { name: 'vehiculos', label: 'Número de Vehículos', type: 'number', placeholder: 'Eje: 6' }
-            ],
-            'gasto-nomina-venta': [
-                { name: 'nominaLogistica', label: 'Nómina Logística ($)', type: 'number', placeholder: 'Eje: 5000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 150000000' }
-            ],
-            'gasto-fletes-venta': [
-                { name: 'valorFletes', label: 'Valor Fletes ($)', type: 'number', placeholder: 'Eje: 8000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 150000000' }
-            ],
-            'horas-extras-auxiliares': [
-                { name: 'totalHorasExtras', label: 'Total Horas Extras', type: 'number', placeholder: 'Eje: 48' },
-                { name: 'auxiliares', label: 'Número de Auxiliares', type: 'number', placeholder: 'Eje: 6' }
-            ],
-            'primer-margen': [
-                { name: 'ventas', label: 'Ventas Totales ($)', type: 'number', placeholder: 'Eje: 20000000' },
-                { name: 'costoVentas', label: 'Costo de Ventas ($)', type: 'number', placeholder: 'Eje: 15000000' }
-            ],
-            'devoluciones-mal-estado': [
-                { name: 'valorDevolucion', label: 'Valor Dev. Mal Estado ($)', type: 'number', placeholder: 'Eje: 500000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 100000000' }
-            ],
-            'promedio-venta-vendedor': [
-                { name: 'ventasTotales', label: 'Ventas Totales ($)', type: 'number', placeholder: 'Eje: 500000000' },
-                { name: 'numeroVendedores', label: 'Número de Vendedores', type: 'number', placeholder: 'Eje: 10' }
-            ],
-            'venta-credito-total': [
-                { name: 'ventaCredito', label: 'Venta a Crédito ($)', type: 'number', placeholder: 'Eje: 20000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 100000000' }
-            ],
-            'cartera-vencida-total': [
-                { name: 'carteraVencida', label: 'Cartera Vencida ($)', type: 'number', placeholder: 'Eje: 5000000' },
-                { name: 'totalCartera', label: 'Cartera Total ($)', type: 'number', placeholder: 'Eje: 100000000' }
-            ],
-            // New Commercial KPIs
-            'venta-realizada-esperada': [
-                { name: 'ventaRealizada', label: 'Venta Realizada ($)', type: 'number' },
-                { name: 'presupuestoVenta', label: 'Presupuesto de Venta ($)', type: 'number' }
-            ],
-            'devoluciones-buen-estado': [
-                { name: 'devolucionBuenEstado', label: 'Devolución Buen Estado ($)', type: 'number' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number' }
-            ],
-            'devoluciones-mal-estado-comercial': [
-                { name: 'devolucionMalEstado', label: 'Devolución Mal Estado ($)', type: 'number' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number' }
-            ],
-            'participacion-venta-credito': [
-                { name: 'ventaCredito', label: 'Venta Crédito ($)', type: 'number' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number' }
-            ],
-            'cobro-optimo-cartera': [
-                { name: 'carteraVencida', label: 'Cartera Vencida ($)', type: 'number' },
-                { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number' }
-            ],
-            'rotacion-equipo-comercial': [
-                { name: 'personalRetirado', label: 'Personal Retirado', type: 'number' },
-                { name: 'promedioEmpleados', label: 'Promedio de Empleados', type: 'number' }
-            ],
-            'gasto-personal-comercial': [
-                { name: 'gastosPersonal', label: 'Gastos de Personal ($)', type: 'number' },
-                { name: 'ventaTotal', label: 'Total Venta ($)', type: 'number' }
-            ],
-            'gasto-viaje-comercial': [
-                { name: 'gastosViaje', label: 'Gastos de Viaje ($)', type: 'number' },
-                { name: 'ventaTotal', label: 'Total Venta ($)', type: 'number' }
-            ],
-
-            'dias-inventario-comercial': [
-                { name: 'diasInventario', label: 'Días de Inventario', type: 'number' }
-            ],
-
-            'cartera-11-30': [
-                { name: 'cartera1130', label: 'Cartera 11-30 días ($)', type: 'number', placeholder: 'Eje: 5000000' },
-                { name: 'carteraTotal', label: 'Cartera Total ($)', type: 'number', placeholder: 'Eje: 100000000' }
-            ],
-            'valor-cartera-venta': [
-                { name: 'carteraTotal', label: 'Cartera Total ($)', type: 'number', placeholder: 'Eje: 100000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 500000000' }
-            ],
-            'notas-errores-venta': [
-                { name: 'notasDevolucion', label: 'Notas x Devolución ($)', type: 'number' },
-                { name: 'valorVenta', label: 'Valor de la Venta ($)', type: 'number' }
-            ],
-            'fiabilidad-inventarios': [
-                { name: 'valorVerificado', label: 'Valor Verificado ($)', type: 'number' },
-                { name: 'valorCorrecto', label: 'Valor Correcto ($)', type: 'number' }
-            ],
-
-            'obsolescencia': [
-                { name: 'inventarioObsoleto', label: 'Inventario Obsoleto ($)', type: 'number' },
-                { name: 'inventarioTotal', label: 'Inventario Total ($)', type: 'number' }
-            ],
-            'mermas': [
-                { name: 'valorMermas', label: 'Valor Mermas ($)', type: 'number' },
-                { name: 'inventarioTotal', label: 'Inventario Total ($)', type: 'number' }
-            ],
-
-            'revision-margenes': [
-                { name: 'revisionesEjecutadas', label: 'Revisiones Ejecutadas', type: 'number' },
-                { name: 'revisionesProgramadas', label: 'Revisiones Programadas', type: 'number' }
-            ],
-            'revision-precios': [
-                { name: 'revisionesEjecutadas', label: 'Revisiones Ejecutadas', type: 'number' },
-                { name: 'revisionesProgramadas', label: 'Revisiones Programadas', type: 'number' }
-            ],
-            // Picking Specific
-            'segundos-unidad-separada': [
-                { name: 'unidadesSeparadas', label: 'Unidades Separadas', type: 'number', placeholder: 'Eje: 40000' },
-                { name: 'segundosUtilizados', label: 'Segundos Utilizados', type: 'number', placeholder: 'Eje: 72000' }
-            ],
-            'pesos-separados-hombre': [
-                { name: 'valorVenta', label: 'Valor Venta ($)', type: 'number', placeholder: 'Eje: 3500000000' },
-                { name: 'auxiliaresSeparacion', label: 'Auxiliares de Separación', type: 'number', placeholder: 'Eje: 17' }
-            ],
-            'pedidos-separar-total': [
-                { name: 'pedidosFacturados', label: 'Pedidos Facturados', type: 'number', placeholder: 'Eje: 1200' },
-                { name: 'pedidosSeparados', label: 'Pedidos Separados', type: 'number', placeholder: 'Eje: 1200' }
-            ],
-            'planillas-separadas': [
-                { name: 'planillasGeneradas', label: 'Planillas Generadas', type: 'number', placeholder: 'Eje: 15' },
-                { name: 'planillasSeparadas', label: 'Planillas Separadas', type: 'number', placeholder: 'Eje: 15' }
-            ],
-            'nomina-venta-picking': [
-                { name: 'valorNomina', label: 'Valor Nómina ($)', type: 'number', placeholder: 'Eje: 65000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3500000000' }
-            ],
-            'horas-extras-venta-picking': [
-                { name: 'horasExtras', label: 'Valor Horas Extras ($)', type: 'number', placeholder: 'Eje: 2000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3500000000' }
-            ],
-            // Deposito Specific
-            'embalajes-perdidos': [
-                { name: 'canastillasRecibidas', label: 'Canastillas Recibidas', type: 'number', placeholder: 'Eje: 5000' },
-                { name: 'canastillasGestionadas', label: 'Canastillas Gestionadas', type: 'number', placeholder: 'Eje: 5000' }
-            ],
-            'nomina-compra-deposito': [
-                { name: 'valorNomina', label: 'Valor Nómina ($)', type: 'number', placeholder: 'Eje: 13000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3200000000' }
-            ],
-            'horas-extras-venta-deposito': [
-                { name: 'horasExtras', label: 'Valor Horas Extras ($)', type: 'number', placeholder: 'Eje: 150000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3500000000' }
-            ],
-            'averias-venta': [
-                { name: 'totalAverias', label: 'Total Averías ($)', type: 'number', placeholder: 'Eje: 7000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 3500000000' }
-            ],
-            // Talento Humano Specific
-            'rotacion-personal': [
-                { name: 'personalRetirado', label: 'Personal Retirado', type: 'number', placeholder: 'Eje: 8' },
-                { name: 'promedioEmpleados', label: 'Promedio Empleados', type: 'number', placeholder: 'Eje: 160' }
-            ],
-            'ausentismo': [
-                { name: 'diasPerdidos', label: 'Días Perdidos', type: 'number', placeholder: 'Eje: 150' },
-                { name: 'diasLaborados', label: 'Días Laborados', type: 'number', placeholder: 'Eje: 4000' }
-            ],
-            'calificacion-auditoria': [
-                { name: 'actividadesEjecutadas', label: 'Actividades Ejecutadas', type: 'number', placeholder: 'Eje: 9' },
-                { name: 'actividadesProgramadas', label: 'Actividades Programadas', type: 'number', placeholder: 'Eje: 10' }
-            ],
-            'he-rn-nomina': [
-                { name: 'valorHEDHEN', label: 'Valor HED/HEN ($)', type: 'number', placeholder: 'Eje: 15000000' },
-                { name: 'totalNomina', label: 'Total Nómina ($)', type: 'number', placeholder: 'Eje: 400000000' }
-            ],
-            'gasto-nomina-venta-rrhh': [
-                { name: 'valorNomina', label: 'Valor Nómina ($)', type: 'number', placeholder: 'Eje: 613000000' },
-                { name: 'ventaTotal', label: 'Venta Total ($)', type: 'number', placeholder: 'Eje: 5200000000' }
-            ],
-            'actividades-cultura': [
-                { name: 'actividadesEjecutadas', label: 'Actividades Ejecutadas', type: 'number', placeholder: 'Eje: 12' },
-                { name: 'actividadesProgramadas', label: 'Actividades Programadas', type: 'number', placeholder: 'Eje: 12' }
-            ],
-            'tiempo-contratacion': [
-                { name: 'diasVacante', label: 'Días de Respuesta', type: 'number', placeholder: 'Eje: 7' }
-            ],
-            // Caja Specific
-            'arqueos-realizados': [
-                { name: 'arqueosProgramados', label: 'Arqueos Programados', type: 'number', placeholder: 'Eje: 8' },
-                { name: 'arqueosRealizados', label: 'Arqueos Realizados', type: 'number', placeholder: 'Eje: 8' },
-                { name: 'valorSobra', label: 'Sobra Detectada ($)', type: 'number', placeholder: 'Eje: 5000' },
-                { name: 'valorFaltante', label: 'Faltante Detectado ($)', type: 'number', placeholder: 'Eje: 2000' }
-            ],
-            'indice-arqueo-caja': [
-                { name: 'currentValue', label: 'N° de Arqueos con Diferencia', type: 'number', placeholder: 'Eje: 2' }
-            ],
-            'planillas-cerradas': [
-                { name: 'planillasGeneradas', label: 'Planillas Generadas', type: 'number', placeholder: 'Eje: 40' },
-                { name: 'planillasCerradas', label: 'Planillas Cerradas', type: 'number', placeholder: 'Eje: 40' }
-            ],
-            'vales-descuadres': [
-                { name: 'totalCuadreCaja', label: 'Total Cuadre de Caja ($)', type: 'number', placeholder: 'Eje: 150000000' },
-                { name: 'valorVales', label: 'Valor de Vales ($)', type: 'number', placeholder: 'Eje: 750000' }
-            ],
-            // Cartera Specific (Fed by Contabilidad)
-            'cartera-no-vencida': [
-                { name: 'totalVenta', label: 'Total Venta ($)', type: 'number', placeholder: 'Eje: 1500000000' },
-                { name: 'totalCarteraVencida', label: 'Total Cartera Vencida ($)', type: 'number', placeholder: 'Eje: 140000000' }
-            ],
-            'cartera-mayor-30': [
-                { name: 'totalCartera', label: 'Total Cartera ($)', type: 'number', placeholder: 'Eje: 140000000' },
-                { name: 'totalMayor30', label: 'Total Mayor a 30 días ($)', type: 'number', placeholder: 'Eje: 7000000' }
-            ],
-            'recircularizaciones': [
-                { name: 'programadas', label: 'Programadas', type: 'number', placeholder: 'Eje: 2' },
-                { name: 'efectuadas', label: 'Efectuadas', type: 'number', placeholder: 'Eje: 2' }
-            ],
-            // Contabilidad Specific
-            'dias-cierre': [
-                { name: 'totalDiasCierre', label: 'Total Días al Cierre', type: 'number', placeholder: 'Eje: 12' },
-                { name: 'diasReporte', label: 'Días para el Reporte', type: 'number', placeholder: 'Eje: 13' }
-            ],
-            'ajustes-posteriores': [
-                { name: 'ajustesPosteriores', label: 'Cantidad de Ajustes', type: 'number', placeholder: 'Eje: 1' }
-            ],
-            'ajustes-revisoria': [
-                { name: 'ajustesRevisor', label: 'Cantidad de Ajustes', type: 'number', placeholder: 'Eje: 1' }
-            ],
-
-            'quiebres-inventario': [
-                { name: 'quiebres', label: 'Número de Quiebres', type: 'number', placeholder: 'Eje: 5' },
-                { name: 'totalSku', label: 'Total SKUs', type: 'number', placeholder: 'Eje: 500' }
-            ],
-            'rotacion-cxc': [
-                { name: 'ventasCredito', label: 'Ventas a Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' },
-                { name: 'cxcInicial', label: 'CxC Inicial ($)', type: 'number', placeholder: 'Eje: 100000000' },
-                { name: 'cxcFinal', label: 'CxC Final ($)', type: 'number', placeholder: 'Eje: 120000000' }
-            ],
-            'rotacion-cxp': [
-                { name: 'comprasCredito', label: 'Compras a Crédito ($)', type: 'number', placeholder: 'Eje: 350000000' },
-                { name: 'cxpInicial', label: 'CxP Inicial ($)', type: 'number', placeholder: 'Eje: 80000000' },
-                { name: 'cxpFinal', label: 'CxP Final ($)', type: 'number', placeholder: 'Eje: 90000000' }
-            ],
-            'conciliaciones-bancarias': [
-                { name: 'conciliacionesRequeridas', label: 'Conciliaciones Requeridas', type: 'number', placeholder: 'Eje: 2' },
-                { name: 'conciliacionesRealizadas', label: 'Conciliaciones Realizadas', type: 'number', placeholder: 'Eje: 1' }
-            ],
-            'conciliaciones-diarias': [
-                { name: 'conciliacionesSistema', label: 'Conciliaciones en Sistema', type: 'number', placeholder: 'Eje: 10' },
-                { name: 'conciliacionesBanco', label: 'Conciliaciones en Banco', type: 'number', placeholder: 'Eje: 10' }
-            ],
-            'activos-conciliados': [
-                { name: 'activosRegistrados', label: 'Activos Registrados', type: 'number', placeholder: 'Eje: 250' },
-                { name: 'activosConciliados', label: 'Activos Conciliados', type: 'number', placeholder: 'Eje: 245' }
-            ],
-            'multas-sanciones': [
-                { name: 'multasSanciones', label: 'Multas o Sanciones ($)', type: 'number', placeholder: 'Eje: 2500000' },
-                { name: 'ingreso', label: 'Ingreso Total ($)', type: 'number', placeholder: 'Eje: 3600000000' }
-            ],
-            'optimizacion-tributaria': [
-                { name: 'impuestosOptimizados', label: 'Impuestos Optimizados ($)', type: 'number', placeholder: 'Eje: 70000000' },
-                { name: 'totalImpuestos', label: 'Total de Impuestos ($)', type: 'number', placeholder: 'Eje: 150000000' }
-            ],
-            'pedidos-facturados': [
-                { name: 'pedidos', label: 'Número de Pedidos', type: 'number', placeholder: 'Eje: 1500' },
-                { name: 'facturas', label: 'Pedidos Facturados', type: 'number', placeholder: 'Eje: 1500' }
-            ],
-            'impresion-facturas': [
-                { name: 'facturasImpresas', label: 'Facturas Impresas', type: 'number', placeholder: 'Eje: 800' },
-                { name: 'facturasGeneradas', label: 'Facturas Generadas', type: 'number', placeholder: 'Eje: 800' }
-            ],
-            'error-facturacion': [
-                { name: 'errores', label: 'Errores en Facturación', type: 'number', placeholder: 'Eje: 5' },
-                { name: 'facturas', label: 'Total Facturas', type: 'number', placeholder: 'Eje: 1500' }
-            ],
-            'tareas-programadas': [
-                { name: 'tareasEjecutadas', label: 'Tareas Ejecutadas', type: 'number', placeholder: 'Eje: 10' },
-                { name: 'tareasProgramadas', label: 'Tareas Programadas', type: 'number', placeholder: 'Eje: 10' }
-            ],
-            'mantenimiento-equipos': [
-                { name: 'currentValue', label: 'Equipos Mantenidos', type: 'number', placeholder: 'Eje: 3' }
-            ],
-            'resolucion-incidencias': [
-                { name: 'totalIncidencias', label: 'Total Incidencias', type: 'number', placeholder: 'Eje: 20' },
-                { name: 'incidenciasRecurrentes', label: 'Incidencias Recurrentes', type: 'number', placeholder: 'Eje: 1' }
-            ],
-        };
-
-
-        return fieldMappings[kpi.id] || [{ name: 'currentValue', label: 'Valor Real', type: 'number' }];
+        return getKPIFormulaFields(kpi.id);
     };
 
     const calculateLiveResult = () => {
@@ -635,7 +393,7 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         // ── Limpiar número: formato colombiano (punto=miles, coma=decimal) ──
         const cleanNumericFields = (data) => {
             const cleaned = { ...data };
-            const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id', 'value'];
+            const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id', 'value', 'periodSelectedByUser'];
             Object.keys(cleaned).forEach(key => {
                 if (skipKeys.includes(key)) return;
                 if (typeof cleaned[key] === 'string' && cleaned[key].trim() !== '') {
@@ -691,10 +449,17 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
         const msgString = formData.brand;
 
-        // Limpiar borradores en memoria Y en localStorage
-        drafts.current = {};
+        // Limpiar SOLO el borrador de la marca/periodo guardado, no los de otras marcas
+        const savedKey = `${formData.brand}-${formData.period}`;
+        delete drafts.current[savedKey];
         if (typeof window !== 'undefined') {
-            try { window.localStorage.removeItem(`kpi_drafts_${kpi.id}`); } catch { /* ignore error */ }
+            try {
+                if (Object.keys(drafts.current).length === 0) {
+                    window.localStorage.removeItem(`kpi_drafts_${kpi.id}`);
+                } else {
+                    window.localStorage.setItem(`kpi_drafts_${kpi.id}`, JSON.stringify(drafts.current));
+                }
+            } catch { /* ignore */ }
         }
 
         if (isMetaMode) {
@@ -717,6 +482,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         }
         setFormData(prev => {
             let parsedValue = value;
+
+            // Si el usuario cambia el período manualmente, marcar el flag para que
+            // applyKPIUpdate no lo sobreescriba con el período actual.
+            if (fieldName === 'period') {
+                return { ...prev, period: value, periodSelectedByUser: true };
+            }
             
             // Si es un string, intentamos limpiar formateo de miles
             if (typeof value === 'string') {

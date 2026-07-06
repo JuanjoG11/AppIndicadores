@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getAreaById } from '../data/areas';
 import KPIDetailCard from '../components/dashboard/KPIDetailCard';
 import KPIDataForm from '../components/forms/KPIDataForm';
+import BulkKPIDataGrid from '../components/forms/BulkKPIDataGrid';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { filterKPIsByEntity, getKPIResponsable, BRAND_TO_ENTITY } from '../utils/kpiHelpers';
 import { calculateAreaScore } from '../data/mockData';
@@ -32,7 +33,8 @@ import {
     AlertCircle,
     Package,
     Maximize2,
-    X as XIcon
+    X as XIcon,
+    Zap
 } from 'lucide-react';
 import { isInverseKPI } from '../utils/kpiCalculations';
 
@@ -50,6 +52,7 @@ const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpda
     const [editingKPIId, setEditingKPIId] = useState(null);
     const [editMode, setEditMode] = useState('data');
     const [isChartExpanded, setIsChartExpanded] = useState(false);
+    const [showBulkGrid, setShowBulkGrid] = useState(false);
 
     // Filter by Entity first
     const baseCompanyKPIs = React.useMemo(() => 
@@ -405,6 +408,32 @@ const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpda
                     >
                         <TrendingUp size={16} /> Exportar Área PDF
                     </button>
+
+                    {canModify && (
+                        <button
+                            onClick={() => setShowBulkGrid(true)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.6rem',
+                                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                border: 'none',
+                                color: 'white',
+                                padding: '0.75rem 1.25rem',
+                                borderRadius: '14px',
+                                fontSize: '0.85rem',
+                                fontWeight: 900,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 4px 12px rgba(245,158,11,0.35)',
+                                whiteSpace: 'nowrap'
+                            }}
+                            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <Zap size={16} /> ⚡ Carga Rápida (Tabla)
+                        </button>
+                    )}
 
                     <div className="glass" style={{
                         padding: '1.5rem 2.5rem',
@@ -824,6 +853,18 @@ const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpda
                         rawUpdates={rawUpdates}
                     />
                 </ErrorBoundary>
+            )}
+
+            {showBulkGrid && (
+                <BulkKPIDataGrid
+                    kpis={filteredKPIs}
+                    currentUser={currentUser}
+                    rawUpdates={rawUpdates}
+                    onSave={(kpiId, data) => {
+                        if (onUpdateKPI) onUpdateKPI(kpiId, data);
+                    }}
+                    onCancel={() => setShowBulkGrid(false)}
+                />
             )}
 
             {/* Info Footer */}

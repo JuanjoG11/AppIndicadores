@@ -213,18 +213,20 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         const freq = (liveKpi?.frecuencia || kpiDef?.frecuencia || 'MENSUAL').toUpperCase();
         const isManualUpd = !newData.updatedAt;
 
-        // GUARDIA: si es una actualización manual (del form) y el periodo enviado no es del mes
-        // actual, corregirlo automáticamente. Previene que un borrador corrupto del mes pasado
-        // se guarde con period incorrecto, causando isFromCurrent=false → hasData=false.
+        // GUARDIA: si es una actualización manual sin selector de período explícito
+        // (periodSelectedByUser !== true) y el período enviado es de un mes anterior al actual,
+        // corregirlo. Esto bloquea borradores corruptos del mes pasado sin afectar correcciones
+        // históricas intencionales que el usuario seleccionó en el form.
         const currentActualPeriod = getPeriodIndex(new Date(), freq);
-        if (isManualUpd && newData.period) {
+        if (isManualUpd && newData.period && !newData.periodSelectedByUser) {
             const sentMonthKey = toMonthKey(String(newData.period)) || String(newData.period);
             const currentMonthKey = toMonthKey(currentActualPeriod) || currentActualPeriod;
             if (sentMonthKey !== currentMonthKey) {
-                console.warn(`⚠️ [applyKPIUpdate] Period mismatch en guardado manual: enviado=${newData.period}, actual=${currentActualPeriod}. Corrigiendo.`);
+                console.warn(`⚠️ [applyKPIUpdate] Period mismatch en guardado automático: enviado=${newData.period}, actual=${currentActualPeriod}. Corrigiendo.`);
                 newData = { ...newData, period: currentActualPeriod };
             }
         }
+        // Solo loguear en caso de corrección automática (no spam en consola)
 
         // Calcular fecha del registro
         let recDateObj;
@@ -647,43 +649,17 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                     ...additionalData,
                     brand: persistBrand,
                     period: periodToStore,
+                    periodSelectedByUser: undefined, // no persisitir el flag interno
                     ...(additionalData?.type !== 'META_UPDATE' ? { manual: true } : {})
                 },
                 value: isFinite(value) ? value : 0,
                 cargo: user?.cargo || 'Sistema'
             };
 
-            // Buscar registro existente con la misma clave exacta (kpi+company+brand+period)
-            // IMPORTANTE: filtrar también por periodo en la query para evitar traer registros de otros meses
-            const { data: existingRows } = await supabase
-                .from('kpi_updates')
-                .select('id, additional_data, updated_at')
-                .eq('kpi_id', payload.kpi_id)
-                .eq('company_id', payload.company_id)
-                .eq('additional_data->>brand', persistBrand)
-                .eq('additional_data->>period', periodToStore)
-                .neq('additional_data->>type', 'META_UPDATE');
-
-            // Validar que el registro encontrado realmente corresponde al mismo periodo
-            const existing = existingRows?.find(row => {
-                const rowPeriod = row.additional_data?.period || '';
-                if (granular) {
-                    return rowPeriod === periodToStore ||
-                        (rowPeriod.length === 7 && rowPeriod === toMonthKey(periodToStore));
-                }
-                return (toMonthKey(rowPeriod) || rowPeriod) === periodToStore;
-            });
-
-            let error;
-            if (existing?.id) {
-                ({ error } = await supabase
-                    .from('kpi_updates')
-                    .update({ value: payload.value, additional_data: payload.additional_data, cargo: payload.cargo })
-                    .eq('id', existing.id));
-            } else {
-                ({ error } = await supabase.from('kpi_updates').insert(payload));
-            }
-            
+            // Con anon key de Supabase, UPDATE y DELETE no están permitidos.
+            // Estrategia: siempre INSERT. El batch de carga inicial ya deduplica
+            // conservando solo el registro más reciente por KPI+company+brand+periodo.
+            const { error } = await supabase.from('kpi_updates').insert(payload);
             if (error) {
                 console.error("❌ Detalle Error Supabase:", error.message, error.details, error.hint);
                 throw error;
@@ -858,7 +834,30 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         // BUG FIX #1/#2: Para frecuencias granulares preservar el periodo exacto.
                         // toMonthKey colapsaría Q1 y Q2 al mismo key, perdiendo uno de los dos.
                         const granularFreq = isGranularFrequency(frequency);
-                        const periodKey = granularFreq ? rawPeriod : (toMonthKey(rawPeriod) || rawPeriod);
+
+                        // CORRECCIÓN DE REGISTROS LEGACY: Para frecuencias mensuales/bimestrales,
+                        // si el period guardado en DB es de un mes anterior pero updated_at es del mes
+                        // actual, el dato es válido para este mes (fue guardado con period corrupto).
+                        // Usamos el mes del updated_at como periodo real.
+                        let resolvedRawPeriod = rawPeriod;
+                        if (!granularFreq && rawPeriod) {
+                            const savedMonthKey = toMonthKey(rawPeriod) || rawPeriod;
+                            const updatedAtMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                            const nowMonthKey = (() => {
+                                const n = new Date();
+                                return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`;
+                            })();
+                            // Solo corregir si:
+                            // 1. El period guardado difiere del mes del updated_at
+                            // 2. El updated_at es del mes ACTUAL (no un dato histórico legítimo del mes pasado)
+                            // Esto evita reclasificar datos históricos válidos como del mes actual
+                            if (savedMonthKey !== updatedAtMonthKey && updatedAtMonthKey === nowMonthKey) {
+                                resolvedRawPeriod = updatedAtMonthKey;
+                                console.log(`[batch] Corrigiendo period legacy: ${rawPeriod} → ${resolvedRawPeriod} (updated_at: ${upd.updated_at})`);
+                            }
+                        }
+
+                        const periodKey = granularFreq ? resolvedRawPeriod : (toMonthKey(resolvedRawPeriod) || resolvedRawPeriod);
                         
                         const groupKey = `${kpiId}-${companyId}-${brand}-${periodKey}`;
 
@@ -1106,9 +1105,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 return {
                                     ...kpi,
                                     ...baseKpiUpdate,
-                                    // hasData acumulativo: true si este dato es del periodo actual
-                                    // OR si ya había un dato del periodo actual de otra marca procesada antes
-                                    hasData: isFromCurrentPeriod || (kpi.hasData && !shouldShowInDashboard),
+                                    // hasData: usar exactamente lo que calculó baseKpiUpdate.
+                                    // Para multi-marca: si ya había una marca del mes actual procesada
+                                    // antes (kpi.hasData=true) y ahora procesamos otra marca también
+                                    // del mes actual, preservar true. Pero si el dato es de otro mes,
+                                    // NO heredar el true de una marca anterior.
+                                    hasData: baseKpiUpdate.hasData || (isFromCurrentPeriod && kpi.hasData),
                                     brandValues,
                                     lastUpdate: new Date(upd.updated_at || upd.created_at) > new Date(kpi.lastUpdate || 0)
                                         ? (upd.updated_at || upd.created_at)
@@ -1166,7 +1168,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 }
 
                 // Skip applying realtime updates that originated from the current user to avoid overwriting optimistic UI state
-                const isSelfUpdate = p.new.cargo && currentUser?.cargo && p.new.cargo === currentUser.cargo && (p.new.additional_data?.company || 'TYM') === activeCompany;
+                // Usamos cargo + company + timestamp cercano para detectar updates propios.
+                // NO comparar solo por cargo porque dos usuarios pueden tener el mismo cargo.
+                const updatedAtMs = new Date(p.new.updated_at || 0).getTime();
+                const nowMs = Date.now();
+                const isVeryRecent = (nowMs - updatedAtMs) < 10000; // menos de 10 segundos
+                const isSelfUpdate = isVeryRecent &&
+                    p.new.cargo && currentUser?.cargo && p.new.cargo === currentUser.cargo &&
+                    (p.new.additional_data?.company || 'TYM') === activeCompany;
                 if (isSelfUpdate) {
                     // Ignore self update; optimistic UI already reflects the change
                     return;

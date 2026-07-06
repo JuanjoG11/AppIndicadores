@@ -6,9 +6,11 @@ import {
     Activity,
     Box,
     ShieldIcon,
-    LayoutGrid
+    LayoutGrid,
+    Zap
 } from 'lucide-react';
 import KPIDataForm from '../components/forms/KPIDataForm';
+import BulkKPIDataGrid from '../components/forms/BulkKPIDataGrid';
 import { filterKPIsByEntity, BRAND_TO_ENTITY, getEntityBrands, getKPIResponsable } from '../utils/kpiHelpers';
 import { isInverseKPI } from '../utils/kpiCalculations';
 import { getKPIDeadline, checkIsUrgent, checkIsExpired, formatDeadline, formatDateTime, formatKPIValue, getCurrentPeriodKey } from '../utils/formatters';
@@ -18,6 +20,7 @@ import { Clock, Calendar } from 'lucide-react';
 
 const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onViewHistory }) => {
     const [editingKPIId, setEditingKPIId] = useState(null);
+    const [showBulkGrid, setShowBulkGrid] = useState(false);
     
     const getDisplayPeriod = () => {
         const now = new Date();
@@ -277,9 +280,23 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
         const isMine = effectiveResponsable === currentUser.cargo;
         const currentPeriodKey = getCurrentPeriodKey(kpi.frecuencia);
         const cardHasData = kpi.hasData && (!isCurrentMonth || kpi.additionalData?.period === currentPeriodKey);
-        
+
+        // Detectar si hay dato de un período anterior (histórico) aunque no sea del mes actual
+        // Sirve para mostrar "CARGADO (junio)" en vez de solo "FALTA CARGAR"
+        const hasHistoricalData = kpi.hasData && !cardHasData;
+        const historicalPeriod = hasHistoricalData ? (kpi.additionalData?.period || '') : '';
+        const historicalMonthName = (() => {
+            if (!historicalPeriod) return '';
+            const m = historicalPeriod.match(/^\d{4}-(\d{2})/);
+            if (!m) return historicalPeriod;
+            const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            return months[parseInt(m[1]) - 1] || historicalPeriod;
+        })();
+
         let isReady = false;
         let pendingBrandsList = [];
+        // Marcas con dato histórico pero sin dato actual
+        let historicalBrandsList = [];
 
         if (kpi.meta && typeof kpi.meta === 'object') {
             const effectiveBrands = getEffectiveBrands(kpi);
@@ -287,14 +304,18 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                 pendingBrandsList = effectiveBrands.filter(brand => {
                     const dataKey = `${currentUser.company}-${brand}`;
                     const brandData = kpi.brandValues?.[dataKey];
-                    // Validar también que el periodo del dato coincide con el periodo actual
                     const brandHasData = brandData?.hasData === true &&
                         (!isCurrentMonth || brandData?.additionalData?.period === currentPeriodKey);
                     return !brandHasData;
                 });
+                // Cuáles de las pendientes tienen al menos dato histórico
+                historicalBrandsList = pendingBrandsList.filter(brand => {
+                    const dataKey = `${currentUser.company}-${brand}`;
+                    const brandData = kpi.brandValues?.[dataKey];
+                    return brandData?.hasData === true; // tiene dato, pero de otro período
+                });
                 isReady = pendingBrandsList.length === 0;
             } else {
-                // Usar cardHasData que ya valida el periodo, no solo kpi.hasData
                 isReady = cardHasData === true;
             }
         } else {
@@ -339,17 +360,23 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                             borderRadius: '10px',
                             fontSize: '0.65rem',
                             fontWeight: 800,
-                            background: isReady ? '#ecfdf5' : '#fff7ed',
-                            color: isReady ? '#059669' : '#ea580c',
+                            background: isReady ? '#ecfdf5' : (hasHistoricalData || historicalBrandsList.length > 0 ? '#eff6ff' : '#fff7ed'),
+                            color: isReady ? '#059669' : (hasHistoricalData || historicalBrandsList.length > 0 ? '#3b82f6' : '#ea580c'),
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.4rem'
                         }}>
                             {isReady ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
                             <span style={{ whiteSpace: 'normal' }}>
-                                {isReady ? 'LISTO' : (pendingBrandsList.length > 0
-                                    ? `FALTA CARGAR: ${pendingBrandsList.join(', ')}`
-                                    : 'FALTA CARGAR')}
+                                {isReady
+                                    ? 'LISTO'
+                                    : pendingBrandsList.length > 0
+                                        ? historicalBrandsList.length > 0
+                                            ? `FALTA MES ACTUAL: ${pendingBrandsList.join(', ')}`
+                                            : `FALTA CARGAR: ${pendingBrandsList.join(', ')}`
+                                        : hasHistoricalData
+                                            ? `CARGADO (${historicalMonthName}) · FALTA MES ACTUAL`
+                                            : 'FALTA CARGAR'}
                             </span>
                         </div>
                         <div style={{
@@ -573,6 +600,24 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                         </p>
                     </div>
 
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-end' }}>
+                        <button
+                            onClick={() => setShowBulkGrid(true)}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '0.6rem',
+                                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                border: 'none', color: 'white',
+                                padding: '0.75rem 1.5rem', borderRadius: '14px',
+                                fontSize: '0.9rem', fontWeight: 900, cursor: 'pointer',
+                                boxShadow: '0 4px 15px rgba(245,158,11,0.4)',
+                                transition: 'all 0.2s',
+                                whiteSpace: 'nowrap'
+                            }}
+                            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <Zap size={16} /> ⚡ Carga Rápida (Tabla)
+                        </button>
                     <div style={{ width: '280px', background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.75rem' }}>
                             <span style={{ fontSize: '0.8rem', fontWeight: 700, opacity: 0.8 }}>PROGRESO DE CARGA</span>
@@ -590,6 +635,7 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                         <div style={{ marginTop: '0.75rem', fontSize: '0.7rem', opacity: 0.6, textAlign: 'right' }}>
                             {completedMyKPIs} de {totalMyKPIs} completados
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -785,6 +831,18 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                               })()
                             : undefined
                     }
+                />
+            )}
+
+            {showBulkGrid && (
+                <BulkKPIDataGrid
+                    kpis={myAccessKPIs}
+                    currentUser={currentUser}
+                    rawUpdates={rawUpdates}
+                    onSave={(kpiId, data) => {
+                        if (onUpdateKPI) onUpdateKPI(kpiId, data);
+                    }}
+                    onCancel={() => setShowBulkGrid(false)}
                 />
             )}
 

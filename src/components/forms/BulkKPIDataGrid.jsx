@@ -1,0 +1,658 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+    X,
+    Save,
+    Calculator,
+    AlertTriangle,
+    CheckCircle2,
+    Info,
+    Calendar,
+    RefreshCw,
+    Search,
+    SlidersHorizontal
+} from 'lucide-react';
+import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
+import {
+    BRAND_TO_ENTITY,
+    getKPIFormulaFields,
+    resolveSharedFieldValue,
+    ALL_SHARED_FIELDS,
+    FIELD_ALIAS_GROUPS,
+    getEntityBrands,
+    getKPIResponsable
+} from '../../utils/kpiHelpers';
+import { formatNumber } from '../../utils/formatters';
+
+const getPeriodIndex = (frequency = 'MENSUAL') => {
+    const freq = frequency.toUpperCase();
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+    const monthStr = month.toString().padStart(2, '0');
+
+    if (freq.includes('DIARI')) {
+        return d.toISOString().split('T')[0];
+    }
+    if (freq.includes('SEMANAL')) {
+        const dUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const dayNum = dUTC.getUTCDay() || 7;
+        dUTC.setUTCDate(dUTC.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(dUTC.getUTCFullYear(), 0, 1));
+        const week = Math.ceil((((dUTC - yearStart) / 86400000) + 1) / 7);
+        return `${dUTC.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+    }
+    if (freq.includes('QUINCENAL')) {
+        const fortnight = day <= 15 ? 'Q1' : 'Q2';
+        return `${year}-${monthStr}-${fortnight}`;
+    }
+    return `${year}-${monthStr}`; // MENSUAL / default
+};
+
+const cleanNumericValue = (valStr) => {
+    if (typeof valStr !== 'string') return valStr;
+    let clean = valStr.trim().replace(/\s/g, '');
+    if (clean.includes(',') && clean.includes('.')) {
+        clean = clean.replace(/\./g, '').replace(',', '.');
+    } else if (clean.includes(',')) {
+        clean = clean.replace(',', '.');
+    } else {
+        clean = clean.replace(/\./g, '');
+    }
+    const num = parseFloat(clean);
+    return isNaN(num) ? '' : num;
+};
+
+const formatInputValue = (val) => {
+    if (val == null || val === '') return '';
+    const str = val.toString().replace(/\./g, '');
+    const [int, dec] = str.split(',');
+    const formattedInt = int.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return dec !== undefined ? `${formattedInt},${dec}` : formattedInt;
+};
+
+const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates = [] }) => {
+    const userEntity = currentUser?.company || 'TYM';
+    const lockedBrand = currentUser?.activeBrand || null;
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showOnlyPending, setShowOnlyPending] = useState(true);
+    const [gridData, setGridData] = useState({});
+    const [userModified, setUserModified] = useState({}); // Track user manually modified fields
+    const [saveStatus, setSaveStatus] = useState({ state: 'idle', message: '' });
+
+    // Determine brands user can see
+    const getEffectiveBrands = (kpi) => {
+        const all = getEntityBrands(kpi, userEntity);
+        if (lockedBrand) {
+            if (Array.isArray(lockedBrand)) {
+                const normalizedLocks = lockedBrand.map(l => l?.trim().toUpperCase());
+                return all.filter(b => normalizedLocks.includes(b?.trim().toUpperCase()));
+            }
+            return all.filter(b => b?.trim().toUpperCase() === lockedBrand?.trim().toUpperCase());
+        }
+        return all;
+    };
+
+    // Flatten KPIs to rows (one per brand required/allowed)
+    const rows = useMemo(() => {
+        const list = [];
+        kpis.forEach(kpi => {
+            const effectiveBrands = getEffectiveBrands(kpi);
+            const freqPeriod = getPeriodIndex(kpi.frecuencia);
+
+            if (effectiveBrands.length === 0) {
+                list.push({
+                    kpi,
+                    brand: userEntity,
+                    period: freqPeriod,
+                    key: `${kpi.id}-${userEntity}-${freqPeriod}`
+                });
+            } else {
+                effectiveBrands.forEach(brand => {
+                    list.push({
+                        kpi,
+                        brand,
+                        period: freqPeriod,
+                        key: `${kpi.id}-${brand}-${freqPeriod}`
+                    });
+                });
+            }
+        });
+        return list;
+    }, [kpis, userEntity, lockedBrand]);
+
+    // Initial load: prefill inputs using exact values or shared fields
+    useEffect(() => {
+        const initial = {};
+        const modified = {};
+
+        rows.forEach(row => {
+            const { kpi, brand, period, key } = row;
+            const dataKey = `${userEntity}-${brand.toUpperCase()}`;
+
+            // A. Check if the KPI already has saved data in rawUpdates
+            let existingData = null;
+            if (rawUpdates && Array.isArray(rawUpdates)) {
+                const match = rawUpdates.find(upd =>
+                    upd.kpi_id === kpi.id &&
+                    (upd.company_id === userEntity || upd.additional_data?.company === userEntity) &&
+                    upd.additional_data?.brand?.toUpperCase() === brand.toUpperCase() &&
+                    upd.additional_data?.period === period &&
+                    upd.additional_data?.type !== 'META_UPDATE'
+                );
+                if (match && match.additional_data) {
+                    existingData = { ...match.additional_data };
+                }
+            }
+
+            // B. Fallback to kpi brandValues
+            if (!existingData) {
+                const bVal = kpi.brandValues?.[dataKey];
+                if (bVal && bVal.hasData) {
+                    const storedPeriod = bVal.additionalData?.period || '';
+                    if (storedPeriod === period || (storedPeriod.startsWith(period) && kpi.frecuencia === 'MENSUAL')) {
+                        existingData = { ...bVal.additionalData };
+                    }
+                }
+            }
+
+            if (existingData) {
+                // Prepopulate with existing clean data
+                const cleaned = { ...existingData };
+                delete cleaned.updatedAt; delete cleaned.period; delete cleaned.timestamp;
+                initial[key] = cleaned;
+            } else {
+                // C. Fallback: load shared fields from other KPIs
+                const shared = {};
+                const formulaFields = getKPIFormulaFields(kpi.id);
+
+                rawUpdates.forEach(upd => {
+                    if (upd.kpi_id === kpi.id) return;
+                    if (upd.additional_data?.type === 'META_UPDATE') return;
+                    const updPeriod = upd.additional_data?.period || '';
+                    const updBrand = upd.additional_data?.brand?.toUpperCase() || '';
+                    const updCompany = upd.additional_data?.company || upd.company_id || '';
+
+                    // Same brand, same company, same month
+                    if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
+                    if (updBrand !== brand.toUpperCase()) return;
+                    if (updCompany !== userEntity) return;
+
+                    formulaFields.forEach(field => {
+                        const val = resolveSharedFieldValue(upd.additional_data, field.name);
+                        if (val !== undefined && shared[field.name] === undefined) {
+                            shared[field.name] = val;
+                        }
+                    });
+                });
+                initial[key] = shared;
+            }
+            modified[key] = new Set();
+        });
+
+        setGridData(initial);
+        setUserModified(modified);
+    }, [rows, rawUpdates, userEntity]);
+
+    // Handle input change & propagate shared values to other rows
+    const handleInputChange = (rowKey, rowBrand, rowPeriod, fieldName, rawValue) => {
+        // Track input manually
+        setUserModified(prev => {
+            const next = { ...prev };
+            if (!next[rowKey]) next[rowKey] = new Set();
+            next[rowKey].add(fieldName);
+            return next;
+        });
+
+        setGridData(prev => {
+            const next = { ...prev };
+            if (!next[rowKey]) next[rowKey] = {};
+            next[rowKey][fieldName] = rawValue;
+
+            // Propagation logic: check if field is shared
+            if (ALL_SHARED_FIELDS.includes(fieldName)) {
+                const aliasGroup = FIELD_ALIAS_GROUPS.find(g => g.includes(fieldName)) || [fieldName];
+
+                rows.forEach(other => {
+                    if (other.key === rowKey) return;
+                    const sameBrand = other.brand.toUpperCase() === rowBrand.toUpperCase();
+                    const sameMonth = other.period.substring(0, 7) === rowPeriod.substring(0, 7);
+
+                    if (sameBrand && sameMonth) {
+                        const otherFields = getKPIFormulaFields(other.kpi.id);
+                        const matchField = otherFields.find(f => aliasGroup.includes(f.name));
+
+                        if (matchField) {
+                            // Propagate ONLY if the user hasn't edited that field in the other row manually
+                            const isUserModified = userModified[other.key]?.has(matchField.name);
+                            if (!isUserModified) {
+                                if (!next[other.key]) next[other.key] = {};
+                                next[other.key][matchField.name] = rawValue;
+                            }
+                        }
+                    }
+                });
+            }
+            return next;
+        });
+    };
+
+    // Calculate details for each row
+    const getRowDetails = (row) => {
+        const { kpi, brand, key } = row;
+        const fields = getKPIFormulaFields(kpi.id);
+        const rowValues = gridData[key] || {};
+
+        // Parse numerical fields
+        const parsedData = {};
+        let filledCount = 0;
+        fields.forEach(f => {
+            const val = rowValues[f.name];
+            if (val !== undefined && val !== null && val !== '') {
+                const cleanNum = cleanNumericValue(val.toString());
+                if (cleanNum !== '') {
+                    parsedData[f.name] = cleanNum;
+                    filledCount++;
+                }
+            }
+        });
+
+        const isComplete = fields.length === filledCount;
+        const liveVal = isComplete ? calculateKPIValue(kpi.id, parsedData) : null;
+
+        // Meta target
+        const metaObj = kpi.meta || {};
+        const targetMeta = typeof metaObj === 'object'
+            ? (metaObj[brand] || metaObj[brand.toLowerCase()] || Object.values(metaObj)[0] || 0)
+            : metaObj;
+
+        // Compliance & semaphore
+        let compliance = 0;
+        let semaphore = 'gray';
+        const isStrict = ['revision-margenes', 'revision-precios', 'pedidos-facturados', 'impresion-facturas', 'fiabilidad-inventarios', 'planillas-separadas', 'pedidos-separar-total'].includes(kpi.id);
+        const isInverse = isInverseKPI(kpi.id);
+
+        if (liveVal !== null) {
+            if (targetMeta === 0 && liveVal === 0) {
+                compliance = 100;
+            } else if (targetMeta === 0 && liveVal > 0) {
+                compliance = isInverse ? 0 : 100;
+            } else {
+                compliance = isInverse ? (targetMeta / liveVal) * 100 : (liveVal / targetMeta) * 100;
+                compliance = Math.min(Math.max(Math.round(compliance || 0), 0), 100);
+            }
+
+            const greenThreshold = isStrict ? 100 : 95;
+            const yellowThreshold = isStrict ? 100 : 85;
+            if (compliance >= greenThreshold) semaphore = 'green';
+            else if (compliance >= yellowThreshold) semaphore = 'yellow';
+            else semaphore = 'red';
+        }
+
+        // Check if this row originally has data in rawUpdates
+        const originallyLoaded = (() => {
+            const dataKey = `${userEntity}-${brand.toUpperCase()}`;
+            const bVal = kpi.brandValues?.[dataKey];
+            return bVal && bVal.hasData;
+        })();
+
+        return {
+            fields,
+            isComplete,
+            liveVal,
+            targetMeta,
+            compliance,
+            semaphore,
+            originallyLoaded,
+            parsedData
+        };
+    };
+
+    // Filter rows based on filters & search
+    const filteredRows = useMemo(() => {
+        return rows.filter(row => {
+            const details = getRowDetails(row);
+
+            // Filter out fully loaded rows if showOnlyPending is true
+            if (showOnlyPending && details.originallyLoaded) {
+                return false;
+            }
+
+            // Search text
+            if (searchTerm) {
+                const matchName = row.kpi.name.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchBrand = row.brand.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchArea = (row.kpi.subArea || '').toLowerCase().includes(searchTerm.toLowerCase());
+                if (!matchName && !matchBrand && !matchArea) return false;
+            }
+
+            return true;
+        });
+    }, [rows, searchTerm, showOnlyPending, gridData]);
+
+    // Handle batch save
+    const handleSaveAll = async () => {
+        try {
+            setSaveStatus({ state: 'saving', message: 'Guardando datos en lote...' });
+            let saveCount = 0;
+
+            for (const row of rows) {
+                const details = getRowDetails(row);
+                // Save only if inputs are fully completed
+                if (details.isComplete) {
+                    const rowKey = `${row.kpi.id}-${row.brand}-${row.period}`;
+                    // Guardar solo si el usuario modificó algo en esta fila
+                    const wasModified = userModified[row.key] && userModified[row.key].size > 0;
+                    
+                    if (wasModified || !details.originallyLoaded) {
+                        const payload = {
+                            brand: row.brand,
+                            period: row.period,
+                            ...details.parsedData,
+                            type: 'DATA_UPDATE'
+                        };
+
+                        await onSave(row.kpi.id, payload);
+                        saveCount++;
+                    }
+                }
+            }
+
+            setSaveStatus({ state: 'success', message: `¡Carga masiva exitosa! Se actualizaron ${saveCount} registros.` });
+            setTimeout(() => {
+                setSaveStatus({ state: 'idle', message: '' });
+                onCancel(); // Close grid modal
+            }, 2500);
+
+        } catch (error) {
+            console.error('Error saving bulk data', error);
+            setSaveStatus({ state: 'error', message: `Error al guardar: ${error.message || 'Inténtalo de nuevo.'}` });
+        }
+    };
+
+    return (
+        <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000,
+            padding: '2rem'
+        }}>
+            <div className="glass" style={{
+                width: '100%', maxWidth: '1280px', height: '100%', maxHeight: '850px',
+                borderRadius: '32px', display: 'flex', flexDirection: 'column',
+                overflow: 'hidden', border: '1px solid var(--glass-border)',
+                background: 'var(--bg-card)', boxShadow: 'var(--shadow-xl)'
+            }}>
+                {/* Header */}
+                <div style={{
+                    padding: '2rem 2.5rem', borderBottom: '1px solid var(--border-soft)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: 'var(--bg-soft)'
+                }}>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+                            <SlidersHorizontal size={24} color="var(--brand)" />
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-main)' }}>
+                                Carga de Indicadores en Bloque
+                            </h2>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            Ingresa los datos para la entidad <strong>{userEntity}</strong>. Los campos compartidos como <em>ventaTotal</em> se propagarán automáticamente.
+                        </p>
+                    </div>
+                    <button
+                        onClick={onCancel}
+                        style={{
+                            background: 'white', border: '1px solid var(--border-soft)',
+                            padding: '0.5rem', borderRadius: '12px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.2s', color: 'var(--text-muted)'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                        onMouseOut={e => e.currentTarget.style.background = 'white'}
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Filters Row */}
+                <div style={{
+                    padding: '1rem 2.5rem', borderBottom: '1px solid var(--border-soft)',
+                    display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap',
+                    background: '#f8fafc'
+                }}>
+                    <div style={{ position: 'relative', flex: 1, minWidth: '250px' }}>
+                        <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                        <input
+                            type="text"
+                            placeholder="Buscar por KPI, marca o subárea..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={{
+                                width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
+                                borderRadius: '12px', border: '1px solid var(--border-medium)',
+                                fontSize: '0.85rem', outline: 'none', background: 'white', color: 'var(--text-main)'
+                            }}
+                        />
+                    </div>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer' }}>
+                        <input
+                            type="checkbox"
+                            checked={showOnlyPending}
+                            onChange={e => setShowOnlyPending(e.target.checked)}
+                            style={{ width: '16px', height: '16px', borderRadius: '4px', accentColor: 'var(--brand)' }}
+                        />
+                        Mostrar solo pendientes por cargar
+                    </label>
+
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                        <Calendar size={14} />
+                        Período Actual: {new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
+                    </div>
+                </div>
+
+                {/* Table Area */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2.5rem' }}>
+                    {filteredRows.length === 0 ? (
+                        <div style={{ padding: '4rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                            <CheckCircle2 size={48} color="var(--success)" />
+                            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)' }}>
+                                {showOnlyPending ? '¡No tienes indicadores pendientes por cargar!' : 'No se encontraron resultados.'}
+                            </div>
+                            {showOnlyPending && (
+                                <button
+                                    onClick={() => setShowOnlyPending(false)}
+                                    style={{
+                                        padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-medium)',
+                                        background: 'white', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600
+                                    }}
+                                >
+                                    Ver todos los indicadores
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '2px solid var(--border-soft)', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>
+                                    <th style={{ padding: '0.75rem 1rem', width: '30%' }}>INDICADOR</th>
+                                    <th style={{ padding: '0.75rem 1rem', width: '10%' }}>MARCA</th>
+                                    <th style={{ padding: '0.75rem 1rem', width: '12%' }}>FRECUENCIA</th>
+                                    <th style={{ padding: '0.75rem 1rem', width: '33%' }}>VALORES FÓRMULA</th>
+                                    <th style={{ padding: '0.75rem 1rem', width: '15%' }}>CÁLCULO LIVE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredRows.map(row => {
+                                    const { kpi, brand, period, key } = row;
+                                    const details = getRowDetails(row);
+
+                                    return (
+                                        <tr key={key} style={{
+                                            borderBottom: '1px solid var(--border-soft)',
+                                            transition: 'background 0.15s',
+                                            background: details.originallyLoaded ? '#f8fafc' : 'transparent'
+                                        }}>
+                                            {/* Column 1: KPI Details */}
+                                            <td style={{ padding: '1rem 1rem' }}>
+                                                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                                                    {kpi.name}
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                                    {kpi.subArea || 'General'}
+                                                </div>
+                                            </td>
+
+                                            {/* Column 2: Brand */}
+                                            <td style={{ padding: '1rem 1rem' }}>
+                                                <span style={{
+                                                    padding: '0.25rem 0.5rem', borderRadius: '8px',
+                                                    fontSize: '0.75rem', fontWeight: 800,
+                                                    background: BRAND_TO_ENTITY[brand] === 'TYM' ? '#eff6ff' : '#f0fdf4',
+                                                    color: BRAND_TO_ENTITY[brand] === 'TYM' ? '#1e40af' : '#166534',
+                                                    border: BRAND_TO_ENTITY[brand] === 'TYM' ? '1px solid #dbeafe' : '1px solid #dcfce7'
+                                                }}>
+                                                    {brand}
+                                                </span>
+                                            </td>
+
+                                            {/* Column 3: Frequency & Period */}
+                                            <td style={{ padding: '1rem 1rem' }}>
+                                                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                                                    {kpi.frecuencia}
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                                                    {period}
+                                                </div>
+                                            </td>
+
+                                            {/* Column 4: Dynamic Inputs */}
+                                            <td style={{ padding: '1rem 1rem' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
+                                                    {details.fields.map(field => {
+                                                        const rowValues = gridData[key] || {};
+                                                        const isShared = ALL_SHARED_FIELDS.includes(field.name);
+
+                                                        return (
+                                                            <div key={field.name}>
+                                                                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                                                    {field.label} {isShared && '🔗'}
+                                                                </div>
+                                                                <input
+                                                                    type="text"
+                                                                    inputMode="decimal"
+                                                                    value={formatInputValue(rowValues[field.name])}
+                                                                    onChange={e => handleInputChange(key, brand, period, field.name, e.target.value)}
+                                                                    style={{
+                                                                        width: '100%', padding: '0.4rem 0.6rem',
+                                                                        borderRadius: '8px', border: '1px solid var(--border-medium)',
+                                                                        fontSize: '0.8rem', fontWeight: 700, outline: 'none',
+                                                                        background: 'white', color: 'var(--text-main)',
+                                                                        borderColor: isShared ? '#93c5fd' : 'var(--border-medium)'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </td>
+
+                                            {/* Column 5: live calculation result */}
+                                            <td style={{ padding: '1rem 1rem' }}>
+                                                {details.liveVal !== null ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <div>
+                                                            <div style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--text-main)' }}>
+                                                                {kpi.unit === '$' && '$'}
+                                                                {kpi.unit === '$' ? formatNumber(details.liveVal, 0) : (kpi.unit === '%' ? formatNumber(details.liveVal, 2) : formatNumber(details.liveVal, 0))}
+                                                                {kpi.unit !== '$' && kpi.unit}
+                                                            </div>
+                                                            <div style={{
+                                                                fontSize: '0.7rem', fontWeight: 800,
+                                                                color: details.semaphore === 'green' ? 'var(--success)' : (details.semaphore === 'yellow' ? 'var(--warning)' : 'var(--danger)')
+                                                            }}>
+                                                                {details.compliance}% cumpl.
+                                                            </div>
+                                                        </div>
+                                                        <div style={{
+                                                            width: '10px', height: '10px', borderRadius: '50%',
+                                                            background: details.semaphore === 'green' ? 'var(--success)' : (details.semaphore === 'yellow' ? 'var(--warning)' : 'var(--danger)')
+                                                        }} />
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <AlertTriangle size={12} /> Faltan datos
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+
+                {/* Footer Area */}
+                <div style={{
+                    padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border-soft)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: 'var(--bg-soft)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Info size={16} color="var(--brand)" />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                            Los campos marcados con 🔗 propagan sus datos a otros KPIs del mismo mes/marca automáticamente.
+                        </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        {saveStatus.state !== 'idle' && (
+                            <div style={{
+                                fontSize: '0.85rem', fontWeight: 700,
+                                color: saveStatus.state === 'saving' ? 'var(--text-main)' : (saveStatus.state === 'success' ? 'var(--success)' : 'var(--danger)'),
+                                display: 'flex', alignItems: 'center', gap: '0.5rem'
+                            }}>
+                                {saveStatus.state === 'saving' && <RefreshCw size={14} className="spin" />}
+                                {saveStatus.message}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={onCancel}
+                            disabled={saveStatus.state === 'saving'}
+                            style={{
+                                padding: '0.75rem 1.5rem', borderRadius: '12px', border: '1px solid var(--border-medium)',
+                                background: 'white', color: 'var(--text-muted)', fontWeight: 800, cursor: 'pointer',
+                                transition: 'all 0.2s', fontSize: '0.85rem'
+                            }}
+                            onMouseOver={e => !e.currentTarget.disabled && (e.currentTarget.style.background = 'var(--bg-hover)')}
+                            onMouseOut={e => e.currentTarget.style.background = 'white'}
+                        >
+                            CANCELAR
+                        </button>
+
+                        <button
+                            onClick={handleSaveAll}
+                            disabled={saveStatus.state === 'saving' || filteredRows.length === 0}
+                            style={{
+                                padding: '0.75rem 2rem', borderRadius: '12px', border: 'none',
+                                background: 'var(--brand)', color: 'white', fontWeight: 900,
+                                fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                opacity: (saveStatus.state === 'saving' || filteredRows.length === 0) ? 0.6 : 1,
+                                cursor: (saveStatus.state === 'saving' || filteredRows.length === 0) ? 'not-allowed' : 'pointer',
+                                boxShadow: '0 4px 12px rgba(37,99,235,0.2)'
+                            }}
+                        >
+                            <Save size={16} /> GUARDAR TODO
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default BulkKPIDataGrid;
