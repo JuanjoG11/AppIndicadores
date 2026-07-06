@@ -837,27 +837,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         // toMonthKey colapsaría Q1 y Q2 al mismo key, perdiendo uno de los dos.
                         const granularFreq = isGranularFrequency(frequency);
 
-                        // CORRECCIÓN DE REGISTROS LEGACY: Para frecuencias mensuales/bimestrales,
-                        // si el period guardado en DB es de un mes anterior pero updated_at es del mes
-                        // actual, el dato es válido para este mes (fue guardado con period corrupto).
-                        // Usamos el mes del updated_at como periodo real.
                         let resolvedRawPeriod = rawPeriod;
-                        if (!granularFreq && rawPeriod) {
-                            const savedMonthKey = toMonthKey(rawPeriod) || rawPeriod;
-                            const updatedAtMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                            const nowMonthKey = (() => {
-                                const n = new Date();
-                                return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`;
-                            })();
-                            // Solo corregir si:
-                            // 1. El period guardado difiere del mes del updated_at
-                            // 2. El updated_at es del mes ACTUAL (no un dato histórico legítimo del mes pasado)
-                            // Esto evita reclasificar datos históricos válidos como del mes actual
-                            if (savedMonthKey !== updatedAtMonthKey && updatedAtMonthKey === nowMonthKey) {
-                                resolvedRawPeriod = updatedAtMonthKey;
-                                console.log(`[batch] Corrigiendo period legacy: ${rawPeriod} → ${resolvedRawPeriod} (updated_at: ${upd.updated_at})`);
-                            }
-                        }
 
                         const periodKey = granularFreq ? resolvedRawPeriod : (toMonthKey(resolvedRawPeriod) || resolvedRawPeriod);
                         
