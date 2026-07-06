@@ -17,8 +17,11 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
 
     // Project KPIs to the selected month using history
     const filteredKPIs = useMemo(() => {
-        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-        const isCurrentMonth = selectedMonth === currentMonthName;
+        const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const now = new Date();
+        const prevMonthName = MONTHS[now.getMonth() === 0 ? 11 : now.getMonth() - 1]; // mes reportable (junio)
+        // Usar datos en vivo SOLO para el mes reportable (mes anterior)
+        const isCurrentMonth = selectedMonth === prevMonthName;
 
         return baseKPIs.map(kpi => {
             // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)

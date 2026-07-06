@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
 import { BRAND_TO_ENTITY, getKPIFormulaFields, resolveSharedFieldValue, ALL_SHARED_FIELDS } from '../../utils/kpiHelpers';
-import { formatNumber } from '../../utils/formatters';
+import { formatNumber, getCurrentPeriodKey } from '../../utils/formatters';
 
 const MONTH_NAMES = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -68,7 +68,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const isBrandPending = (brandName) => {
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
         const brandData = kpi.brandValues?.[dataKey];
-        return !brandData || brandData.hasData === false;
+        if (!brandData || !brandData.hasData) return true;
+        // Pendiente si el dato no es del periodo actual
+        const expectedPeriod = getCurrentPeriodKey(kpi.frecuencia);
+        return brandData.additionalData?.period !== expectedPeriod;
     };
 
     // 3. Seleccionar por defecto

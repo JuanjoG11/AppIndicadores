@@ -186,8 +186,10 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
         return effectiveBrands.some(brand => {
             const dataKey = `${currentUser.company}-${brand}`;
             const brandData = k.brandValues?.[dataKey];
-            // Pendiente si no hay datos o los datos del periodo actual no están marcados como hasData
-            return !brandData || (brandData.additionalData?.period === currentPeriodKey && brandData.hasData !== true);
+            // Pendiente si no hay datos del periodo actual con hasData=true
+            const hasCurrent = brandData?.hasData === true &&
+                brandData?.additionalData?.period === currentPeriodKey;
+            return !hasCurrent;
         });
     });
 
@@ -255,8 +257,9 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                         total++;
                         const dataKey = `${currentUser.company}-${brand}`;
                         const brandData = k.brandValues?.[dataKey];
-                        // hasData=true ya significa que es del periodo actual
-                        if (brandData?.hasData === true) done++;
+                        const currentPeriodKey = getCurrentPeriodKey(k.frecuencia);
+                        // Completado si tiene datos del periodo actual con hasData=true
+                        if (brandData?.hasData === true && brandData?.additionalData?.period === currentPeriodKey) done++;
                     });
                 }
             }

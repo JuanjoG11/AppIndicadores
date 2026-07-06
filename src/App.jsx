@@ -31,7 +31,9 @@ const AppInner = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 900);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()]);
+  const MONTH_NAMES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  // El picker arranca en el mes anterior — los datos siempre son del mes vencido
+  const [selectedMonth, setSelectedMonth] = useState(MONTH_NAMES_ES[new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1]);
 
   // ── KPI Data (via custom hook) ────────────────────────────────────────────
   const { kpiData, rawUpdates, isLoading, lastSyncTime, applyKPIUpdate } = useKPIs(

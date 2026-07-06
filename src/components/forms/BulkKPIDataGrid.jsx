@@ -21,7 +21,7 @@ import {
     getEntityBrands,
     getKPIResponsable
 } from '../../utils/kpiHelpers';
-import { formatNumber } from '../../utils/formatters';
+import { formatNumber, getCurrentPeriodKey } from '../../utils/formatters';
 
 // ─── Period helpers per frequency type ───────────────────────────────────────
 
@@ -436,11 +436,13 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
             else semaphore = 'red';
         }
 
-        // Check if this row originally has data in rawUpdates
+        // Check if this row originally has data for the current period
         const originallyLoaded = (() => {
             const dataKey = `${userEntity}-${brand.toUpperCase()}`;
             const bVal = kpi.brandValues?.[dataKey];
-            return bVal && bVal.hasData;
+            if (!bVal || !bVal.hasData) return false;
+            const expectedPeriod = getCurrentPeriodKey(kpi.frecuencia);
+            return bVal.additionalData?.period === expectedPeriod;
         })();
 
         return {

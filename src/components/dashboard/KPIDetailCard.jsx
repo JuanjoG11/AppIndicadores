@@ -24,8 +24,10 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
     const entity = activeCompany || 'TYM';
 
     const currentPeriodKey = getCurrentPeriodKey(kpi.frecuencia);
-    const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-    const isCurrentMonth = selectedMonth === currentMonthName;
+    const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const now = new Date();
+    const prevMonthName = MONTHS[now.getMonth() === 0 ? 11 : now.getMonth() - 1];
+    const isCurrentMonth = selectedMonth === prevMonthName;
 
     let displayHasData = false;
     if (isBrandFocus) {

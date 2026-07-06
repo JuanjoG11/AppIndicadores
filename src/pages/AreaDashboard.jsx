@@ -61,8 +61,10 @@ const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpda
 
     // Project KPIs to selected month
     const projectedKPIs = React.useMemo(() => {
-        const currentMonthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][new Date().getMonth()];
-        const isCurrentMonth = selectedMonth === currentMonthName;
+        const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const now = new Date();
+        const prevMonthName = MONTHS[now.getMonth() === 0 ? 11 : now.getMonth() - 1];
+        const isCurrentMonth = selectedMonth === prevMonthName;
         
         return baseCompanyKPIs.map(kpi => {
             // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)
