@@ -23,31 +23,141 @@ import {
 } from '../../utils/kpiHelpers';
 import { formatNumber } from '../../utils/formatters';
 
-const getPeriodIndex = (frequency = 'MENSUAL') => {
-    const freq = frequency.toUpperCase();
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    const monthStr = month.toString().padStart(2, '0');
+// ─── Period helpers per frequency type ───────────────────────────────────────
 
-    if (freq.includes('DIARI')) {
-        return d.toISOString().split('T')[0];
+/** Last N months as YYYY-MM, newest first */
+const getRecentMonths = (n = 6) => {
+    const result = [];
+    const d = new Date();
+    for (let i = 0; i < n; i++) {
+        const y = d.getFullYear();
+        const m = (d.getMonth() + 1).toString().padStart(2, '0');
+        result.push(`${y}-${m}`);
+        d.setMonth(d.getMonth() - 1);
     }
-    if (freq.includes('SEMANAL')) {
-        const dUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        const dayNum = dUTC.getUTCDay() || 7;
-        dUTC.setUTCDate(dUTC.getUTCDate() + 4 - dayNum);
-        const yearStart = new Date(Date.UTC(dUTC.getUTCFullYear(), 0, 1));
-        const week = Math.ceil((((dUTC - yearStart) / 86400000) + 1) / 7);
-        return `${dUTC.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
-    }
-    if (freq.includes('QUINCENAL')) {
-        const fortnight = day <= 15 ? 'Q1' : 'Q2';
-        return `${year}-${monthStr}-${fortnight}`;
-    }
-    return `${year}-${monthStr}`; // MENSUAL / default
+    return result;
 };
+
+/** Last N fortnights as YYYY-MM-Q1 or YYYY-MM-Q2, newest first */
+const getRecentQuincenas = (n = 6) => {
+    const result = [];
+    const now = new Date();
+    // Start from the most recently COMPLETED fortnight
+    let d = new Date(now);
+    // If today is Q1 (1-15), the last completed is previous month Q2
+    // If today is Q2 (16+), the last completed is this month Q1
+    if (d.getDate() <= 15) {
+        // Last completed: previous month Q2
+        d.setMonth(d.getMonth() - 1);
+        let y = d.getFullYear(), m = (d.getMonth() + 1).toString().padStart(2, '0');
+        result.push(`${y}-${m}-Q2`);
+        // then Q1 of same month
+        result.push(`${y}-${m}-Q1`);
+        // go back further
+        for (let i = 0; i < n - 2; i++) {
+            d.setMonth(d.getMonth() - 1);
+            y = d.getFullYear(); m = (d.getMonth() + 1).toString().padStart(2, '0');
+            result.push(`${y}-${m}-Q2`);
+            result.push(`${y}-${m}-Q1`);
+            if (result.length >= n) break;
+        }
+    } else {
+        // Last completed: this month Q1
+        let y = d.getFullYear(), m = (d.getMonth() + 1).toString().padStart(2, '0');
+        result.push(`${y}-${m}-Q1`);
+        for (let i = 0; i < n - 1; i++) {
+            d.setMonth(d.getMonth() - 1);
+            y = d.getFullYear(); m = (d.getMonth() + 1).toString().padStart(2, '0');
+            result.push(`${y}-${m}-Q2`);
+            result.push(`${y}-${m}-Q1`);
+            if (result.length >= n) break;
+        }
+    }
+    return result.slice(0, n);
+};
+
+/** ISO week key YYYY-Www for the past N weeks, newest first */
+const getISOWeekKey = (date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dow = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dow); // ISO Thursday
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+};
+
+const getRecentWeeks = (n = 8) => {
+    const result = [];
+    const now = new Date();
+    // Start from the most recently COMPLETED week (last Monday-Sunday block)
+    const dow = now.getDay() || 7; // 1=Mon ... 7=Sun
+    // Last completed week ended last Sunday:
+    const lastSunday = new Date(now);
+    lastSunday.setDate(now.getDate() - dow); // go back to last Sunday
+    for (let i = 0; i < n; i++) {
+        const key = getISOWeekKey(lastSunday);
+        result.push(key);
+        lastSunday.setDate(lastSunday.getDate() - 7);
+    }
+    return result;
+};
+
+// Smart defaults — most recently COMPLETED/EXPIRED period
+const getDefaultMonthKey = () => {
+    const d = new Date();
+    const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    return `${prev.getFullYear()}-${(prev.getMonth() + 1).toString().padStart(2, '0')}`;
+};
+
+const getDefaultQuincenaKey = () => getRecentQuincenas(1)[0];
+const getDefaultWeekKey = () => getRecentWeeks(1)[0];
+const getTodayKey = () => new Date().toISOString().split('T')[0];
+
+// Label formatters
+const formatMonthLabel = (yyyyMM) => {
+    if (!yyyyMM) return '';
+    const [year, month] = yyyyMM.split('-');
+    return new Date(parseInt(year), parseInt(month) - 1, 1)
+        .toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+};
+
+const formatQuincenaLabel = (key) => {
+    if (!key) return '';
+    // YYYY-MM-Q1 or YYYY-MM-Q2
+    const m = key.match(/^(\d{4})-(\d{2})-(Q[12])$/);
+    if (!m) return key;
+    const monthName = new Date(parseInt(m[1]), parseInt(m[2]) - 1, 1)
+        .toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+    return `${m[3] === 'Q1' ? '1RA' : '2DA'} QUINCENA ${monthName} ${m[1]}`;
+};
+
+const formatWeekLabel = (key) => {
+    if (!key) return '';
+    // YYYY-Www → find the Monday of that week
+    const m = key.match(/^(\d{4})-W(\d{1,2})$/);
+    if (!m) return key;
+    const year = parseInt(m[1]), week = parseInt(m[2]);
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const dow = jan4.getUTCDay() || 7;
+    const monday = new Date(jan4);
+    monday.setUTCDate(jan4.getUTCDate() - (dow - 1) + (week - 1) * 7);
+    const sunday = new Date(monday);
+    sunday.setUTCDate(monday.getUTCDate() + 6);
+    const fmt = (d) => d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).toUpperCase();
+    return `Sem ${week}: ${fmt(monday)} – ${fmt(sunday)} ${year}`;
+};
+
+/** Given a frequency and the per-frequency selected keys, return the period key for a row */
+const resolveRowPeriod = (frequency, { selectedMonthKey, selectedQuincenaKey, selectedWeekKey }) => {
+    const freq = (frequency || 'MENSUAL').toUpperCase();
+    if (freq.includes('DIARI')) return getTodayKey();
+    if (freq.includes('SEMANAL')) return selectedWeekKey;
+    if (freq.includes('QUINCENAL')) return selectedQuincenaKey;
+    // MENSUAL, BIMESTRAL, TRIMESTRAL, SEMESTRAL, ANUAL → use month key
+    return selectedMonthKey;
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 const cleanNumericValue = (valStr) => {
     if (typeof valStr !== 'string') return valStr;
@@ -71,15 +181,41 @@ const formatInputValue = (val) => {
     return dec !== undefined ? `${formattedInt},${dec}` : formattedInt;
 };
 
-const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates = [] }) => {
+const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates = [], isInline = false }) => {
     const userEntity = currentUser?.company || 'TYM';
     const lockedBrand = currentUser?.activeBrand || null;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [showOnlyPending, setShowOnlyPending] = useState(true);
     const [gridData, setGridData] = useState({});
-    const [userModified, setUserModified] = useState({}); // Track user manually modified fields
+    const [userModified, setUserModified] = useState({});
     const [saveStatus, setSaveStatus] = useState({ state: 'idle', message: '' });
+    const [rowSaveStatus, setRowSaveStatus] = useState({}); // per-row save feedback
+
+    // Global defaults (used as initial values for per-row overrides)
+    const recentMonths = useMemo(() => getRecentMonths(6), []);
+    const recentQuincenas = useMemo(() => getRecentQuincenas(6), []);
+    const recentWeeks = useMemo(() => getRecentWeeks(8), []);
+
+    // Per-KPI period overrides: { [kpiId]: periodKey }
+    const [rowPeriodOverrides, setRowPeriodOverrides] = useState({});
+
+    const getRowPeriod = (kpi) => {
+        if (rowPeriodOverrides[kpi.id] !== undefined) return rowPeriodOverrides[kpi.id];
+        const freq = (kpi.frecuencia || 'MENSUAL').toUpperCase();
+        if (freq.includes('DIARI')) return getTodayKey();
+        if (freq.includes('SEMANAL')) return getDefaultWeekKey();
+        if (freq.includes('QUINCENAL')) return getDefaultQuincenaKey();
+        return getDefaultMonthKey();
+    };
+
+    const periodSelectors = {
+        selectedMonthKey: getDefaultMonthKey(),
+        selectedQuincenaKey: getDefaultQuincenaKey(),
+        selectedWeekKey: getDefaultWeekKey()
+    };
+
+
 
     // Determine brands user can see
     const getEffectiveBrands = (kpi) => {
@@ -99,7 +235,7 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
         const list = [];
         kpis.forEach(kpi => {
             const effectiveBrands = getEffectiveBrands(kpi);
-            const freqPeriod = getPeriodIndex(kpi.frecuencia);
+            const freqPeriod = getRowPeriod(kpi);
 
             if (effectiveBrands.length === 0) {
                 list.push({
@@ -120,7 +256,7 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
             }
         });
         return list;
-    }, [kpis, userEntity, lockedBrand]);
+    }, [kpis, userEntity, lockedBrand, rowPeriodOverrides]);
 
     // Initial load: prefill inputs using exact values or shared fields
     useEffect(() => {
@@ -137,7 +273,7 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                 const match = rawUpdates.find(upd =>
                     upd.kpi_id === kpi.id &&
                     (upd.company_id === userEntity || upd.additional_data?.company === userEntity) &&
-                    upd.additional_data?.brand?.toUpperCase() === brand.toUpperCase() &&
+                    (upd.additional_data?.brand?.toUpperCase() === brand.toUpperCase() || (!upd.additional_data?.brand && brand === userEntity)) &&
                     upd.additional_data?.period === period &&
                     upd.additional_data?.type !== 'META_UPDATE'
                 );
@@ -174,10 +310,10 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                     const updBrand = upd.additional_data?.brand?.toUpperCase() || '';
                     const updCompany = upd.additional_data?.company || upd.company_id || '';
 
-                    // Same brand, same company, same month
+                    // Same month, same company, same brand (or no brand)
                     if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
-                    if (updBrand !== brand.toUpperCase()) return;
                     if (updCompany !== userEntity) return;
+                    if (updBrand !== '' && updBrand !== brand.toUpperCase()) return;
 
                     formulaFields.forEach(field => {
                         const val = resolveSharedFieldValue(upd.additional_data, field.name);
@@ -331,6 +467,28 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
         });
     }, [rows, searchTerm, showOnlyPending, gridData]);
 
+    // Handle individual row save
+    const handleSaveRow = async (row) => {
+        const details = getRowDetails(row);
+        if (!details.isComplete) return;
+        const rowStatusKey = row.key;
+        setRowSaveStatus(prev => ({ ...prev, [rowStatusKey]: 'saving' }));
+        try {
+            const payload = {
+                brand: row.brand,
+                period: row.period,
+                ...details.parsedData,
+                type: 'DATA_UPDATE'
+            };
+            await onSave(row.kpi.id, payload);
+            setRowSaveStatus(prev => ({ ...prev, [rowStatusKey]: 'success' }));
+            setTimeout(() => setRowSaveStatus(prev => ({ ...prev, [rowStatusKey]: null })), 2500);
+        } catch (error) {
+            setRowSaveStatus(prev => ({ ...prev, [rowStatusKey]: 'error' }));
+            setTimeout(() => setRowSaveStatus(prev => ({ ...prev, [rowStatusKey]: null })), 3000);
+        }
+    };
+
     // Handle batch save
     const handleSaveAll = async () => {
         try {
@@ -341,7 +499,6 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                 const details = getRowDetails(row);
                 // Save only if inputs are fully completed
                 if (details.isComplete) {
-                    const rowKey = `${row.kpi.id}-${row.brand}-${row.period}`;
                     // Guardar solo si el usuario modificó algo en esta fila
                     const wasModified = userModified[row.key] && userModified[row.key].size > 0;
                     
@@ -362,7 +519,9 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
             setSaveStatus({ state: 'success', message: `¡Carga masiva exitosa! Se actualizaron ${saveCount} registros.` });
             setTimeout(() => {
                 setSaveStatus({ state: 'idle', message: '' });
-                onCancel(); // Close grid modal
+                if (!isInline && onCancel) {
+                    onCancel(); // Close grid modal
+                }
             }, 2500);
 
         } catch (error) {
@@ -372,13 +531,17 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
     };
 
     return (
-        <div style={{
+        <div style={isInline ? { width: '100%', padding: '0 0 2rem 0' } : {
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)',
             display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000,
             padding: '2rem'
         }}>
-            <div className="glass" style={{
+            <div className="glass" style={isInline ? {
+                width: '100%', borderRadius: '24px', display: 'flex', flexDirection: 'column',
+                overflow: 'hidden', border: '1px solid var(--border-soft)',
+                background: 'var(--bg-card)', boxShadow: 'var(--shadow-lg)'
+            } : {
                 width: '100%', maxWidth: '1280px', height: '100%', maxHeight: '850px',
                 borderRadius: '32px', display: 'flex', flexDirection: 'column',
                 overflow: 'hidden', border: '1px solid var(--glass-border)',
@@ -394,29 +557,31 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
                             <SlidersHorizontal size={24} color="var(--brand)" />
                             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-main)' }}>
-                                Carga de Indicadores en Bloque
+                                Consola de Alimentación de Indicadores
                             </h2>
                         </div>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            Ingresa los datos para la entidad <strong>{userEntity}</strong>. Los campos compartidos como <em>ventaTotal</em> se propagarán automáticamente.
+                            Ingresa los datos para la entidad <strong>{userEntity}</strong>. Los campos compartidos como <em>ventaTotal</em> se propagarán automáticamente entre filas equivalentes.
                         </p>
                     </div>
-                    <button
-                        onClick={onCancel}
-                        style={{
-                            background: 'white', border: '1px solid var(--border-soft)',
-                            padding: '0.5rem', borderRadius: '12px', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'all 0.2s', color: 'var(--text-muted)'
-                        }}
-                        onMouseOver={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                        onMouseOut={e => e.currentTarget.style.background = 'white'}
-                    >
-                        <X size={20} />
-                    </button>
+                    {!isInline && (
+                        <button
+                            onClick={onCancel}
+                            style={{
+                                background: 'white', border: '1px solid var(--border-soft)',
+                                padding: '0.5rem', borderRadius: '12px', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all 0.2s', color: 'var(--text-muted)'
+                            }}
+                            onMouseOver={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                            onMouseOut={e => e.currentTarget.style.background = 'white'}
+                        >
+                            <X size={20} />
+                        </button>
+                    )}
                 </div>
 
-                {/* Filters Row */}
+                {/* Filters Row - search + pending toggle only */}
                 <div style={{
                     padding: '1rem 2.5rem', borderBottom: '1px solid var(--border-soft)',
                     display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap',
@@ -444,13 +609,8 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                             onChange={e => setShowOnlyPending(e.target.checked)}
                             style={{ width: '16px', height: '16px', borderRadius: '4px', accentColor: 'var(--brand)' }}
                         />
-                        Mostrar solo pendientes por cargar
+                        Mostrar solo pendientes
                     </label>
-
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                        <Calendar size={14} />
-                        Período Actual: {new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
-                    </div>
                 </div>
 
                 {/* Table Area */}
@@ -488,6 +648,13 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                                 {filteredRows.map(row => {
                                     const { kpi, brand, period, key } = row;
                                     const details = getRowDetails(row);
+                                    const freq = (kpi.frecuencia || 'MENSUAL').toUpperCase();
+                                    const isMonthly = !freq.includes('DIARI') && !freq.includes('SEMANAL') && !freq.includes('QUINCENAL');
+                                    const isQuincenal = freq.includes('QUINCENAL');
+                                    const isSemanal = freq.includes('SEMANAL');
+                                    const isDiario = freq.includes('DIARI');
+                                    const currentPeriod = getRowPeriod(kpi);
+                                    const rowSt = rowSaveStatus[key];
 
                                     return (
                                         <tr key={key} style={{
@@ -495,14 +662,48 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                                             transition: 'background 0.15s',
                                             background: details.originallyLoaded ? '#f8fafc' : 'transparent'
                                         }}>
-                                            {/* Column 1: KPI Details */}
+                                            {/* Column 1: KPI Details + inline period selector */}
                                             <td style={{ padding: '1rem 1rem' }}>
-                                                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                                                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.35rem' }}>
                                                     {kpi.name}
                                                 </div>
-                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.4rem' }}>
                                                     {kpi.subArea || 'General'}
                                                 </div>
+                                                {/* Inline period selector per row */}
+                                                {!isDiario && (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                                        <Calendar size={11} color={isQuincenal ? '#059669' : (isSemanal ? '#7c3aed' : 'var(--brand)')} />
+                                                        <select
+                                                            value={currentPeriod}
+                                                            onChange={e => {
+                                                                setRowPeriodOverrides(prev => ({ ...prev, [kpi.id]: e.target.value }));
+                                                                setGridData(prev => { const n = {...prev}; delete n[key]; return n; });
+                                                                setUserModified(prev => { const n = {...prev}; delete n[key]; return n; });
+                                                            }}
+                                                            style={{
+                                                                padding: '0.2rem 0.45rem', borderRadius: '7px', fontSize: '0.65rem',
+                                                                border: `1.5px solid ${isQuincenal ? '#059669' : (isSemanal ? '#7c3aed' : 'var(--brand)')}`,
+                                                                fontWeight: 800,
+                                                                color: isQuincenal ? '#059669' : (isSemanal ? '#7c3aed' : 'var(--brand)'),
+                                                                background: isQuincenal ? '#ecfdf5' : (isSemanal ? '#f5f3ff' : '#eff6ff'),
+                                                                cursor: 'pointer', outline: 'none', maxWidth: '180px'
+                                                            }}
+                                                        >
+                                                            {isQuincenal
+                                                                ? recentQuincenas.map(q => <option key={q} value={q}>{formatQuincenaLabel(q)}{q === getDefaultQuincenaKey() ? ' ✓' : ''}</option>)
+                                                                : isSemanal
+                                                                    ? recentWeeks.map(w => <option key={w} value={w}>{formatWeekLabel(w)}{w === getDefaultWeekKey() ? ' ✓' : ''}</option>)
+                                                                    : recentMonths.map(m => <option key={m} value={m}>{formatMonthLabel(m)}{m === getDefaultMonthKey() ? ' ✓' : ''}</option>)
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                )}
+                                                {isDiario && (
+                                                    <div style={{ fontSize: '0.65rem', color: 'var(--brand)', fontWeight: 800 }}>
+                                                        📅 Hoy: {currentPeriod}
+                                                    </div>
+                                                )}
                                             </td>
 
                                             {/* Column 2: Brand */}
@@ -559,8 +760,29 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                                                 </div>
                                             </td>
 
-                                            {/* Column 5: live calculation result */}
+                                            {/* Column 5: live result + individual save button */}
                                             <td style={{ padding: '1rem 1rem' }}>
+                                                {/* Individual Save Button */}
+                                                <div style={{ marginBottom: '0.5rem' }}>
+                                                    <button
+                                                        onClick={() => handleSaveRow(row)}
+                                                        disabled={!details.isComplete || rowSt === 'saving'}
+                                                        title={details.isComplete ? 'Guardar este KPI' : 'Completa todos los campos para guardar'}
+                                                        style={{
+                                                            padding: '0.3rem 0.7rem', borderRadius: '8px', border: 'none',
+                                                            fontSize: '0.7rem', fontWeight: 800,
+                                                            background: rowSt === 'success' ? '#dcfce7' : rowSt === 'error' ? '#fee2e2' : details.isComplete ? 'var(--brand)' : '#e2e8f0',
+                                                            color: rowSt === 'success' ? '#166534' : rowSt === 'error' ? '#991b1b' : details.isComplete ? 'white' : '#94a3b8',
+                                                            cursor: details.isComplete && rowSt !== 'saving' ? 'pointer' : 'not-allowed',
+                                                            display: 'flex', alignItems: 'center', gap: '0.3rem',
+                                                            transition: 'all 0.2s', whiteSpace: 'nowrap'
+                                                        }}
+                                                    >
+                                                        {rowSt === 'saving' ? <RefreshCw size={10} className="spin" /> : <Save size={10} />}
+                                                        {rowSt === 'success' ? '¡Guardado!' : rowSt === 'error' ? 'Error' : 'Guardar'}
+                                                    </button>
+                                                </div>
+
                                                 {details.liveVal !== null ? (
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                         <div>
@@ -620,19 +842,21 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                             </div>
                         )}
 
-                        <button
-                            onClick={onCancel}
-                            disabled={saveStatus.state === 'saving'}
-                            style={{
-                                padding: '0.75rem 1.5rem', borderRadius: '12px', border: '1px solid var(--border-medium)',
-                                background: 'white', color: 'var(--text-muted)', fontWeight: 800, cursor: 'pointer',
-                                transition: 'all 0.2s', fontSize: '0.85rem'
-                            }}
-                            onMouseOver={e => !e.currentTarget.disabled && (e.currentTarget.style.background = 'var(--bg-hover)')}
-                            onMouseOut={e => e.currentTarget.style.background = 'white'}
-                        >
-                            CANCELAR
-                        </button>
+                        {!isInline && (
+                            <button
+                                onClick={onCancel}
+                                disabled={saveStatus.state === 'saving'}
+                                style={{
+                                    padding: '0.75rem 1.5rem', borderRadius: '12px', border: '1px solid var(--border-medium)',
+                                    background: 'white', color: 'var(--text-muted)', fontWeight: 800, cursor: 'pointer',
+                                    transition: 'all 0.2s', fontSize: '0.85rem'
+                                }}
+                                onMouseOver={e => !e.currentTarget.disabled && (e.currentTarget.style.background = 'var(--bg-hover)')}
+                                onMouseOut={e => e.currentTarget.style.background = 'white'}
+                            >
+                                CANCELAR
+                            </button>
+                        )}
 
                         <button
                             onClick={handleSaveAll}

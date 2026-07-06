@@ -600,24 +600,6 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                         </p>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-end' }}>
-                        <button
-                            onClick={() => setShowBulkGrid(true)}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '0.6rem',
-                                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                                border: 'none', color: 'white',
-                                padding: '0.75rem 1.5rem', borderRadius: '14px',
-                                fontSize: '0.9rem', fontWeight: 900, cursor: 'pointer',
-                                boxShadow: '0 4px 15px rgba(245,158,11,0.4)',
-                                transition: 'all 0.2s',
-                                whiteSpace: 'nowrap'
-                            }}
-                            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                        >
-                            <Zap size={16} /> ⚡ Carga Rápida (Tabla)
-                        </button>
                     <div style={{ width: '280px', background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.75rem' }}>
                             <span style={{ fontSize: '0.8rem', fontWeight: 700, opacity: 0.8 }}>PROGRESO DE CARGA</span>
@@ -635,7 +617,6 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                         <div style={{ marginTop: '0.75rem', fontSize: '0.7rem', opacity: 0.6, textAlign: 'right' }}>
                             {completedMyKPIs} de {totalMyKPIs} completados
                         </div>
-                    </div>
                     </div>
                 </div>
             </div>
@@ -685,166 +666,17 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
             </div>
 
             {/* Dashboard Sections */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5rem' }}>
-
-                {/* 1. Indicadores por Alimentar */}
-                <section>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                        <div style={{ background: '#f97316', color: 'white', padding: '0.6rem', borderRadius: '12px', boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)' }}>
-                            <Box size={24} />
-                        </div>
-                        <div>
-                            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#1e293b', marginBottom: '0.25rem' }}>Indicadores por Alimentar</h2>
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0 }}>Tienes {pendingKPIs.length} indicadores pendientes.</p>
-                                {criticalCount > 0 && (
-                                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ef4444', background: '#fff1f2', padding: '0.1rem 0.5rem', borderRadius: '6px' }}>
-                                        {criticalCount} VENCIDOS
-                                    </span>
-                                )}
-                                {urgentCount > 0 && (
-                                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#f59e0b', background: '#fffbeb', padding: '0.1rem 0.5rem', borderRadius: '6px' }}>
-                                        {urgentCount} URGENTES
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {pendingKPIs.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-                            {sortedSubAreas.map(subArea => {
-                                const kpis = pendingGroups[subArea];
-                                if (!kpis || kpis.length === 0) return null;
-                                return (
-                                    <div key={`pending-${subArea}`}>
-                                        <h3 style={{
-                                            fontSize: '1rem',
-                                            fontWeight: 900,
-                                            color: '#64748b',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.1em',
-                                            marginBottom: '1.5rem',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.75rem'
-                                        }}>
-                                            <div style={{ width: '12px', height: '4px', background: 'var(--brand)', borderRadius: '2px' }}></div>
-                                            {subArea}
-                                        </h3>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                                            {kpis.map((kpi, idx) => renderKPICard(kpi, idx))}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {/* Render others if any */}
-                            {Object.keys(pendingGroups).filter(sa => !sortedSubAreas.includes(sa)).map(subArea => (
-                                <div key={`pending-${subArea}`}>
-                                    {subArea !== 'General' && <h3 style={{ fontSize: '1rem', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', marginBottom: '1.5rem' }}>{subArea}</h3>}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                                        {pendingGroups[subArea].map((kpi, idx) => renderKPICard(kpi, idx))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div style={{ padding: '3rem', textAlign: 'center', background: '#f8fafc', borderRadius: '32px', border: '1px dashed #e2e8f0' }}>
-                            <div style={{ color: '#10b981', marginBottom: '1rem' }}><CheckCircle2 size={40} style={{ margin: '0 auto' }} /></div>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#475569' }}>¡Todo al día!</h3>
-                            <p style={{ color: '#94a3b8' }}>Has alimentado todos tus indicadores asignados.</p>
-                        </div>
-                    )}
-                </section>
-
-                {/* 2. Indicadores de mi Área (Merged Listos + Access) */}
-                <section>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                        <div style={{ background: '#64748b', color: 'white', padding: '0.6rem', borderRadius: '12px' }}>
-                            <Activity size={24} />
-                        </div>
-                        <div>
-                            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#1e293b', marginBottom: '0.25rem' }}>Indicadores de mi Área</h2>
-                            <p style={{ fontSize: '0.95rem', color: '#64748b' }}>Monitoreo general y KPIs ya cargados del departamento.</p>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-                        {sortedSubAreas.map(subArea => {
-                            const kpis = areaGroups[subArea];
-                            if (!kpis || kpis.length === 0) return null;
-                            return (
-                                <div key={`area-${subArea}`}>
-                                    <h3 style={{
-                                        fontSize: '1rem',
-                                        fontWeight: 900,
-                                        color: '#64748b',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.1em',
-                                        marginBottom: '1.5rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.75rem'
-                                    }}>
-                                        <div style={{ width: '12px', height: '4px', background: '#94a3b8', borderRadius: '2px' }}></div>
-                                        {subArea}
-                                    </h3>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                                        {[...kpis].sort((a, b) => {
-                                            const isMineA = getKPIResponsable(a, currentUser) === currentUser.cargo;
-                                            const isMineB = getKPIResponsable(b, currentUser) === currentUser.cargo;
-                                            if (isMineA && !isMineB) return -1;
-                                            if (!isMineA && isMineB) return 1;
-                                            return 0;
-                                        }).map((kpi, idx) => renderKPICard(kpi, idx, kpi.responsable !== currentUser.cargo))}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        {/* Render others if any */}
-                        {Object.keys(areaGroups).filter(sa => !sortedSubAreas.includes(sa)).map(subArea => (
-                            <div key={`area-${subArea}`}>
-                                {subArea !== 'General' && <h3 style={{ fontSize: '1rem', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', marginBottom: '1.5rem' }}>{subArea}</h3>}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                                    {areaGroups[subArea].map((kpi, idx) => renderKPICard(kpi, idx, kpi.responsable !== currentUser.cargo))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            </div>
-
-            {editingKPI && (
-                <KPIDataForm
-                    kpi={editingKPI}
-                    currentUser={currentUser}
-                    onSave={handleSaveKPI}
-                    onCancel={() => setEditingKPIId(null)}
-                    mode={editMode}
-                    rawUpdates={rawUpdates}
-                    defaultPeriod={
-                        editingKPI.frecuencia === 'MENSUAL'
-                            ? (() => {
-                                  // Siempre el mes actual — consistente con getCurrentPeriodKey
-                                  const now = new Date();
-                                  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                              })()
-                            : undefined
-                    }
-                />
-            )}
-
-            {showBulkGrid && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem', marginTop: '2rem' }}>
                 <BulkKPIDataGrid
                     kpis={myAccessKPIs}
                     currentUser={currentUser}
                     rawUpdates={rawUpdates}
+                    isInline={true}
                     onSave={(kpiId, data) => {
                         if (onUpdateKPI) onUpdateKPI(kpiId, data);
                     }}
-                    onCancel={() => setShowBulkGrid(false)}
                 />
-            )}
+            </div>
 
             {/* Footer Tip */}
             <div style={{
@@ -862,9 +694,9 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                     <Info size={32} />
                 </div>
                 <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.25rem' }}>Tip de Productividad</h4>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.25rem' }}>Consola Unificada de Carga</h4>
                     <p style={{ fontSize: '0.95rem', color: '#64748b', lineHeight: 1.6 }}>
-                        Al completar un indicador en la sección **"Por Alimentar"**, este se moverá automáticamente a **"Listos"**. Mantén ambas compañías al día para una visión clara de la gerencia.
+                        Al alimentar un indicador en la tabla superior, los campos compartidos como <em>ventaTotal</em> se propagarán automáticamente a otros KPIs del mismo período y marca. Presiona <strong>GUARDAR TODO</strong> para registrar las actualizaciones en lote.
                     </p>
                 </div>
             </div>

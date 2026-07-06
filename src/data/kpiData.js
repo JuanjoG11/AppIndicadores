@@ -872,7 +872,10 @@ export const kpiDefinitions = [
         area: 'comercial',
         subArea: 'Cartera y Crédito',
         objetivo: 'Reducir la mora en el recaudo',
-        meta: 80,
+        meta: {
+            UNILEVER: 80,
+            FAMILIA: 80
+        },
         unit: '%',
         frecuencia: 'SEMANAL',
         responsable: 'CARTERA',

@@ -480,24 +480,26 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 else semaphore = 'red';
             }
 
-            // Actualizar desglose por marca.
-            // BUG FIX #4: Solo sobreescribir si el nuevo dato es más reciente que el existente,
-            // evitando que realtime desordenado reemplace datos del periodo actual con datos viejos.
             const oldBrandData = brandValues[dataKey] || {};
             const oldUpdatedAt = oldBrandData.additionalData?.updatedAt || oldBrandData.updatedAt || 0;
             const newUpdatedAt = d.updatedAt || new Date().toISOString();
             const newIsNewer = !oldBrandData.additionalData?.updatedAt || newUpdatedAt >= oldUpdatedAt;
 
+            // BUG FIX: Si es una actualización de META (META_UPDATE), no cambiar el estado de hasData, mantener el que ya tenía.
+            const nextHasData = d.type === 'META_UPDATE' 
+                ? (oldBrandData.hasData ?? false)
+                : (isFromCurrentPeriod ? true : false);
+
             brandValues[dataKey] = {
                 ...oldBrandData,
-                currentValue: shouldShowInDashboard && newIsNewer ? newValue : (oldBrandData.currentValue || 0),
+                currentValue: shouldShowInDashboard && newIsNewer && d.type !== 'META_UPDATE' ? newValue : (oldBrandData.currentValue || 0),
                 meta: targetMeta,
-                compliance: shouldShowInDashboard && newIsNewer ? compliance : (oldBrandData.compliance || 0),
-                semaphore: shouldShowInDashboard && newIsNewer ? semaphore : (oldBrandData.semaphore || 'gray'),
+                compliance: shouldShowInDashboard && newIsNewer && d.type !== 'META_UPDATE' ? compliance : (oldBrandData.compliance || 0),
+                semaphore: shouldShowInDashboard && newIsNewer && d.type !== 'META_UPDATE' ? semaphore : (oldBrandData.semaphore || 'gray'),
                 additionalData: shouldShowInDashboard && newIsNewer ? d : (oldBrandData.additionalData || d),
-                hasData: isFromCurrentPeriod ? true : false
+                hasData: nextHasData
             };
-            console.log(`[applyKPIUpdate] ${kpiId} brand=${currentBrand} period=${recordPeriodIndex} isFromCurrent=${isFromCurrentPeriod} shouldShow=${shouldShowInDashboard} isNewer=${newIsNewer} → hasData=${isFromCurrentPeriod}`);
+            console.log(`[applyKPIUpdate] ${kpiId} brand=${currentBrand} period=${recordPeriodIndex} isFromCurrent=${isFromCurrentPeriod} type=${d.type} → hasData=${nextHasData}`);
 
             // ── CONSOLIDACIÓN DE VALORES PARA EL HISTORIAL ──
             let historyValue = newValue;

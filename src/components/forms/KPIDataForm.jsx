@@ -98,21 +98,25 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         const period = targetPeriod || new Date().toISOString().substring(0, 7);
         const shared = {};
 
-        // Buscar en todos los KPIs del mismo periodo/marca/empresa
+        // Buscar en todos los KPIs del mismo periodo/empresa — independientemente del área/cargo que lo guardó.
+        // Esto permite propagación cruzada entre departamentos: si Comercial guardó ventaTotal,
+        // Gestión Humana lo verá pre-llenado en su KPI si también usa ese campo.
         rawUpdates.forEach(upd => {
             if (upd.kpi_id === kpi.id) return; // skip el propio KPI
             if (upd.additional_data?.type === 'META_UPDATE') return;
             const updPeriod = upd.additional_data?.period || '';
-            const updBrand = upd.additional_data?.brand?.toUpperCase() || '';
+            const updBrand = (upd.additional_data?.brand || '').toUpperCase();
             const updCompany = upd.additional_data?.company || upd.company_id || '';
-            // Mismo mes, misma marca, misma empresa
+            // Mismo mes, misma empresa
             if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
-            if (updBrand !== brandName.toUpperCase()) return;
             if (updCompany !== userEntity) return;
+            // Brand: exact match OR the saved record has no brand (company-level KPI)
+            const brandMatches = updBrand === brandName.toUpperCase() || updBrand === '' || updBrand === userEntity.toUpperCase();
+            if (!brandMatches) return;
             // Extraer campos compartidos usando resolución de alias
             SHARED_FIELDS.forEach(field => {
                 const val = resolveSharedFieldValue(upd.additional_data, field);
-                if (val !== undefined && shared[field] === undefined) {
+                if (val !== undefined && val !== null && val !== '' && shared[field] === undefined) {
                     shared[field] = val;
                 }
             });
