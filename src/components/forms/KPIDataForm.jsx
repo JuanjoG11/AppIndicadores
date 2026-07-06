@@ -98,7 +98,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     const getSharedFieldValues = (brandName, targetPeriod) => {
         if (!rawUpdates || !Array.isArray(rawUpdates)) return {};
-        const period = targetPeriod || new Date().toISOString().substring(0, 7);
+        // Usar el periodo vigente (mes anterior para mensuales) si no se especifica
+        const period = targetPeriod || getCurrentPeriodKey(kpi.frecuencia);
         const shared = {};
 
         // Buscar en todos los KPIs del mismo periodo/empresa — independientemente del área/cargo que lo guardó.
@@ -130,7 +131,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
     const getInitialBrandData = (brandName, targetPeriod = null) => {
         if (!brandName) return {};
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
-        const period = targetPeriod || new Date().toISOString().substring(0, 7); // YYYY-MM
+        // Usar el periodo vigente (mes anterior para mensuales) si no se especifica
+        const period = targetPeriod || getCurrentPeriodKey(kpi.frecuencia);
         
         // 1. Buscar en rawUpdates por periodo EXACTO (Bug Fix #6: evitar startsWith que matchea otros periodos)
         if (rawUpdates && Array.isArray(rawUpdates)) {
