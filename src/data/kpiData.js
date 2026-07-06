@@ -512,10 +512,10 @@ export const kpiDefinitions = [
             FAMILIA: 10
         },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'CARTERA',
         formula: 'TOTAL CARTERA VENCIDA / TOTAL VENTA',
-        sustentacion: 'QUINCENAL',
+        sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
     },
     {
@@ -530,10 +530,10 @@ export const kpiDefinitions = [
             FAMILIA: 5
         },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'CARTERA',
         formula: 'TOTAL MAYOR A 30 / TOTAL CARTERA',
-        sustentacion: 'QUINCENAL',
+        sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
     },
 
@@ -567,10 +567,10 @@ export const kpiDefinitions = [
             UNILEVER: 20
         },
         unit: '%',
-        frecuencia: 'QUINCENAL',
+        frecuencia: 'MENSUAL',
         responsable: 'CARTERA',
         formula: 'VENTA CREDITO / TOTAL VENTA',
-        sustentacion: 'QUINCENAL',
+        sustentacion: 'MENSUAL',
         fuente: 'CONTABILIDAD'
     },
 
@@ -853,11 +853,11 @@ export const kpiDefinitions = [
             FLEISCHMANN: 8
         },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'CARTERA',
         formula: 'VENTA CREDITO / VENTA TOTAL',
         sustentacion: 'COMERCIAL',
-        frecuenciaSustentacion: 'SEMANAL',
+        frecuenciaSustentacion: 'MENSUAL',
         fuente: 'CARTERA'
     },
     {
@@ -872,11 +872,11 @@ export const kpiDefinitions = [
             FAMILIA: 80
         },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'CARTERA',
         formula: 'CARTERA VENCIDA / TOTAL CARTERA',
         sustentacion: 'COMERCIAL',
-        frecuenciaSustentacion: 'SEMANAL',
+        frecuenciaSustentacion: 'MENSUAL',
         fuente: 'CARTERA'
     },
     {

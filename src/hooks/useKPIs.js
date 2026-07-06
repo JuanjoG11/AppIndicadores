@@ -308,6 +308,13 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             if (recordPeriodIndex.length === 7 && frequency !== 'MENSUAL') {
                 recordPeriodIndex = getPeriodIndex(recordDateObj, frequency);
             }
+
+            // COMPATIBILIDAD INVERSA: Si el periodo guardado es granular (semanal/quincenal) pero el KPI
+            // ahora es MENSUAL, colapsarlo a YYYY-MM para que coincida con el periodo actual.
+            if (!isGranularFrequency(frequency)) {
+                const collapsed = toMonthKey(recordPeriodIndex);
+                if (collapsed) recordPeriodIndex = collapsed;
+            }
             
             const currentReportablePeriod = getReportablePeriod(frequency);
             const today = new Date();
