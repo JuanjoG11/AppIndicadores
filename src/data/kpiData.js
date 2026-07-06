@@ -1129,8 +1129,8 @@ export const kpiDefinitions = [
     {
         id: 'pedidos-devueltos',
         name: 'Índice de Devoluciones',
-        area: 'facturacion',
-        subArea: 'Operación Facturación',
+        area: 'logistica',
+        subArea: 'Logística de Entrega',
         objetivo: 'Garantizar el % mas alto de efectividad en la entrega',
         meta: {
             ALPINA: 1.80,
@@ -1141,7 +1141,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'FACTURACION',
+        responsable: 'LOGISTICA',
         formula: 'PEDIDOS DEVUELTOS / PEDIDOS FACTURADOS',
         sustentacion: 'SEMANAL',
         fuente: 'APP DE DEVOLUCIONES'
@@ -1149,8 +1149,8 @@ export const kpiDefinitions = [
     {
         id: 'averias-venta',
         name: 'Índice de Averías',
-        area: 'facturacion',
-        subArea: 'Operación Facturación',
+        area: 'logistica',
+        subArea: 'Logística de Entrega',
         objetivo: 'Optimizar la rentabilidad en la Bodega',
         meta: {
             ALPINA: 0.20,
@@ -1161,7 +1161,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'SEMANAL',
-        responsable: 'FACTURACION',
+        responsable: 'LOGISTICA',
         formula: 'TOTAL AVERIAS / VENTA TOTAL',
         sustentacion: 'QUINCENAL',
         fuente: 'SYT'
@@ -1224,7 +1224,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'DIARIO',
-        responsable: 'LOGISTICA',
+        responsable: 'FACTURACION',
         formula: 'ERRORES / FACTURAS',
         sustentacion: 'SEMANAL',
         fuente: 'REPORTE DE CALIDAD'

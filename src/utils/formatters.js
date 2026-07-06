@@ -259,7 +259,12 @@ export const getCurrentPeriodKey = (frequency) => {
         const fortnight = day <= 15 ? 'Q1' : 'Q2';
         return `${year}-${monthStr}-${fortnight}`;
     }
-    return `${year}-${monthStr}`; // MENSUAL
+    // MENSUAL, BIMESTRAL, SEMESTRAL, ANUAL → el periodo vigente es el mes ANTERIOR
+    // Los analistas siempre cargan el mes vencido
+    const prev = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const prevYear = prev.getFullYear();
+    const prevMonth = (prev.getMonth() + 1).toString().padStart(2, '0');
+    return `${prevYear}-${prevMonth}`;
 };
 
 

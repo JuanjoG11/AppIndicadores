@@ -258,6 +258,16 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
         return list;
     }, [kpis, userEntity, lockedBrand, rowPeriodOverrides]);
 
+    // Group rows by kpi.id for multi-brand display (título único, marcas en columnas)
+    const buildGroupedRows = (rowList) => {
+        const groups = new Map();
+        rowList.forEach(row => {
+            if (!groups.has(row.kpi.id)) groups.set(row.kpi.id, []);
+            groups.get(row.kpi.id).push(row);
+        });
+        return Array.from(groups.values());
+    };
+
     // Initial load: prefill inputs using exact values or shared fields
     useEffect(() => {
         const initial = {};
@@ -645,32 +655,31 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredRows.map(row => {
-                                    const { kpi, brand, period, key } = row;
-                                    const details = getRowDetails(row);
+                                {buildGroupedRows(filteredRows).map(group => {
+                                    const firstRow = group[0];
+                                    const { kpi } = firstRow;
+                                    const isMultiBrandGroup = group.length > 1;
                                     const freq = (kpi.frecuencia || 'MENSUAL').toUpperCase();
                                     const isMonthly = !freq.includes('DIARI') && !freq.includes('SEMANAL') && !freq.includes('QUINCENAL');
                                     const isQuincenal = freq.includes('QUINCENAL');
                                     const isSemanal = freq.includes('SEMANAL');
                                     const isDiario = freq.includes('DIARI');
                                     const currentPeriod = getRowPeriod(kpi);
-                                    const rowSt = rowSaveStatus[key];
 
                                     return (
-                                        <tr key={key} style={{
+                                        <tr key={kpi.id} style={{
                                             borderBottom: '1px solid var(--border-soft)',
                                             transition: 'background 0.15s',
-                                            background: details.originallyLoaded ? '#f8fafc' : 'transparent'
+                                            background: group.every(r => getRowDetails(r).originallyLoaded) ? '#f8fafc' : 'transparent'
                                         }}>
-                                            {/* Column 1: KPI Details + inline period selector */}
-                                            <td style={{ padding: '1rem 1rem' }}>
+                                            {/* Column 1: KPI Details + inline period selector — UNA VEZ */}
+                                            <td style={{ padding: '1rem 1rem', verticalAlign: 'middle' }}>
                                                 <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.35rem' }}>
                                                     {kpi.name}
                                                 </div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.4rem' }}>
                                                     {kpi.subArea || 'General'}
                                                 </div>
-                                                {/* Inline period selector per row */}
                                                 {!isDiario && (
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                                                         <Calendar size={11} color={isQuincenal ? '#059669' : (isSemanal ? '#7c3aed' : 'var(--brand)')} />
@@ -678,8 +687,10 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                                                             value={currentPeriod}
                                                             onChange={e => {
                                                                 setRowPeriodOverrides(prev => ({ ...prev, [kpi.id]: e.target.value }));
-                                                                setGridData(prev => { const n = {...prev}; delete n[key]; return n; });
-                                                                setUserModified(prev => { const n = {...prev}; delete n[key]; return n; });
+                                                                group.forEach(r => {
+                                                                    setGridData(prev => { const n = {...prev}; delete n[r.key]; return n; });
+                                                                    setUserModified(prev => { const n = {...prev}; delete n[r.key]; return n; });
+                                                                });
                                                             }}
                                                             style={{
                                                                 padding: '0.2rem 0.45rem', borderRadius: '7px', fontSize: '0.65rem',
@@ -706,108 +717,221 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                                                 )}
                                             </td>
 
-                                            {/* Column 2: Brand */}
-                                            <td style={{ padding: '1rem 1rem' }}>
-                                                <span style={{
-                                                    padding: '0.25rem 0.5rem', borderRadius: '8px',
-                                                    fontSize: '0.75rem', fontWeight: 800,
-                                                    background: BRAND_TO_ENTITY[brand] === 'TYM' ? '#eff6ff' : '#f0fdf4',
-                                                    color: BRAND_TO_ENTITY[brand] === 'TYM' ? '#1e40af' : '#166534',
-                                                    border: BRAND_TO_ENTITY[brand] === 'TYM' ? '1px solid #dbeafe' : '1px solid #dcfce7'
-                                                }}>
-                                                    {brand}
-                                                </span>
+                                            {/* Column 2: Marca(s) */}
+                                            <td style={{ padding: '1rem 1rem', verticalAlign: 'middle' }}>
+                                                {isMultiBrandGroup ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                                        {group.map(r => (
+                                                            <span key={r.brand} style={{
+                                                                padding: '0.2rem 0.5rem', borderRadius: '8px',
+                                                                fontSize: '0.72rem', fontWeight: 800,
+                                                                background: BRAND_TO_ENTITY[r.brand] === 'TYM' ? '#eff6ff' : '#f0fdf4',
+                                                                color: BRAND_TO_ENTITY[r.brand] === 'TYM' ? '#1e40af' : '#166534',
+                                                                border: BRAND_TO_ENTITY[r.brand] === 'TYM' ? '1px solid #dbeafe' : '1px solid #dcfce7',
+                                                                display: 'inline-block'
+                                                            }}>
+                                                                {r.brand}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <span style={{
+                                                        padding: '0.25rem 0.5rem', borderRadius: '8px',
+                                                        fontSize: '0.75rem', fontWeight: 800,
+                                                        background: BRAND_TO_ENTITY[firstRow.brand] === 'TYM' ? '#eff6ff' : '#f0fdf4',
+                                                        color: BRAND_TO_ENTITY[firstRow.brand] === 'TYM' ? '#1e40af' : '#166534',
+                                                        border: BRAND_TO_ENTITY[firstRow.brand] === 'TYM' ? '1px solid #dbeafe' : '1px solid #dcfce7'
+                                                    }}>
+                                                        {firstRow.brand}
+                                                    </span>
+                                                )}
                                             </td>
 
-                                            {/* Column 3: Frequency & Period */}
-                                            <td style={{ padding: '1rem 1rem' }}>
+                                            {/* Column 3: Frecuencia */}
+                                            <td style={{ padding: '1rem 1rem', verticalAlign: 'middle' }}>
                                                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>
                                                     {kpi.frecuencia}
                                                 </div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                                                    {period}
+                                                    {currentPeriod}
                                                 </div>
                                             </td>
 
-                                            {/* Column 4: Dynamic Inputs */}
-                                            <td style={{ padding: '1rem 1rem' }}>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
-                                                    {details.fields.map(field => {
-                                                        const rowValues = gridData[key] || {};
-                                                        const isShared = ALL_SHARED_FIELDS.includes(field.name);
-
-                                                        return (
-                                                            <div key={field.name}>
-                                                                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                                                    {field.label} {isShared && '🔗'}
+                                            {/* Column 4: Inputs — columnas por marca si hay varias */}
+                                            <td style={{ padding: '1rem 1rem', verticalAlign: 'top' }}>
+                                                {isMultiBrandGroup ? (
+                                                    <div style={{
+                                                        display: 'grid',
+                                                        gridTemplateColumns: `repeat(${group.length}, 1fr)`,
+                                                        gap: '0.75rem'
+                                                    }}>
+                                                        {group.map(row => {
+                                                            const { brand, key } = row;
+                                                            const details = getRowDetails(row);
+                                                            return (
+                                                                <div key={brand} style={{
+                                                                    border: '1px solid var(--border-soft)',
+                                                                    borderRadius: '10px',
+                                                                    overflow: 'hidden'
+                                                                }}>
+                                                                    <div style={{
+                                                                        padding: '0.3rem 0.6rem',
+                                                                        background: BRAND_TO_ENTITY[brand] === 'TYM' ? '#eff6ff' : '#f0fdf4',
+                                                                        fontSize: '0.68rem', fontWeight: 900,
+                                                                        color: BRAND_TO_ENTITY[brand] === 'TYM' ? '#1e40af' : '#166534',
+                                                                        textAlign: 'center'
+                                                                    }}>
+                                                                        {brand}
+                                                                    </div>
+                                                                    <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                                                        {details.fields.map(field => {
+                                                                            const rowValues = gridData[key] || {};
+                                                                            const isShared = ALL_SHARED_FIELDS.includes(field.name);
+                                                                            return (
+                                                                                <div key={field.name}>
+                                                                                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                        {field.label} {isShared && '🔗'}
+                                                                                    </div>
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        inputMode="decimal"
+                                                                                        value={formatInputValue(rowValues[field.name])}
+                                                                                        onChange={e => handleInputChange(key, brand, row.period, field.name, e.target.value)}
+                                                                                        style={{
+                                                                                            width: '100%', padding: '0.35rem 0.5rem',
+                                                                                            borderRadius: '7px', border: '1px solid var(--border-medium)',
+                                                                                            fontSize: '0.78rem', fontWeight: 700, outline: 'none',
+                                                                                            background: 'white', color: 'var(--text-main)',
+                                                                                            borderColor: isShared ? '#93c5fd' : 'var(--border-medium)',
+                                                                                            boxSizing: 'border-box'
+                                                                                        }}
+                                                                                    />
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
                                                                 </div>
-                                                                <input
-                                                                    type="text"
-                                                                    inputMode="decimal"
-                                                                    value={formatInputValue(rowValues[field.name])}
-                                                                    onChange={e => handleInputChange(key, brand, period, field.name, e.target.value)}
-                                                                    style={{
-                                                                        width: '100%', padding: '0.4rem 0.6rem',
-                                                                        borderRadius: '8px', border: '1px solid var(--border-medium)',
-                                                                        fontSize: '0.8rem', fontWeight: 700, outline: 'none',
-                                                                        background: 'white', color: 'var(--text-main)',
-                                                                        borderColor: isShared ? '#93c5fd' : 'var(--border-medium)'
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </td>
-
-                                            {/* Column 5: live result + individual save button */}
-                                            <td style={{ padding: '1rem 1rem' }}>
-                                                {/* Individual Save Button */}
-                                                <div style={{ marginBottom: '0.5rem' }}>
-                                                    <button
-                                                        onClick={() => handleSaveRow(row)}
-                                                        disabled={!details.isComplete || rowSt === 'saving'}
-                                                        title={details.isComplete ? 'Guardar este KPI' : 'Completa todos los campos para guardar'}
-                                                        style={{
-                                                            padding: '0.3rem 0.7rem', borderRadius: '8px', border: 'none',
-                                                            fontSize: '0.7rem', fontWeight: 800,
-                                                            background: rowSt === 'success' ? '#dcfce7' : rowSt === 'error' ? '#fee2e2' : details.isComplete ? 'var(--brand)' : '#e2e8f0',
-                                                            color: rowSt === 'success' ? '#166534' : rowSt === 'error' ? '#991b1b' : details.isComplete ? 'white' : '#94a3b8',
-                                                            cursor: details.isComplete && rowSt !== 'saving' ? 'pointer' : 'not-allowed',
-                                                            display: 'flex', alignItems: 'center', gap: '0.3rem',
-                                                            transition: 'all 0.2s', whiteSpace: 'nowrap'
-                                                        }}
-                                                    >
-                                                        {rowSt === 'saving' ? <RefreshCw size={10} className="spin" /> : <Save size={10} />}
-                                                        {rowSt === 'success' ? '¡Guardado!' : rowSt === 'error' ? 'Error' : 'Guardar'}
-                                                    </button>
-                                                </div>
-
-                                                {details.liveVal !== null ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                        <div>
-                                                            <div style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--text-main)' }}>
-                                                                {kpi.unit === '$' && '$'}
-                                                                {kpi.unit === '$' ? formatNumber(details.liveVal, 0) : (kpi.unit === '%' ? formatNumber(details.liveVal, 2) : formatNumber(details.liveVal, 0))}
-                                                                {kpi.unit !== '$' && kpi.unit}
-                                                            </div>
-                                                            <div style={{
-                                                                fontSize: '0.7rem', fontWeight: 800,
-                                                                color: details.semaphore === 'green' ? 'var(--success)' : (details.semaphore === 'yellow' ? 'var(--warning)' : 'var(--danger)')
-                                                            }}>
-                                                                {details.compliance}% cumpl.
-                                                            </div>
-                                                        </div>
-                                                        <div style={{
-                                                            width: '10px', height: '10px', borderRadius: '50%',
-                                                            background: details.semaphore === 'green' ? 'var(--success)' : (details.semaphore === 'yellow' ? 'var(--warning)' : 'var(--danger)')
-                                                        }} />
+                                                            );
+                                                        })}
                                                     </div>
                                                 ) : (
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                        <AlertTriangle size={12} /> Faltan datos
+                                                    // Una sola marca — layout original
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
+                                                        {getRowDetails(firstRow).fields.map(field => {
+                                                            const rowValues = gridData[firstRow.key] || {};
+                                                            const isShared = ALL_SHARED_FIELDS.includes(field.name);
+                                                            return (
+                                                                <div key={field.name}>
+                                                                    <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                                                        {field.label} {isShared && '🔗'}
+                                                                    </div>
+                                                                    <input
+                                                                        type="text"
+                                                                        inputMode="decimal"
+                                                                        value={formatInputValue(rowValues[field.name])}
+                                                                        onChange={e => handleInputChange(firstRow.key, firstRow.brand, firstRow.period, field.name, e.target.value)}
+                                                                        style={{
+                                                                            width: '100%', padding: '0.4rem 0.6rem',
+                                                                            borderRadius: '8px', border: '1px solid var(--border-medium)',
+                                                                            fontSize: '0.8rem', fontWeight: 700, outline: 'none',
+                                                                            background: 'white', color: 'var(--text-main)',
+                                                                            borderColor: isShared ? '#93c5fd' : 'var(--border-medium)'
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
+                                            </td>
+
+                                            {/* Column 5: Cálculo live + botón guardar */}
+                                            <td style={{ padding: '1rem 1rem', verticalAlign: 'top' }}>
+                                                {isMultiBrandGroup ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                                        {group.map(row => {
+                                                            const details = getRowDetails(row);
+                                                            const rowSt = rowSaveStatus[row.key];
+                                                            return (
+                                                                <div key={row.brand} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                    <button
+                                                                        onClick={() => handleSaveRow(row)}
+                                                                        disabled={!details.isComplete || rowSt === 'saving'}
+                                                                        style={{
+                                                                            padding: '0.3rem 0.7rem', borderRadius: '8px', border: 'none',
+                                                                            fontSize: '0.7rem', fontWeight: 800,
+                                                                            background: rowSt === 'success' ? '#dcfce7' : rowSt === 'error' ? '#fee2e2' : details.isComplete ? 'var(--brand)' : '#e2e8f0',
+                                                                            color: rowSt === 'success' ? '#166534' : rowSt === 'error' ? '#991b1b' : details.isComplete ? 'white' : '#94a3b8',
+                                                                            cursor: details.isComplete && rowSt !== 'saving' ? 'pointer' : 'not-allowed',
+                                                                            whiteSpace: 'nowrap', transition: 'all 0.2s'
+                                                                        }}
+                                                                    >
+                                                                        {rowSt === 'success' ? '✓' : rowSt === 'error' ? '✗' : rowSt === 'saving' ? '...' : '⬆ Guardar'}
+                                                                    </button>
+                                                                    {details.liveVal !== null && (
+                                                                        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: details.semaphore === 'green' ? '#059669' : details.semaphore === 'red' ? '#dc2626' : '#f59e0b' }}>
+                                                                            {details.liveVal} {kpi.unit}
+                                                                        </span>
+                                                                    )}
+                                                                    {details.liveVal === null && (
+                                                                        <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Faltan datos</span>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (() => {
+                                                    const details = getRowDetails(firstRow);
+                                                    const rowSt = rowSaveStatus[firstRow.key];
+                                                    return (
+                                                        <div>
+                                                            <div style={{ marginBottom: '0.5rem' }}>
+                                                                <button
+                                                                    onClick={() => handleSaveRow(firstRow)}
+                                                                    disabled={!details.isComplete || rowSt === 'saving'}
+                                                                    title={details.isComplete ? 'Guardar este KPI' : 'Completa todos los campos para guardar'}
+                                                                    style={{
+                                                                        padding: '0.3rem 0.7rem', borderRadius: '8px', border: 'none',
+                                                                        fontSize: '0.7rem', fontWeight: 800,
+                                                                        background: rowSt === 'success' ? '#dcfce7' : rowSt === 'error' ? '#fee2e2' : details.isComplete ? 'var(--brand)' : '#e2e8f0',
+                                                                        color: rowSt === 'success' ? '#166534' : rowSt === 'error' ? '#991b1b' : details.isComplete ? 'white' : '#94a3b8',
+                                                                        cursor: details.isComplete && rowSt !== 'saving' ? 'pointer' : 'not-allowed',
+                                                                        display: 'flex', alignItems: 'center', gap: '0.3rem',
+                                                                        transition: 'all 0.2s', whiteSpace: 'nowrap'
+                                                                    }}
+                                                                >
+                                                                    {rowSt === 'saving' ? <RefreshCw size={10} className="spin" /> : <Save size={10} />}
+                                                                    {rowSt === 'success' ? '¡Guardado!' : rowSt === 'error' ? 'Error' : 'Guardar'}
+                                                                </button>
+                                                            </div>
+                                                            {details.liveVal !== null ? (
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                    <div>
+                                                                        <div style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--text-main)' }}>
+                                                                            {kpi.unit === '$' && '$'}
+                                                                            {kpi.unit === '$' ? formatNumber(details.liveVal, 0) : (kpi.unit === '%' ? formatNumber(details.liveVal, 2) : formatNumber(details.liveVal, 0))}
+                                                                            {kpi.unit !== '$' && kpi.unit}
+                                                                        </div>
+                                                                        <div style={{
+                                                                            fontSize: '0.7rem', fontWeight: 800,
+                                                                            color: details.semaphore === 'green' ? 'var(--success)' : (details.semaphore === 'yellow' ? 'var(--warning)' : 'var(--danger)')
+                                                                        }}>
+                                                                            {details.compliance}% cumpl.
+                                                                        </div>
+                                                                    </div>
+                                                                    <div style={{
+                                                                        width: '10px', height: '10px', borderRadius: '50%',
+                                                                        background: details.semaphore === 'green' ? 'var(--success)' : (details.semaphore === 'yellow' ? 'var(--warning)' : 'var(--danger)')
+                                                                    }} />
+                                                                </div>
+                                                            ) : (
+                                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                    <AlertTriangle size={12} /> Faltan datos
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()}
                                             </td>
                                         </tr>
                                     );

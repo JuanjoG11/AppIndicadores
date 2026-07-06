@@ -168,6 +168,66 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         return getSharedFieldValues(brandName, period);
     };
 
+    // ── Multi-marca: modo columnas (solo data, no meta) ──────────────────────
+    // Cuando el usuario tiene 2+ marcas, se muestra una columna por marca.
+    const isMultiBrand = !isMetaMode && commercialBrands.length > 1;
+
+    // Estado por marca: { FLEISCHMANN: { campo1: '', ... }, ZENU: { ... } }
+    const [multiFormData, setMultiFormData] = useState(() => {
+        if (!isMultiBrand) return {};
+        const d = new Date();
+        let initialPeriod = defaultPeriod;
+        if (!initialPeriod) {
+            if (kpi.frecuencia === 'SEMANAL') {
+                const dd = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                const day = dd.getUTCDay() || 7;
+                dd.setUTCDate(dd.getUTCDate() + 4 - day);
+                const yearStart = new Date(Date.UTC(dd.getUTCFullYear(), 0, 1));
+                const week = Math.ceil((((dd - yearStart) / 86400000) + 1) / 7);
+                initialPeriod = `${dd.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+            } else if (kpi.frecuencia === 'QUINCENAL') {
+                const q = d.getDate() <= 15 ? 'Q1' : 'Q2';
+                initialPeriod = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${q}`;
+            } else {
+                // MENSUAL, BIMESTRAL → mes anterior
+                const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+                initialPeriod = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}`;
+            }
+        }
+        const map = {};
+        commercialBrands.forEach(brand => {
+            map[brand] = {
+                brand,
+                company: userEntity,
+                period: initialPeriod,
+                ...getInitialBrandData(brand, initialPeriod)
+            };
+        });
+        return map;
+    });
+
+    const handleMultiChange = (brand, fieldName, value) => {
+        setMultiFormData(prev => {
+            const updated = {
+                ...prev,
+                [brand]: {
+                    ...prev[brand],
+                    [fieldName]: value,
+                    ...(fieldName === 'period' ? { periodSelectedByUser: true } : {})
+                }
+            };
+            // Sync shared fields across all brands of same entity
+            if (ALL_SHARED_FIELDS.includes(fieldName)) {
+                commercialBrands.forEach(b => {
+                    if (b !== brand && BRAND_TO_ENTITY[b] === userEntity) {
+                        updated[b] = { ...updated[b], [fieldName]: value };
+                    }
+                });
+            }
+            return updated;
+        });
+    };
+
     // Inicializar con datos previos si existen
     const drafts = useRef({});
     const lastInput = useRef(null);
@@ -196,9 +256,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 const quincena = d.getDate() <= 15 ? 'Q1' : 'Q2';
                 initialPeriod = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${quincena}`;
             } else if (kpi.frecuencia === 'MENSUAL') {
-                initialPeriod = d.toISOString().substring(0, 7);
+                // El periodo vigente para mensuales es el mes anterior (carga de mes vencido)
+                const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+                initialPeriod = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
             } else if (kpi.frecuencia === 'BIMESTRAL') {
-                initialPeriod = d.toISOString().substring(0, 7);
+                const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+                initialPeriod = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
             }
         }
         const savedDraft = drafts.current[`${defaultBrand}-${initialPeriod}`];
@@ -390,6 +453,47 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
     const greenThreshold = isStrict ? 100 : 95;
     isMeetingMeta = liveResult !== null && compliance >= greenThreshold;
+
+    const handleMultiSubmit = (e) => {
+        e.preventDefault();
+        const cleanNumeric = (data) => {
+            const cleaned = { ...data };
+            const skipKeys = ['brand', 'period', 'company', 'newFrecuencia', 'detalleFaltante', 'type', 'id', 'value', 'periodSelectedByUser'];
+            Object.keys(cleaned).forEach(key => {
+                if (skipKeys.includes(key)) return;
+                if (typeof cleaned[key] === 'string' && cleaned[key].trim() !== '') {
+                    let valStr = cleaned[key].trim().replace(/\s/g, '');
+                    if (valStr.includes(',') && valStr.includes('.')) valStr = valStr.replace(/\./g, '').replace(',', '.');
+                    else if (valStr.includes(',')) valStr = valStr.replace(',', '.');
+                    else valStr = valStr.replace(/\./g, '');
+                    const parsed = parseFloat(valStr);
+                    if (!isNaN(parsed)) cleaned[key] = parsed;
+                }
+            });
+            return cleaned;
+        };
+        const formulaFields = getFormulaFields().map(f => f.name);
+        let savedCount = 0;
+        commercialBrands.forEach(brand => {
+            const data = cleanNumeric(multiFormData[brand] || {});
+            const hasValue = formulaFields.some(fname => {
+                const v = data[fname];
+                return v !== undefined && v !== null && v !== '' && !isNaN(Number(v));
+            });
+            if (hasValue) {
+                onSave(kpi.id, { ...data, type: 'DATA_UPDATE' });
+                savedCount++;
+            }
+        });
+        if (savedCount === 0) {
+            setFormError('Ingresa al menos un valor antes de guardar.');
+            return;
+        }
+        setFormError('');
+        setSuccessMessage(`¡Datos guardados para ${savedCount} marca${savedCount > 1 ? 's' : ''}!`);
+        setSaveSuccess(true);
+        setTimeout(() => { setSaveSuccess(false); setSuccessMessage(''); }, 3000);
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -628,7 +732,185 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                             {formError}
                         </div>
                     )}
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={isMultiBrand ? handleMultiSubmit : handleSubmit}>
+                        {/* ── MULTI-MARCA: layout columnas ───────────────────── */}
+                        {isMultiBrand && (
+                            <div>
+                                {/* Periodo compartido */}
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1rem', color: '#1e293b' }}>
+                                        <Calendar size={16} color="var(--brand)" />
+                                        PERIODO DE CARGA ({kpi.frecuencia})
+                                    </label>
+                                    {/* Selector de periodo reutilizando el valor de la primera marca */}
+                                    {(() => {
+                                        const period = multiFormData[commercialBrands[0]]?.period || '';
+                                        const setPeriod = (val) => {
+                                            setMultiFormData(prev => {
+                                                const updated = { ...prev };
+                                                commercialBrands.forEach(b => {
+                                                    updated[b] = { ...updated[b], period: val, periodSelectedByUser: true };
+                                                });
+                                                return updated;
+                                            });
+                                        };
+                                        if (kpi.frecuencia === 'DIARIO') return (
+                                            <input type="date" value={period} onChange={e => setPeriod(e.target.value)}
+                                                style={{ padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0', fontSize: '0.95rem', fontWeight: 800, color: '#1e293b', background: '#f8fafc' }} />
+                                        );
+                                        if (kpi.frecuencia === 'SEMANAL') {
+                                            const yMatch = period.match(/^\d{4}/);
+                                            const currentYear = yMatch ? yMatch[0] : new Date().getFullYear().toString();
+                                            const wMatch = period.match(/W(\d{2})/);
+                                            const currentWeek = wMatch ? wMatch[1] : '01';
+                                            return (
+                                                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                    <select value={currentYear} onChange={e => setPeriod(`${e.target.value}-W${currentWeek}`)}
+                                                        style={{ padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0', fontSize: '0.95rem', fontWeight: 800, background: '#f8fafc' }}>
+                                                        <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                                                        <option value={(new Date().getFullYear()-1).toString()}>{new Date().getFullYear()-1}</option>
+                                                    </select>
+                                                    <select value={currentWeek} onChange={e => setPeriod(`${currentYear}-W${e.target.value}`)}
+                                                        style={{ padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0', fontSize: '0.95rem', fontWeight: 800, background: '#f8fafc' }}>
+                                                        {Array.from({length:53},(_,i)=>String(i+1).padStart(2,'0')).map(w=>(
+                                                            <option key={w} value={w}>Semana {w}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            );
+                                        }
+                                        // MENSUAL / BIMESTRAL / QUINCENAL
+                                        const yMatch = period.match(/^\d{4}/);
+                                        const currentYear = yMatch ? yMatch[0] : new Date().getFullYear().toString();
+                                        const mMatch = period.match(/(?:^\d{4}-)(\d{2})/);
+                                        const currentMonth = mMatch ? mMatch[1] : String(new Date().getMonth()+1).padStart(2,'0');
+                                        return (
+                                            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                <select value={currentYear} onChange={e => setPeriod(`${e.target.value}-${currentMonth}`)}
+                                                    style={{ padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0', fontSize: '0.95rem', fontWeight: 800, background: '#f8fafc' }}>
+                                                    <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                                                    <option value={(new Date().getFullYear()-1).toString()}>{new Date().getFullYear()-1}</option>
+                                                </select>
+                                                <select value={currentMonth} onChange={e => setPeriod(`${currentYear}-${e.target.value}`)}
+                                                    style={{ padding: '0.85rem 1.25rem', borderRadius: '14px', border: '2px solid #e2e8f0', fontSize: '0.95rem', fontWeight: 800, background: '#f8fafc' }}>
+                                                    {MONTH_NAMES.map((name,i) => (
+                                                        <option key={i+1} value={String(i+1).padStart(2,'0')}>{name.toUpperCase()}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+
+                                {/* Columnas por marca */}
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: `repeat(${commercialBrands.length}, 1fr)`,
+                                    gap: '1rem',
+                                    marginBottom: '2rem'
+                                }}>
+                                    {commercialBrands.map(brand => {
+                                        const bData = multiFormData[brand] || {};
+                                        const bLiveResult = calculateKPIValue(kpi.id, bData);
+                                        const bMeta = kpi.meta?.[brand] ?? (typeof kpi.meta === 'number' ? kpi.meta : 0);
+                                        let bCompliance = 0;
+                                        if (bMeta === 0 && bLiveResult === 0) bCompliance = isInverse ? 100 : 0;
+                                        else if (bMeta === 0 && bLiveResult > 0) bCompliance = isInverse ? 0 : 100;
+                                        else if (typeof bMeta === 'number') {
+                                            bCompliance = isInverse ? (bLiveResult !== 0 ? (bMeta/bLiveResult)*100 : 0) : (bMeta !== 0 ? (bLiveResult/bMeta)*100 : 0);
+                                            bCompliance = Math.min(Math.max(Math.round(bCompliance||0),0),100);
+                                        }
+                                        const bMeeting = bLiveResult !== null && bCompliance >= (isStrict ? 100 : 95);
+                                        const bPending = isBrandPending(brand);
+
+                                        return (
+                                            <div key={brand} style={{
+                                                border: `2px solid ${bPending ? '#e2e8f0' : '#10b981'}`,
+                                                borderRadius: '20px',
+                                                overflow: 'hidden'
+                                            }}>
+                                                {/* Cabecera de marca */}
+                                                <div style={{
+                                                    padding: '0.75rem 1rem',
+                                                    background: bPending ? '#f8fafc' : '#ecfdf5',
+                                                    textAlign: 'center',
+                                                    fontWeight: 900,
+                                                    fontSize: '0.85rem',
+                                                    color: bPending ? '#64748b' : '#059669',
+                                                    borderBottom: '1px solid #e2e8f0',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '0.4rem'
+                                                }}>
+                                                    {!bPending && <CheckCircle2 size={14} />}
+                                                    {brand}
+                                                    <span style={{ fontSize: '0.65rem', opacity: 0.6, fontWeight: 700 }}>
+                                                        · Meta: {isInverse ? '≤' : '≥'} {bMeta} {kpi.unit}
+                                                    </span>
+                                                </div>
+
+                                                {/* Campos de fórmula */}
+                                                <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                    {getFormulaFields().map(field => (
+                                                        <div key={field.name}>
+                                                            <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, marginBottom: '0.35rem', color: '#334155' }}>
+                                                                {field.label}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                inputMode="decimal"
+                                                                value={(() => {
+                                                                    const val = bData[field.name];
+                                                                    if (val == null || val === '') return '';
+                                                                    const str = val.toString().replace(/\./g, '');
+                                                                    const [int, dec] = str.split(',');
+                                                                    const fmt = int.replace(/\D/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+                                                                    return dec !== undefined ? `${fmt},${dec}` : fmt;
+                                                                })()}
+                                                                onChange={e => handleMultiChange(brand, field.name, e.target.value)}
+                                                                placeholder={field.placeholder || '0'}
+                                                                autoComplete="off"
+                                                                style={{
+                                                                    width: '100%', padding: '0.75rem 1rem',
+                                                                    border: '2px solid #e2e8f0', borderRadius: '12px',
+                                                                    fontSize: '1rem', fontWeight: 800, color: '#1e293b',
+                                                                    background: '#f8fafc', outline: 'none', boxSizing: 'border-box'
+                                                                }}
+                                                                onFocus={e => e.currentTarget.style.borderColor = 'var(--brand)'}
+                                                                onBlur={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Resultado en vivo por marca */}
+                                                {bLiveResult !== null && (
+                                                    <div style={{
+                                                        margin: '0 1rem 1rem',
+                                                        padding: '0.6rem 1rem',
+                                                        borderRadius: '12px',
+                                                        background: bMeeting ? '#ecfdf5' : '#fef2f2',
+                                                        border: `1px solid ${bMeeting ? '#10b981' : '#ef4444'}`,
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center'
+                                                    }}>
+                                                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b' }}>Resultado</span>
+                                                        <span style={{ fontSize: '1rem', fontWeight: 900, color: bMeeting ? '#059669' : '#dc2626' }}>
+                                                            {bLiveResult} {kpi.unit} · {bCompliance}%
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── MODO NORMAL (una marca o modo meta) ─────────────── */}
+                        {!isMultiBrand && (<>
                         {/* BRAND / ENTITY SELECTION - PREMIUM CHIPS */}
                         {(isMetaMode || (!isMetaMode && (hasCommercialBrands || kpi.meta?.TYM !== undefined || kpi.meta?.TAT !== undefined))) && (
                             <div style={{ marginBottom: '2rem' }}>
@@ -1130,8 +1412,11 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                             </div>
                         )}
 
-                        {/* LIVE RESULT CARD - WOW FACTOR */}
-                        {!isMetaMode && liveResult !== null && (
+                        {/* ── Cierre modo normal ── */}
+                        </>)}
+
+                        {/* LIVE RESULT CARD - solo en modo normal/una marca */}
+                        {!isMultiBrand && !isMetaMode && liveResult !== null && (
                             <div className="premium-shadow" style={{
                                 marginBottom: '2.5rem', padding: '2rem',
                                 background: isMeetingMeta ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)' : 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
