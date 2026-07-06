@@ -383,14 +383,23 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 const parsedNewMeta = typeof rawNewMeta === 'string' ? parseFloat(rawNewMeta) : rawNewMeta;
                 if (rawNewMeta !== undefined && rawNewMeta !== null && rawNewMeta !== '' && !isNaN(parsedNewMeta)) {
                     const scope = d.brand;
+                    const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
                     if (!scope || scope === 'Global' || scope === 'global' || scope === currentCompany) {
-                        const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
-                        kpi.meta = { ...currentMeta, [currentCompany]: parsedNewMeta };
+                        // Meta global de empresa: propagar a todas las marcas que pertenecen a esta empresa
+                        const brandsOfCompany = Object.keys(currentMeta).filter(b =>
+                            BRAND_TO_ENTITY[b] === currentCompany || b === currentCompany
+                        );
+                        if (brandsOfCompany.length > 0) {
+                            const updatedMeta = { ...currentMeta };
+                            brandsOfCompany.forEach(b => { updatedMeta[b] = parsedNewMeta; });
+                            kpi.meta = updatedMeta;
+                        } else {
+                            kpi.meta = { ...currentMeta, [currentCompany]: parsedNewMeta };
+                        }
                     } else {
                         const staticDef = kpiDefinitions.find(s => s.id === kpiId);
                         const originalHasBrand = staticDef && staticDef.meta && typeof staticDef.meta === 'object' && staticDef.meta.hasOwnProperty(scope);
                         if (originalHasBrand) {
-                            const currentMeta = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
                             kpi.meta = { ...currentMeta, [scope]: parsedNewMeta };
                         }
                     }
@@ -795,13 +804,21 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 const parsedMeta = typeof rawMeta === 'string' ? parseFloat(rawMeta) : rawMeta;
                                 if (rawMeta !== undefined && rawMeta !== null && rawMeta !== '' && !isNaN(parsedMeta)) {
                                     const scope = d.brand;
+                                    const base = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
                                     if (!scope || scope === 'Global' || scope === 'global') {
-                                        const base = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
-                                        // Usar la empresa del additional_data si existe, si no usar el company_id del registro
+                                        // Meta global de empresa: propagar a todas las marcas que pertenecen a esta empresa
                                         const companyScope = d.company || upd.additional_data?.company || 'TYM';
-                                        newMeta = { ...base, [companyScope]: parsedMeta };
+                                        const brandsOfCompany = Object.keys(base).filter(b =>
+                                            BRAND_TO_ENTITY[b] === companyScope || b === companyScope
+                                        );
+                                        if (brandsOfCompany.length > 0) {
+                                            const updatedMeta = { ...base };
+                                            brandsOfCompany.forEach(b => { updatedMeta[b] = parsedMeta; });
+                                            newMeta = updatedMeta;
+                                        } else {
+                                            newMeta = { ...base, [companyScope]: parsedMeta };
+                                        }
                                     } else {
-                                        const base = (kpi.meta && typeof kpi.meta === 'object') ? { ...kpi.meta } : { global: kpi.meta };
                                         newMeta = { ...base, [scope]: parsedMeta };
                                     }
                                     console.log(`🎯 Meta restaurada desde DB: ${kpi.id} ${d.brand || 'global'} → ${parsedMeta}`);
