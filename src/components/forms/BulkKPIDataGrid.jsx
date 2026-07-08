@@ -489,6 +489,7 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
             const payload = {
                 brand: row.brand,
                 period: row.period,
+                company: userEntity,
                 ...details.parsedData,
                 type: 'DATA_UPDATE'
             };
@@ -518,6 +519,7 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                         const payload = {
                             brand: row.brand,
                             period: row.period,
+                            company: userEntity,
                             ...details.parsedData,
                             type: 'DATA_UPDATE'
                         };
