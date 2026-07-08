@@ -202,11 +202,30 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
     const getReportablePeriod = (frequency = 'MENSUAL') => {
         const now = new Date();
         const freq = (frequency || 'MENSUAL').toUpperCase();
-        // Para granulares (DIARIO, SEMANAL, QUINCENAL) usar el periodo actual
-        if (isGranularFrequency(freq) || freq.includes('DIARI')) {
+        // DIARIO → periodo actual (hoy)
+        if (freq.includes('DIARI')) {
             return getPeriodIndex(now, frequency);
         }
-        // Para MENSUAL, BIMESTRAL, SEMESTRAL, ANUAL → el periodo vigente es el mes anterior
+        // SEMANAL → semana anterior (última semana completada)
+        if (freq.includes('SEMANAL')) {
+            const prev = new Date(now);
+            prev.setDate(now.getDate() - 7);
+            return getPeriodIndex(prev, frequency);
+        }
+        // QUINCENAL → quincena anterior completada
+        if (freq.includes('QUINCENAL')) {
+            const day = now.getDate();
+            if (day <= 15) {
+                // Estamos en Q1 → la última quincena completada es Q2 del mes anterior
+                const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 20);
+                return getPeriodIndex(prevMonth, frequency);
+            } else {
+                // Estamos en Q2 → la última quincena completada es Q1 de este mes
+                const q1 = new Date(now.getFullYear(), now.getMonth(), 1);
+                return getPeriodIndex(q1, frequency);
+            }
+        }
+        // MENSUAL, BIMESTRAL, SEMESTRAL, ANUAL → mes anterior
         const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         return getPeriodIndex(prev, frequency);
     };

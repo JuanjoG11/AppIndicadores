@@ -185,8 +185,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         if (!initialPeriod) {
             if (kpi.frecuencia === 'SEMANAL') {
                 const dd = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-                const day = dd.getUTCDay() || 7;
-                dd.setUTCDate(dd.getUTCDate() + 4 - day);
+                const dow = dd.getUTCDay() || 7;
+                // Semana anterior
+                dd.setUTCDate(dd.getUTCDate() - (dow - 1) - 7);
+                dd.setUTCDate(dd.getUTCDate() + 4 - (dd.getUTCDay() || 7));
                 const yearStart = new Date(Date.UTC(dd.getUTCFullYear(), 0, 1));
                 const week = Math.ceil((((dd - yearStart) / 86400000) + 1) / 7);
                 initialPeriod = `${dd.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
@@ -247,16 +249,18 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             initialPeriod = d.toISOString().split('T')[0]; // Default Day
             
             if (kpi.frecuencia === 'SEMANAL') {
-                // ISO week: mismo algoritmo que date-fns format(d, "yyyy-'W'II")
-                const isoWeek = (dt) => {
+                // Semana anterior (última semana completada)
+                const isoWeekPrev = (dt) => {
                     const d = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()));
-                    const day = d.getUTCDay() || 7;
-                    d.setUTCDate(d.getUTCDate() + 4 - day);
+                    const dow = d.getUTCDay() || 7;
+                    // Ir al lunes de la semana anterior
+                    d.setUTCDate(d.getUTCDate() - (dow - 1) - 7);
+                    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
                     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
                     const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
                     return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
                 };
-                initialPeriod = isoWeek(d);
+                initialPeriod = isoWeekPrev(d);
             } else if (kpi.frecuencia === 'QUINCENAL') {
                 const quincena = d.getDate() <= 15 ? 'Q1' : 'Q2';
                 initialPeriod = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${quincena}`;

@@ -248,9 +248,13 @@ export const getCurrentPeriodKey = (frequency) => {
         return `${year}-${monthStr}-${day.toString().padStart(2, '0')}`;
     }
     if (freq.includes('SEMANAL')) {
+        // El periodo vigente es la semana anterior (última semana completada)
+        // igual que los mensuales usan el mes anterior
         const d = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
         const dow = d.getUTCDay() || 7;
-        d.setUTCDate(d.getUTCDate() + 4 - dow);
+        // Ir al lunes de esta semana, luego restar 7 días para llegar a la semana anterior
+        d.setUTCDate(d.getUTCDate() - (dow - 1) - 7);
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); // ISO Thursday de la semana anterior
         const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
         const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
