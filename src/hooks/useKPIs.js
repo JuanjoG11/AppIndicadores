@@ -358,15 +358,15 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const currentReportablePeriod = getReportablePeriod(frequency);
             const today = new Date();
             const actualCurrentPeriod = getPeriodIndex(today, frequency);
-            // Mes reportable (anterior para mensuales) en YYYY-MM
+            // Periodo reportable: mes/semana/quincena anterior
             const currentMonthNorm = toMonthKey(currentReportablePeriod) || currentReportablePeriod;
-            // Mes calendario actual en YYYY-MM (para aceptar también carga del mes en curso)
-            const calendarMonthNorm = toMonthKey(actualCurrentPeriod) || actualCurrentPeriod;
             const recordMonthNorm = toMonthKey(recordPeriodIndex) || recordPeriodIndex;
 
             // Periodos comparativos
-            const isStrictCurrent = recordPeriodIndex === currentReportablePeriod || recordPeriodIndex === actualCurrentPeriod;
-            const isSameMonthNorm = currentMonthNorm === recordMonthNorm || calendarMonthNorm === recordMonthNorm;
+            // Para granulares: solo aceptar el periodo reportable exacto (semana/quincena anterior)
+            // Para no granulares: aceptar el mes reportable
+            const isStrictCurrent = recordPeriodIndex === currentReportablePeriod;
+            const isSameMonthNorm = currentMonthNorm === recordMonthNorm;
 
             // Comparación cruzada de meses para frecuencias gruesas
             const recordMonth = periodToMonth(recordPeriodIndex);
@@ -377,23 +377,15 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const granular = isGranularFrequency(frequency);
             const isFromCurrentPeriod = !forceHistorical && (
                 granular
-                    ? isStrictCurrent
+                    ? isStrictCurrent  // solo el periodo reportable exacto
                     : (
                         isStrictCurrent || 
                         isSameMonthNorm ||
                         isCrossPeriodMatch ||
-                        recordPeriodIndex === currentReportablePeriod ||
                         (frequency === 'BIMESTRAL' && isSameBimonthlyPeriod(recordPeriodIndex, currentReportablePeriod))
                     )
             );
-            const shouldShowInDashboard = !forceHistorical && (
-                isStrictCurrent ||
-                isSameMonthNorm ||
-                isCrossPeriodMatch ||
-                recordPeriodIndex === currentReportablePeriod ||
-                (frequency === 'BIMESTRAL' && isSameBimonthlyPeriod(recordPeriodIndex, currentReportablePeriod)) ||
-                recordMonthNorm === currentMonthNorm
-            );
+            const shouldShowInDashboard = isFromCurrentPeriod;
             
             // Enriquecer datos con el periodo calculado si falta
             const updatedAdditionalData = {
@@ -940,12 +932,10 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 // Bug fix: obtener freq y targetMeta del estado del KPI (ya con metas/frecuencias
                                 // del gerente aplicadas en el paso 3b), no del kpiDef estático.
                                 const freq = (kpi.frecuencia || kpiDef.frecuencia || 'MENSUAL').toUpperCase();
-                                const currentPeriodKey = getReportablePeriod(freq); // mes anterior para MENSUAL
-                                const strictCurrentPeriod = getPeriodIndex(new Date(), freq); // mes calendario actual
-                                // Mes reportable en YYYY-MM
+                                const currentPeriodKey = getReportablePeriod(freq); // periodo anterior (semana/mes/quincena vencida)
+                                const strictCurrentPeriod = getPeriodIndex(new Date(), freq); // periodo actual (no usar para dashboard)
+                                // Periodo reportable en YYYY-MM
                                 const currentMonthKey = toMonthKey(currentPeriodKey) || currentPeriodKey;
-                                // Mes calendario actual en YYYY-MM (para aceptar también datos del mes en curso)
-                                const calendarMonthKey = toMonthKey(strictCurrentPeriod) || strictCurrentPeriod;
                                 const groupMonthKey = toMonthKey(group.periodKey) || group.periodKey;
 
                                 const recordMonth = periodToMonth(group.periodKey);
@@ -954,13 +944,13 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                                            recordMonth && recordMonth === currentMonth;
 
                                 const granular = isGranularFrequency(freq);
+                                // Para granulares: solo aceptar el periodo reportable exacto
+                                // Para no granulares: aceptar el mes reportable
                                 const isFromCurrentPeriod = granular
-                                    ? (group.periodKey === currentPeriodKey || group.periodKey === strictCurrentPeriod)
+                                    ? (group.periodKey === currentPeriodKey)
                                     : (
                                         group.periodKey === currentPeriodKey ||
-                                        group.periodKey === strictCurrentPeriod ||
                                         groupMonthKey === currentMonthKey ||
-                                        groupMonthKey === calendarMonthKey ||
                                         isCrossPeriodMatch ||
                                         (freq === 'BIMESTRAL' && isSameBimonthlyPeriod(group.periodKey, currentPeriodKey))
                                     );
@@ -1073,8 +1063,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 if (hIdx >= 0) history[hIdx] = { ...history[hIdx], ...historyPoint };
                                 else history.push(historyPoint);
 
-                                // Para dashboard: mostramos valor si es del periodo vigente (mes anterior para mensuales)
-                                const shouldShowInDashboard = isFromCurrentPeriod || groupMonthKey === currentMonthKey || groupMonthKey === calendarMonthKey;
+                                // Para dashboard: mostrar solo si es del periodo reportable
+                                const shouldShowInDashboard = isFromCurrentPeriod;
                                 const brandValues = { ...(kpi.brandValues || {}) };
                                 const oldBrandEntry = brandValues[dataKey] || {};
                                 // BUG FIX #4 (batch): solo sobreescribir si el nuevo dato es más reciente
