@@ -543,10 +543,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const nextHasData = d.type === 'META_UPDATE' 
                 ? (oldBrandData.hasData ?? false)
                 // Para DIARIO: nunca preservar hasData de otro día
-                // Para SEMANAL/MENSUAL: preservar si ya había hasData del periodo correcto
-                : (isFromCurrentPeriod ? true : (
-                    (frequency === 'DIARIO' || frequency === 'DIARIA') ? false : (oldBrandData.hasData === true ? true : false)
-                ));
+                // Para SEMANAL/MENSUAL: preservar solo si el dato NO es de un mes futuro al reportable
+                : (isFromCurrentPeriod ? true : (() => {
+                    if (frequency === 'DIARIO' || frequency === 'DIARIA') return false;
+                    const dataMonthKey = toMonthKey(recordPeriodIndex) || recordPeriodIndex;
+                    const reportableMonthKey = toMonthKey(currentReportablePeriod) || currentReportablePeriod;
+                    if (dataMonthKey > reportableMonthKey) return false; // dato futuro → limpiar
+                    return oldBrandData.hasData === true ? true : false;
+                })());
 
             brandValues[dataKey] = {
                 ...oldBrandData,
@@ -1089,10 +1093,14 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                     semaphore: shouldShowInDashboard && batchIsNewer ? semaphore : (oldBrandEntry.semaphore ?? semaphore),
                                     // hasData: true si es del periodo reportable
                                     // Para DIARIO: nunca preservar hasData de otro día
-                                    // Para SEMANAL/MENSUAL: preservar si había hasData del mes correcto
-                                    hasData: isFromCurrentPeriod ? true : (
-                                        (freq === 'DIARIO' || freq === 'DIARIA') ? false : (oldBrandEntry.hasData === true ? true : false)
-                                    ),
+                                    // Para SEMANAL/MENSUAL: preservar solo si el dato previo era del mes correcto
+                                    // NUNCA preservar si este dato es de un mes futuro al reportable
+                                    hasData: isFromCurrentPeriod ? true : (() => {
+                                        if (freq === 'DIARIO' || freq === 'DIARIA') return false;
+                                        const dataMonthKey = toMonthKey(group.periodKey) || group.periodKey;
+                                        if (dataMonthKey > currentMonthKey) return false; // dato futuro → limpiar
+                                        return oldBrandEntry.hasData === true ? true : false;
+                                    })(),
                                     additionalData: shouldShowInDashboard && batchIsNewer
                                         ? { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at }
                                         : (oldBrandEntry.additionalData || { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at })
