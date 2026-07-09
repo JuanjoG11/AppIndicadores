@@ -114,19 +114,18 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             // Mismo mes, misma empresa
             if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
             if (updCompany !== userEntity) return;
-            // Brand: exact match OR the saved record has no brand (company-level KPI)
-            const brandMatches = updBrand === brandName.toUpperCase() || updBrand === '' || updBrand === userEntity.toUpperCase();
+            // Brand: exact match, no brand, entity level, OR any brand of same entity
+            // Esto permite que ventaTotal cargado por logística (ALPINA) llegue a gestión humana (TYM)
+            const brandMatches = updBrand === brandName.toUpperCase() || 
+                updBrand === '' || 
+                updBrand === userEntity.toUpperCase() ||
+                BRAND_TO_ENTITY[updBrand] === userEntity;
             if (!brandMatches) return;
             // Extraer campos compartidos usando resolución de alias
             // Respetar restricciones de área: no propagar campos de pedidos entre logística y facturación
             SHARED_FIELDS.forEach(field => {
                 const restrictedAreas = AREA_RESTRICTED_FIELDS?.[field];
-                if (restrictedAreas) {
-                    // Este campo solo se propaga dentro de las áreas permitidas
-                    const sourceKpiDef = rawUpdates && getKPIFormulaFields ? null : null; // área del KPI fuente no disponible aquí fácilmente
-                    // Simplificado: si el KPI actual es de facturación, no recibir campos restringidos
-                    if (kpi.area === 'facturacion') return;
-                }
+                if (restrictedAreas && kpi.area === 'facturacion') return;
                 const val = resolveSharedFieldValue(upd.additional_data, field);
                 if (val !== undefined && val !== null && val !== '' && shared[field] === undefined) {
                     shared[field] = val;

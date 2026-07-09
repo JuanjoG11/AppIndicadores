@@ -321,15 +321,20 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                     const updBrand = upd.additional_data?.brand?.toUpperCase() || '';
                     const updCompany = upd.additional_data?.company || upd.company_id || '';
 
-                    // Same month, same company, same brand (or no brand)
+                    // Same month, same company
                     if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
                     if (updCompany !== userEntity) return;
-                    if (updBrand !== '' && updBrand !== brand.toUpperCase()) return;
+                    // Brand: exact match, no brand, entity level, OR any brand of same entity (para campos compartidos globales)
+                    const brandMatchesExact = updBrand === '' || updBrand === brand.toUpperCase() || updBrand === userEntity.toUpperCase();
+                    const brandMatchesEntity = BRAND_TO_ENTITY[updBrand] === userEntity;
+                    if (!brandMatchesExact && !brandMatchesEntity) return;
 
                     formulaFields.forEach(field => {
                         // No propagar campos de pedidos a KPIs de facturación
                         const restrictedAreas = AREA_RESTRICTED_FIELDS?.[field.name];
                         if (restrictedAreas && kpi.area === 'facturacion') return;
+                        // Si la marca no coincide exactamente, solo propagar campos no restringidos (globales como ventaTotal)
+                        if (!brandMatchesExact && restrictedAreas) return;
                         const val = resolveSharedFieldValue(upd.additional_data, field.name);
                         if (val !== undefined && shared[field.name] === undefined) {
                             shared[field.name] = val;
