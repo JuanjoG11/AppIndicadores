@@ -30,12 +30,32 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
     const isCurrentMonth = selectedMonth === prevMonthName;
 
     let displayHasData = false;
+    // Cuando el mes seleccionado es el mes reportable (junio), usar datos en vivo
+    // Cuando es otro mes, verificar que el dato pertenezca exactamente a ese mes
+    const selectedMonthIdx = MONTHS.indexOf(selectedMonth);
+    const selectedMonthKey = selectedMonthIdx >= 0
+        ? `${now.getFullYear()}-${String(selectedMonthIdx + 1).padStart(2, '0')}`
+        : null;
+
     if (isBrandFocus) {
         const dataKey = `${entity}-${selectedBrand}`;
         const bData = kpi.brandValues?.[dataKey];
-        displayHasData = bData?.hasData && (!isCurrentMonth || bData.additionalData?.period === currentPeriodKey);
+        if (isCurrentMonth) {
+            displayHasData = bData?.hasData === true && bData.additionalData?.period === currentPeriodKey;
+        } else {
+            // Para meses del historial: solo mostrar si el dato es de ese mes exacto
+            const bPeriod = bData?.additionalData?.period;
+            const bMonthKey = bPeriod ? (bPeriod.substring(0, 7)) : null;
+            displayHasData = bData?.hasData === true && bMonthKey === selectedMonthKey;
+        }
     } else {
-        displayHasData = kpi.hasData && (!isCurrentMonth || kpi.additionalData?.period === currentPeriodKey);
+        if (isCurrentMonth) {
+            displayHasData = kpi.hasData && kpi.additionalData?.period === currentPeriodKey;
+        } else {
+            const kPeriod = kpi.additionalData?.period;
+            const kMonthKey = kPeriod ? kPeriod.substring(0, 7) : null;
+            displayHasData = kpi.hasData && kMonthKey === selectedMonthKey;
+        }
     }
 
     let displayValue = displayHasData ? kpi.currentValue : null;
