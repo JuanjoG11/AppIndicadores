@@ -114,15 +114,12 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             // Mismo mes, misma empresa
             if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
             if (updCompany !== userEntity) return;
-            // Brand: exact match, no brand, entity level, OR any brand of same entity
-            // Esto permite que ventaTotal cargado por logística (ALPINA) llegue a gestión humana (TYM)
+            // Brand: exact match, no brand, or entity level — misma marca solamente
             const brandMatches = updBrand === brandName.toUpperCase() || 
                 updBrand === '' || 
-                updBrand === userEntity.toUpperCase() ||
-                BRAND_TO_ENTITY[updBrand] === userEntity;
+                updBrand === userEntity.toUpperCase();
             if (!brandMatches) return;
-            // Extraer campos compartidos usando resolución de alias
-            // Respetar restricciones de área: no propagar campos de pedidos entre logística y facturación
+            // Extraer campos compartidos — misma marca, diferente KPI
             SHARED_FIELDS.forEach(field => {
                 const restrictedAreas = AREA_RESTRICTED_FIELDS?.[field];
                 if (restrictedAreas && kpi.area === 'facturacion') return;
