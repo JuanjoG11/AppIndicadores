@@ -321,8 +321,20 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                     const updBrand = upd.additional_data?.brand?.toUpperCase() || '';
                     const updCompany = upd.additional_data?.company || upd.company_id || '';
 
-                    // Same month, same company, same brand (or no brand)
-                    if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
+                    // Normalizar periodo a YYYY-MM para comparar semanas/quincenas con mensuales
+                    const updMonthKey = updPeriod.length >= 7 && updPeriod.match(/^\d{4}-\d{2}/)
+                        ? updPeriod.substring(0, 7)
+                        : updPeriod.match(/^\d{4}-W(\d{2})/)
+                            ? (() => {
+                                const [y, w] = updPeriod.split('-W').map(Number);
+                                const d = new Date(Date.UTC(y, 0, 1 + (w - 1) * 7));
+                                const dow = d.getUTCDay() || 7;
+                                d.setUTCDate(d.getUTCDate() + 4 - dow);
+                                return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+                            })()
+                            : null;
+                    if (!updMonthKey) return;
+                    if (updMonthKey !== period.substring(0, 7)) return;
                     if (updCompany !== userEntity) return;
                     if (updBrand !== '' && updBrand !== brand.toUpperCase() && updBrand !== userEntity.toUpperCase()) return;
 

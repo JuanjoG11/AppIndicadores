@@ -111,8 +111,21 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             const updPeriod = upd.additional_data?.period || '';
             const updBrand = (upd.additional_data?.brand || '').toUpperCase();
             const updCompany = upd.additional_data?.company || upd.company_id || '';
-            // Mismo mes, misma empresa
-            if (updPeriod.substring(0, 7) !== period.substring(0, 7)) return;
+            // Mismo mes calendario, misma empresa
+            // Normalizar periodo a YYYY-MM para comparar semanas/quincenas/diarios con mensuales
+            const updMonthKey = updPeriod.length >= 7 && updPeriod.match(/^\d{4}-\d{2}/)
+                ? updPeriod.substring(0, 7)
+                : updPeriod.match(/^\d{4}-W(\d{2})/)
+                    ? (() => { // ISO week → YYYY-MM
+                        const [y, w] = updPeriod.split('-W').map(Number);
+                        const d = new Date(Date.UTC(y, 0, 1 + (w - 1) * 7));
+                        const dow = d.getUTCDay() || 7;
+                        d.setUTCDate(d.getUTCDate() + 4 - dow);
+                        return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+                    })()
+                    : null;
+            if (!updMonthKey) return;
+            if (updMonthKey !== period.substring(0, 7)) return;
             if (updCompany !== userEntity) return;
             // Brand: exact match, no brand, or entity level — misma marca solamente
             const brandMatches = updBrand === brandName.toUpperCase() || 
