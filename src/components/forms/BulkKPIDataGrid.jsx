@@ -18,6 +18,7 @@ import {
     resolveSharedFieldValue,
     ALL_SHARED_FIELDS,
     FIELD_ALIAS_GROUPS,
+    AREA_RESTRICTED_FIELDS,
     getEntityBrands,
     getKPIResponsable
 } from '../../utils/kpiHelpers';
@@ -326,6 +327,9 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                     if (updBrand !== '' && updBrand !== brand.toUpperCase()) return;
 
                     formulaFields.forEach(field => {
+                        // No propagar campos de pedidos a KPIs de facturación
+                        const restrictedAreas = AREA_RESTRICTED_FIELDS?.[field.name];
+                        if (restrictedAreas && kpi.area === 'facturacion') return;
                         const val = resolveSharedFieldValue(upd.additional_data, field.name);
                         if (val !== undefined && shared[field.name] === undefined) {
                             shared[field.name] = val;
@@ -366,11 +370,14 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                     const sameMonth = other.period.substring(0, 7) === rowPeriod.substring(0, 7);
 
                     if (sameBrand && sameMonth) {
+                        // No propagar campos de pedidos entre logística y facturación
+                        const restrictedAreas = AREA_RESTRICTED_FIELDS?.[fieldName];
+                        if (restrictedAreas && other.kpi.area === 'facturacion') return;
+
                         const otherFields = getKPIFormulaFields(other.kpi.id);
                         const matchField = otherFields.find(f => aliasGroup.includes(f.name));
 
                         if (matchField) {
-                            // Propagate ONLY if the user hasn't edited that field in the other row manually
                             const isUserModified = userModified[other.key]?.has(matchField.name);
                             if (!isUserModified) {
                                 if (!next[other.key]) next[other.key] = {};

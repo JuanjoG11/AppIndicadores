@@ -18,7 +18,7 @@ import {
     Calendar
 } from 'lucide-react';
 import { calculateKPIValue, isInverseKPI } from '../../utils/kpiCalculations';
-import { BRAND_TO_ENTITY, getKPIFormulaFields, resolveSharedFieldValue, ALL_SHARED_FIELDS } from '../../utils/kpiHelpers';
+import { BRAND_TO_ENTITY, getKPIFormulaFields, resolveSharedFieldValue, ALL_SHARED_FIELDS, AREA_RESTRICTED_FIELDS } from '../../utils/kpiHelpers';
 import { formatNumber, getCurrentPeriodKey } from '../../utils/formatters';
 
 const MONTH_NAMES = [
@@ -118,7 +118,15 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
             const brandMatches = updBrand === brandName.toUpperCase() || updBrand === '' || updBrand === userEntity.toUpperCase();
             if (!brandMatches) return;
             // Extraer campos compartidos usando resolución de alias
+            // Respetar restricciones de área: no propagar campos de pedidos entre logística y facturación
             SHARED_FIELDS.forEach(field => {
+                const restrictedAreas = AREA_RESTRICTED_FIELDS?.[field];
+                if (restrictedAreas) {
+                    // Este campo solo se propaga dentro de las áreas permitidas
+                    const sourceKpiDef = rawUpdates && getKPIFormulaFields ? null : null; // área del KPI fuente no disponible aquí fácilmente
+                    // Simplificado: si el KPI actual es de facturación, no recibir campos restringidos
+                    if (kpi.area === 'facturacion') return;
+                }
                 const val = resolveSharedFieldValue(upd.additional_data, field);
                 if (val !== undefined && val !== null && val !== '' && shared[field] === undefined) {
                     shared[field] = val;

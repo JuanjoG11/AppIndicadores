@@ -470,7 +470,9 @@ export const FIELD_ALIAS_GROUPS = [
     ['ventaTotal', 'totalVenta', 'ventasTotales', 'ventas', 'valorVenta'],
     ['totalCartera', 'carteraTotal', 'totalCarteraVencida'],
     ['valorNomina', 'totalNomina', 'nominaLogistica'],
-    ['auxiliares', 'auxiliaresSeparacion']
+    ['auxiliares', 'auxiliaresSeparacion'],
+    // Pedidos — solo para logística (facturación usa campos propios)
+    ['numeroPedidos', 'pedidosFacturados', 'pedidos']
 ];
 
 export const ALL_SHARED_FIELDS = [
@@ -478,8 +480,16 @@ export const ALL_SHARED_FIELDS = [
     'totalCartera', 'carteraTotal', 'totalCarteraVencida',
     'valorNomina', 'totalNomina', 'nominaLogistica',
     'auxiliares', 'auxiliaresSeparacion',
-    'ventaRealizada', 'vehiculos'
+    'ventaRealizada', 'vehiculos',
+    'numeroPedidos', 'pedidosFacturados', 'pedidos'
 ];
+
+// Campos que solo se propagan dentro de la misma área
+export const AREA_RESTRICTED_FIELDS = {
+    'numeroPedidos': ['logistica'],
+    'pedidosFacturados': ['logistica'],
+    'pedidos': ['logistica']
+};
 
 /**
  * Resuelve el valor de un campo compartido considerando sus alias
