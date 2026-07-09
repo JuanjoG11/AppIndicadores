@@ -192,7 +192,6 @@ export const kpiDefinitions = [
         objetivo: 'Aumentar la rentabilidad del proceso de picking',
         meta: {
             ALPINA: 1,
-            FLEISCHMANN: 1,
             UNILEVER: 1,
             FAMILIA: 1
         },
@@ -290,7 +289,6 @@ export const kpiDefinitions = [
             UNILEVER: 5,
             FAMILIA: 5
         },
-        brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -310,7 +308,6 @@ export const kpiDefinitions = [
             UNILEVER: 2.5,
             FAMILIA: 2.5
         },
-        brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -346,7 +343,6 @@ export const kpiDefinitions = [
             UNILEVER: 3,
             FAMILIA: 3
         },
-        brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
@@ -366,7 +362,6 @@ export const kpiDefinitions = [
             UNILEVER: 11,
             FAMILIA: 11
         },
-        brands: ['TYM', 'TAT'],
         unit: '%',
         frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
