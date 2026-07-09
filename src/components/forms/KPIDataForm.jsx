@@ -151,7 +151,11 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         // Usar el periodo vigente (mes anterior para mensuales) si no se especifica
         const period = targetPeriod || getCurrentPeriodKey(kpi.frecuencia);
         
-        // 1. Buscar en rawUpdates por periodo EXACTO (Bug Fix #6: evitar startsWith que matchea otros periodos)
+        // Obtener campos compartidos del mes (ventaTotal, valorNomina, etc.) — tienen prioridad
+        // sobre los valores propios del KPI de periodos anteriores
+        const sharedValues = getSharedFieldValues(brandName, period);
+
+        // 1. Buscar en rawUpdates por periodo EXACTO
         if (rawUpdates && Array.isArray(rawUpdates)) {
             const match = rawUpdates.find(upd => 
                 upd.kpi_id === kpi.id &&
@@ -165,7 +169,8 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
                 delete cleaned.updatedAt;
                 delete cleaned.period;
                 delete cleaned.timestamp;
-                return cleaned;
+                // Sobreescribir campos compartidos con los valores más recientes del mes
+                return { ...cleaned, ...sharedValues };
             }
         }
 
@@ -175,19 +180,20 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
 
         if (data) {
             const storedPeriod = data.period || '';
-            if (!storedPeriod) return {};
+            if (!storedPeriod) return sharedValues;
             const periodMatch = storedPeriod && (storedPeriod === period || storedPeriod.startsWith(period));
             if (periodMatch) {
                 const cleaned = { ...data };
                 delete cleaned.updatedAt;
                 delete cleaned.period;
                 delete cleaned.timestamp;
-                return cleaned;
+                // Sobreescribir campos compartidos con los valores más recientes del mes
+                return { ...cleaned, ...sharedValues };
             }
         }
 
-        // 3. Sin datos propios — intentar precargar campos compartidos de otros KPIs
-        return getSharedFieldValues(brandName, period);
+        // 3. Sin datos propios — usar campos compartidos de otros KPIs
+        return sharedValues;
     };
 
     // ── Multi-marca: modo columnas (solo data, no meta) ──────────────────────

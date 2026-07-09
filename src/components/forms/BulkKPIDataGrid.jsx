@@ -308,7 +308,42 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                 // Prepopulate with existing clean data
                 const cleaned = { ...existingData };
                 delete cleaned.updatedAt; delete cleaned.period; delete cleaned.timestamp;
-                initial[key] = cleaned;
+
+                // Sobreescribir campos compartidos (ventaTotal, valorNomina, etc.) con el valor
+                // más reciente del mes desde otros KPIs — tienen prioridad sobre datos propios de periodos anteriores
+                const sharedOverride = {};
+                const formulaFields = getKPIFormulaFields(kpi.id);
+                rawUpdates.forEach(upd => {
+                    if (upd.kpi_id === kpi.id) return;
+                    if (upd.additional_data?.type === 'META_UPDATE') return;
+                    const updPeriod = upd.additional_data?.period || '';
+                    const updBrand = upd.additional_data?.brand?.toUpperCase() || '';
+                    const updCompany = upd.additional_data?.company || upd.company_id || '';
+                    const updMonthKey = updPeriod.length >= 7 && updPeriod.match(/^\d{4}-\d{2}/)
+                        ? updPeriod.substring(0, 7)
+                        : updPeriod.match(/^\d{4}-W(\d{2})/)
+                            ? (() => {
+                                const [y, w] = updPeriod.split('-W').map(Number);
+                                const d = new Date(Date.UTC(y, 0, 1 + (w - 1) * 7));
+                                const dow = d.getUTCDay() || 7;
+                                d.setUTCDate(d.getUTCDate() + 4 - dow);
+                                return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+                            })() : null;
+                    if (!updMonthKey || updMonthKey !== period.substring(0, 7)) return;
+                    if (updCompany !== userEntity) return;
+                    if (updBrand !== '' && updBrand !== brand.toUpperCase() && updBrand !== userEntity.toUpperCase()) return;
+                    formulaFields.forEach(field => {
+                        if (!ALL_SHARED_FIELDS.includes(field.name)) return;
+                        const restrictedAreas = AREA_RESTRICTED_FIELDS?.[field.name];
+                        if (restrictedAreas && kpi.area === 'facturacion') return;
+                        const val = resolveSharedFieldValue(upd.additional_data, field.name);
+                        if (val !== undefined && sharedOverride[field.name] === undefined) {
+                            sharedOverride[field.name] = val;
+                        }
+                    });
+                });
+
+                initial[key] = { ...cleaned, ...sharedOverride };
             } else {
                 // C. Fallback: load shared fields from other KPIs
                 const shared = {};
