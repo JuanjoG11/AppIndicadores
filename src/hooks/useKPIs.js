@@ -537,7 +537,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             // BUG FIX: Si es una actualización de META (META_UPDATE), no cambiar el estado de hasData, mantener el que ya tenía.
             const nextHasData = d.type === 'META_UPDATE' 
                 ? (oldBrandData.hasData ?? false)
-                : (isFromCurrentPeriod ? true : false);
+                // Si ya hay un hasData:true del periodo correcto, no lo borra un dato de otro periodo
+                : (isFromCurrentPeriod ? true : (oldBrandData.hasData === true ? true : false));
 
             brandValues[dataKey] = {
                 ...oldBrandData,
@@ -1075,14 +1076,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                     currentValue: shouldShowInDashboard && batchIsNewer ? upd.value : (oldBrandEntry.currentValue ?? upd.value),
                                     compliance: shouldShowInDashboard && batchIsNewer ? compliance : (oldBrandEntry.compliance ?? compliance),
                                     semaphore: shouldShowInDashboard && batchIsNewer ? semaphore : (oldBrandEntry.semaphore ?? semaphore),
-                                    // hasData: SOLO true si el dato es del periodo actual exacto.
-                                    // Nunca preservar hasData de un dato de otro mes (evita mostrar mayo en julio).
-                                    hasData: isFromCurrentPeriod ? true : false,
-                                    additionalData: {
-                                        ...(upd.additional_data || {}),
-                                        period: group.periodKey,
-                                        updatedAt: upd.updated_at || upd.created_at
-                                    }
+                                    // hasData: true si este dato es del periodo reportable,
+                                    // O si ya había un hasData:true previo del periodo correcto (no dejar que un dato de otro periodo lo borre)
+                                    hasData: isFromCurrentPeriod ? true : (oldBrandEntry.hasData === true ? true : false),
+                                    additionalData: shouldShowInDashboard && batchIsNewer
+                                        ? { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at }
+                                        : (oldBrandEntry.additionalData || { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at })
                                 };
 
                                  // Determinar el estado del KPI base usando TODOS los brandValues disponibles
