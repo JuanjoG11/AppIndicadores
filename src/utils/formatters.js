@@ -247,24 +247,13 @@ export const getCurrentPeriodKey = (frequency) => {
     if (freq.includes('DIARI')) {
         return `${year}-${monthStr}-${day.toString().padStart(2, '0')}`;
     }
-    if (freq.includes('SEMANAL')) {
-        // El periodo vigente es la semana anterior (última semana completada)
-        // igual que los mensuales usan el mes anterior
-        const d = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-        const dow = d.getUTCDay() || 7;
-        // Ir al lunes de esta semana, luego restar 7 días para llegar a la semana anterior
-        d.setUTCDate(d.getUTCDate() - (dow - 1) - 7);
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); // ISO Thursday de la semana anterior
-        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        return `${d.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+    // SEMANAL y QUINCENAL → devolver el mes anterior (YYYY-MM)
+    // Los datos se comparan por mes, no por semana/quincena exacta
+    if (freq.includes('SEMANAL') || freq.includes('QUINCENAL')) {
+        const prev = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
     }
-    if (freq.includes('QUINCENAL')) {
-        const fortnight = day <= 15 ? 'Q1' : 'Q2';
-        return `${year}-${monthStr}-${fortnight}`;
-    }
-    // MENSUAL, BIMESTRAL, SEMESTRAL, ANUAL → el periodo vigente es el mes ANTERIOR
-    // Los analistas siempre cargan el mes vencido
+    // MENSUAL, BIMESTRAL, SEMESTRAL, ANUAL → mes anterior
     const prev = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const prevYear = prev.getFullYear();
     const prevMonth = (prev.getMonth() + 1).toString().padStart(2, '0');

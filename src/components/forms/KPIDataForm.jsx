@@ -69,9 +69,10 @@ const KPIDataForm = ({ kpi, currentUser, onSave, onCancel, mode = 'data', initia
         const dataKey = `${userEntity}-${brandName.toUpperCase()}`;
         const brandData = kpi.brandValues?.[dataKey];
         if (!brandData || !brandData.hasData) return true;
-        // Pendiente si el dato no es del periodo actual
         const expectedPeriod = getCurrentPeriodKey(kpi.frecuencia);
-        return brandData.additionalData?.period !== expectedPeriod;
+        const storedPeriod = brandData.additionalData?.period || '';
+        const storedMonth = storedPeriod.substring(0, 7).match(/^\d{4}-\d{2}$/) ? storedPeriod.substring(0, 7) : storedPeriod;
+        return storedPeriod !== expectedPeriod && storedMonth !== expectedPeriod;
     };
 
     // 3. Seleccionar por defecto

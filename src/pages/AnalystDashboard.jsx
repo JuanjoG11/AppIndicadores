@@ -187,8 +187,13 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
             const dataKey = `${currentUser.company}-${brand}`;
             const brandData = k.brandValues?.[dataKey];
             // Pendiente si no hay datos del periodo actual con hasData=true
+            // Comparar por mes para SEMANAL/QUINCENAL
+            const storedPeriod = brandData?.additionalData?.period || '';
+            const storedMonthKey = storedPeriod.substring(0, 7).match(/^\d{4}-\d{2}$/)
+                ? storedPeriod.substring(0, 7)
+                : storedPeriod; // para YYYY-MM ya es correcto
             const hasCurrent = brandData?.hasData === true &&
-                brandData?.additionalData?.period === currentPeriodKey;
+                (storedPeriod === currentPeriodKey || storedMonthKey === currentPeriodKey);
             return !hasCurrent;
         });
     });
@@ -258,8 +263,9 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                         const dataKey = `${currentUser.company}-${brand}`;
                         const brandData = k.brandValues?.[dataKey];
                         const currentPeriodKey = getCurrentPeriodKey(k.frecuencia);
-                        // Completado si tiene datos del periodo actual con hasData=true
-                        if (brandData?.hasData === true && brandData?.additionalData?.period === currentPeriodKey) done++;
+                        const storedPeriod = brandData?.additionalData?.period || '';
+                        const storedMonthKey = storedPeriod.substring(0, 7).match(/^\d{4}-\d{2}$/) ? storedPeriod.substring(0, 7) : storedPeriod;
+                        if (brandData?.hasData === true && (storedPeriod === currentPeriodKey || storedMonthKey === currentPeriodKey)) done++;
                     });
                 }
             }
@@ -282,7 +288,15 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
         const effectiveResponsable = getKPIResponsable(kpi, currentUser);
         const isMine = effectiveResponsable === currentUser.cargo;
         const currentPeriodKey = getCurrentPeriodKey(kpi.frecuencia);
-        const cardHasData = kpi.hasData && (!isCurrentMonth || kpi.additionalData?.period === currentPeriodKey);
+        // Helper: chequear si un periodo guardado corresponde al periodo vigente
+        const periodMatches = (storedPeriod) => {
+            if (!storedPeriod) return false;
+            if (storedPeriod === currentPeriodKey) return true;
+            // Comparar por mes para SEMANAL/QUINCENAL
+            const sm = storedPeriod.substring(0, 7);
+            return sm.match(/^\d{4}-\d{2}$/) && sm === currentPeriodKey;
+        };
+        const cardHasData = kpi.hasData && (!isCurrentMonth || periodMatches(kpi.additionalData?.period));
 
         // Detectar si hay dato de un período anterior (histórico) aunque no sea del mes actual
         // Sirve para mostrar "CARGADO (junio)" en vez de solo "FALTA CARGAR"
@@ -308,7 +322,7 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                     const dataKey = `${currentUser.company}-${brand}`;
                     const brandData = kpi.brandValues?.[dataKey];
                     const brandHasData = brandData?.hasData === true &&
-                        (!isCurrentMonth || brandData?.additionalData?.period === currentPeriodKey);
+                        (!isCurrentMonth || periodMatches(brandData?.additionalData?.period));
                     return !brandHasData;
                 });
                 // Cuáles de las pendientes tienen al menos dato histórico
@@ -463,7 +477,7 @@ const AnalystDashboard = ({ kpiData, rawUpdates, currentUser, onUpdateKPI, onVie
                             .map(brand => {
                                 const dataKey = `${currentUser.company}-${brand}`;
                                 const bData = kpi.brandValues?.[dataKey];
-                                const hasData = bData?.hasData && (!isCurrentMonth || bData.additionalData?.period === currentPeriodKey);
+                                const hasData = bData?.hasData && (!isCurrentMonth || periodMatches(bData.additionalData?.period));
                                 const compColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : '#f59e0b')) : '#94a3b8';
                                 const valColor = hasData ? (bData.semaphore === 'green' ? '#059669' : (bData.semaphore === 'red' ? '#ef4444' : (bData.semaphore === 'yellow' ? '#f59e0b' : 'var(--brand)'))) : '#94a3b8';
                                 

@@ -496,7 +496,10 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
             const bVal = kpi.brandValues?.[dataKey];
             if (!bVal || !bVal.hasData) return false;
             const expectedPeriod = getCurrentPeriodKey(kpi.frecuencia);
-            return bVal.additionalData?.period === expectedPeriod;
+            const storedPeriod = bVal.additionalData?.period || '';
+            // Comparar por mes para SEMANAL/QUINCENAL
+            const storedMonth = storedPeriod.substring(0, 7).match(/^\d{4}-\d{2}$/) ? storedPeriod.substring(0, 7) : storedPeriod;
+            return storedPeriod === expectedPeriod || storedMonth === expectedPeriod;
         })();
 
         return {
