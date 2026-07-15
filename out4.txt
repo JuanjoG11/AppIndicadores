@@ -1,0 +1,76 @@
+
+══════════════════════════════════════════════════════════════
+  TODOS LOS DATOS JUNIO 2026 (incluye cargados en julio)
+══════════════════════════════════════════════════════════════
+
+📌 ANALISTA DE INFORMACIÓN
+   pesos-separados-hombre             | ALPINA                   | valor: 244249893       | meta: N/A      | 2026-07-09
+   promedio-venta-vendedor            | ALPINA                   | valor: 109269688.97    | meta: N/A      | 2026-07-09
+   promedio-venta-vendedor            | ZENU                     | valor: 127054138.44    | meta: N/A      | 2026-06-10
+   promedio-venta-vendedor            | FLEISCHMANN              | valor: 34996239.13     | meta: N/A      | 2026-06-10
+   promedio-venta-vendedor            | FAMILIA                  | valor: 90931400.25     | meta: N/A      | 2026-06-10
+   promedio-venta-vendedor            | UNILEVER                 | valor: 68097896        | meta: N/A      | 2026-06-10
+   venta-realizada-esperada           | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+   venta-realizada-esperada           | FLEISCHMANN              | valor: 102.18          | meta: N/A      | 2026-06-10
+   venta-realizada-esperada           | ZENU                     | valor: 101.93          | meta: N/A      | 2026-06-10
+
+📌 CONTADOR
+   indice-arqueo-caja                 | TAT                      | valor: 0               | meta: N/A      | 2026-06-12
+
+📌 CRISTIAN
+   arqueos-realizados                 | ZENU                     | valor: 100             | meta: N/A      | 2026-07-08
+   arqueos-realizados                 | ALPINA                   | valor: 100             | meta: N/A      | 2026-07-08
+   arqueos-realizados                 | FLEISCHMANN              | valor: 100             | meta: N/A      | 2026-06-24
+   gasto-fletes-venta                 | ZENU                     | valor: 14              | meta: N/A      | 2026-07-08
+   gasto-fletes-venta                 | ALPINA                   | valor: 8.47            | meta: N/A      | 2026-07-08
+   gasto-fletes-venta                 | FLEISCHMANN              | valor: 3.71            | meta: N/A      | 2026-07-08
+   indice-arqueo-caja                 | ZENU                     | valor: 0               | meta: N/A      | 2026-06-24
+   indice-arqueo-caja                 | FLEISCHMANN              | valor: 0               | meta: N/A      | 2026-06-24
+   indice-arqueo-caja                 | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-24
+
+📌 FACTURACION
+   impresion-facturas                 | ZENU                     | valor: 100             | meta: N/A      | 2026-06-16
+   impresion-facturas                 | FLEISCHMANN              | valor: 100             | meta: N/A      | 2026-06-16
+   impresion-facturas                 | UNILEVER                 | valor: 100             | meta: N/A      | 2026-06-16
+   impresion-facturas                 | FAMILIA                  | valor: 100             | meta: N/A      | 2026-06-16
+   pedidos-facturados                 | ZENU                     | valor: 100             | meta: N/A      | 2026-06-16
+   pedidos-facturados                 | FLEISCHMANN              | valor: 100             | meta: N/A      | 2026-06-16
+   pedidos-facturados                 | FAMILIA                  | valor: 100             | meta: N/A      | 2026-06-16
+   pedidos-facturados                 | UNILEVER                 | valor: 100             | meta: N/A      | 2026-06-16
+
+📌 GESTIÓN HUMANA
+   ausentismo                         | FLEISCHMANN              | valor: 0               | meta: N/A      | 2026-06-10
+   ausentismo                         | ZENU                     | valor: 0               | meta: N/A      | 2026-06-10
+   ausentismo                         | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-nomina-venta                 | FLEISCHMANN              | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-nomina-venta                 | ZENU                     | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-nomina-venta                 | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-nomina-venta-rrhh            | FLEISCHMANN              | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-nomina-venta-rrhh            | ZENU                     | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-nomina-venta-rrhh            | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-personal-comercial           | FLEISCHMANN              | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-personal-comercial           | ZENU                     | valor: 0               | meta: N/A      | 2026-06-10
+   gasto-personal-comercial           | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+   mantenimiento-equipos              | TYM                      | valor: 4               | meta: N/A      | 2026-07-06
+   nomina-compra-deposito             | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+   nomina-venta-picking               | FLEISCHMANN              | valor: 0               | meta: N/A      | 2026-06-10
+   nomina-venta-picking               | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+   rotacion-equipo-comercial          | ZENU                     | valor: 0               | meta: N/A      | 2026-06-10
+   rotacion-equipo-comercial          | FLEISCHMANN              | valor: 0               | meta: N/A      | 2026-06-10
+   rotacion-equipo-comercial          | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+   rotacion-personal                  | FLEISCHMANN              | valor: 0               | meta: N/A      | 2026-06-10
+   rotacion-personal                  | ZENU                     | valor: 0               | meta: N/A      | 2026-06-10
+   rotacion-personal                  | ALPINA                   | valor: 0               | meta: N/A      | 2026-06-10
+
+📌 LOGISTICA
+   promedio-pedidos-auxiliar          | ALPINA,FLEISCHMANN       | valor: 918.91          | meta: N/A      | 2026-06-12
+   promedio-pedidos-carro             | ALPINA,FLEISCHMANN       | valor: 1072.07         | meta: N/A      | 2026-06-12
+
+📌 SST_CULTURA
+   actividades-cultura                | TAT                      | valor: 0               | meta: N/A      | 2026-06-10
+   actividades-cultura                | TYM                      | valor: 0               | meta: N/A      | 2026-06-10
+   calificacion-auditoria             | TAT                      | valor: 0               | meta: N/A      | 2026-06-10
+   calificacion-auditoria             | TYM                      | valor: 0               | meta: N/A      | 2026-06-10
+
+Total registros únicos: 55
+Total registros brutos: 91

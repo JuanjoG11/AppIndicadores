@@ -1,0 +1,25 @@
+
+✅  Generado: C:\Users\Juanjo\Documents\AppIndicadores\Informe_KPIs_Junio_2026_Final.xlsx
+
+📊  Resumen:
+   Personas evaluadas   : 15
+   Cumplen todo         : 12
+   Con fallos/sin dato  : 3
+   Total bonificaciones : $4.150.000
+
+👤  Detalle por persona:
+   ✅ CARLOS ENRIQUE DÍAZ          3/3 inds  $300.000 de $300.000
+   ✅ ESTEBAN LOAIZA               3/3 inds  $300.000 de $300.000
+   ❌ MARIANA GALLEGO              2/3 inds  $200.000 de $300.000
+   ❌ ANYI MOSQUERA                3/4 inds  $225.000 de $300.000
+   ✅ DIANA GARCÍA                 3/3 inds  $300.000 de $300.000
+   ✅ CRISTIAN BALLESTEROS         3/3 inds  $300.000 de $300.000
+   ✅ DAVID AGUIRRE                4/4 inds  $300.000 de $300.000
+   ✅ FELIPE MURILLO               4/4 inds  $300.000 de $300.000
+   ⚠️  SEBASTIÁN ARIAS              3/4 inds  $225.000 de $300.000
+   ✅ KARINA TABA                  3/3 inds  $300.000 de $300.000
+   ✅ MARÍA JOSÉ FRANCO            2/2 inds  $200.000 de $200.000
+   ✅ DANIEL ARROYAVE              3/3 inds  $300.000 de $300.000
+   ✅ ELIANA GONZÁLEZ              3/3 inds  $300.000 de $300.000
+   ✅ NATALY MOLINA                3/3 inds  $300.000 de $300.000
+   ✅ JUAN JOSÉ COLORADO           3/3 inds  $300.000 de $300.000

@@ -5,12 +5,14 @@ import ExecutiveHistory from '../components/dashboard/ExecutiveHistory';
 import { filterKPIsByEntity } from '../utils/kpiHelpers';
 import { calculateOverallScore } from '../data/mockData';
 import { isInverseKPI } from '../utils/kpiCalculations';
-import { LayoutGrid, TrendingUp, Clock, FileText, Activity, ArrowRight } from 'lucide-react';
+import { exportMonthlyComplianceExcel } from '../utils/exportHelpers';
+import { LayoutGrid, TrendingUp, Clock, FileText, Activity, ArrowRight, Download } from 'lucide-react';
 
 
 const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompany, onViewHistory, selectedMonth }) => {
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'trend'
     const [activeHistoryTab, setActiveHistoryTab] = useState('overview');
+    const [exportingExcel, setExportingExcel] = useState(false);
 
     // Filter KPIs based on selected entity using the utility
     const baseKPIs = filterKPIsByEntity(kpiData, activeCompany);
@@ -116,6 +118,22 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
         setActiveHistoryTab('log');
     };
 
+    const handleExportExcel = () => {
+        setExportingExcel(true);
+        try {
+            const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const now = new Date();
+            const idx = MONTHS.indexOf(selectedMonth);
+            // Si el mes seleccionado aún no llegó este año, es del año pasado
+            const year = idx !== -1 && idx > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
+            const monthLabel = `${selectedMonth}_${year}`;
+            exportMonthlyComplianceExcel(filteredKPIs, activeCompany, monthLabel);
+        } finally {
+            setExportingExcel(false);
+        }
+    };
+
     const overallScoreColor = overallScore >= 95 ? 'var(--success)' : overallScore >= 80 ? 'var(--warning)' : 'var(--danger)';
 
     return (
@@ -180,6 +198,26 @@ const ExecutiveDashboard = ({ kpiData, rawUpdates, activeCompany, setActiveCompa
                         <FileText size={18} />
                         Ver Bitácora de Carga
                         <ArrowRight size={16} />
+                    </button>
+
+                    {/* EXCEL EXPORT */}
+                    <button
+                        onClick={handleExportExcel}
+                        disabled={exportingExcel}
+                        title={`Exportar cumplimiento de ${selectedMonth} a Excel`}
+                        style={{
+                            background: exportingExcel ? '#d1fae5' : '#10b981',
+                            color: 'white', border: 'none', padding: '0.75rem 1.25rem',
+                            borderRadius: '12px', fontWeight: 700, fontSize: '0.85rem',
+                            cursor: exportingExcel ? 'not-allowed' : 'pointer',
+                            display: 'flex', alignItems: 'center', gap: '0.6rem',
+                            transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
+                            opacity: exportingExcel ? 0.7 : 1,
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        <Download size={18} />
+                        {exportingExcel ? 'Generando...' : `Excel ${selectedMonth}`}
                     </button>
 
                     <div style={{ height: '40px', width: '1px', background: 'var(--border-soft)' }} />

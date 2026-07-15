@@ -1,0 +1,75 @@
+
+══════════════════════════════════════════════════════════
+  DATOS REALES JUNIO 2026 — AGRUPADO POR CARGO
+══════════════════════════════════════════════════════════
+
+📌 CARGO: ANALISTA DE INFORMACIÓN
+   pesos-separados-hombre           | Brand: ALPINA                 | Valor: 244249893       | Meta: N/A      | 2026-07-09
+   promedio-venta-vendedor          | Brand: ALPINA                 | Valor: 109269688.97    | Meta: N/A      | 2026-07-09
+   promedio-venta-vendedor          | Brand: ZENU                   | Valor: 127054138.44    | Meta: N/A      | 2026-06-10
+   promedio-venta-vendedor          | Brand: FLEISCHMANN            | Valor: 34996239.13     | Meta: N/A      | 2026-06-10
+   promedio-venta-vendedor          | Brand: FAMILIA                | Valor: 90931400.25     | Meta: N/A      | 2026-06-10
+   promedio-venta-vendedor          | Brand: UNILEVER               | Valor: 68097896        | Meta: N/A      | 2026-06-10
+   venta-realizada-esperada         | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+   venta-realizada-esperada         | Brand: FLEISCHMANN            | Valor: 102.18          | Meta: N/A      | 2026-06-10
+   venta-realizada-esperada         | Brand: ZENU                   | Valor: 101.93          | Meta: N/A      | 2026-06-10
+
+📌 CARGO: CONTADOR
+   indice-arqueo-caja               | Brand: TAT                    | Valor: 0               | Meta: N/A      | 2026-06-12
+
+📌 CARGO: CRISTIAN
+   arqueos-realizados               | Brand: ZENU                   | Valor: 100             | Meta: N/A      | 2026-07-08
+   arqueos-realizados               | Brand: ALPINA                 | Valor: 100             | Meta: N/A      | 2026-07-08
+   arqueos-realizados               | Brand: FLEISCHMANN            | Valor: 100             | Meta: N/A      | 2026-06-24
+   gasto-fletes-venta               | Brand: ZENU                   | Valor: 14              | Meta: N/A      | 2026-07-08
+   gasto-fletes-venta               | Brand: ALPINA                 | Valor: 8.47            | Meta: N/A      | 2026-07-08
+   gasto-fletes-venta               | Brand: FLEISCHMANN            | Valor: 3.71            | Meta: N/A      | 2026-07-08
+   indice-arqueo-caja               | Brand: ZENU                   | Valor: 0               | Meta: N/A      | 2026-06-24
+   indice-arqueo-caja               | Brand: FLEISCHMANN            | Valor: 0               | Meta: N/A      | 2026-06-24
+   indice-arqueo-caja               | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-24
+
+📌 CARGO: FACTURACION
+   impresion-facturas               | Brand: ZENU                   | Valor: 100             | Meta: N/A      | 2026-06-16
+   impresion-facturas               | Brand: FLEISCHMANN            | Valor: 100             | Meta: N/A      | 2026-06-16
+   impresion-facturas               | Brand: UNILEVER               | Valor: 100             | Meta: N/A      | 2026-06-16
+   impresion-facturas               | Brand: FAMILIA                | Valor: 100             | Meta: N/A      | 2026-06-16
+   pedidos-facturados               | Brand: ZENU                   | Valor: 100             | Meta: N/A      | 2026-06-16
+   pedidos-facturados               | Brand: FLEISCHMANN            | Valor: 100             | Meta: N/A      | 2026-06-16
+   pedidos-facturados               | Brand: FAMILIA                | Valor: 100             | Meta: N/A      | 2026-06-16
+   pedidos-facturados               | Brand: UNILEVER               | Valor: 100             | Meta: N/A      | 2026-06-16
+
+📌 CARGO: GESTIÓN HUMANA
+   ausentismo                       | Brand: FLEISCHMANN            | Valor: 0               | Meta: N/A      | 2026-06-10
+   ausentismo                       | Brand: ZENU                   | Valor: 0               | Meta: N/A      | 2026-06-10
+   ausentismo                       | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-nomina-venta               | Brand: FLEISCHMANN            | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-nomina-venta               | Brand: ZENU                   | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-nomina-venta               | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-nomina-venta-rrhh          | Brand: FLEISCHMANN            | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-nomina-venta-rrhh          | Brand: ZENU                   | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-nomina-venta-rrhh          | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-personal-comercial         | Brand: FLEISCHMANN            | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-personal-comercial         | Brand: ZENU                   | Valor: 0               | Meta: N/A      | 2026-06-10
+   gasto-personal-comercial         | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+   mantenimiento-equipos            | Brand: TYM                    | Valor: 4               | Meta: N/A      | 2026-07-06
+   nomina-compra-deposito           | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+   nomina-venta-picking             | Brand: FLEISCHMANN            | Valor: 0               | Meta: N/A      | 2026-06-10
+   nomina-venta-picking             | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+   rotacion-equipo-comercial        | Brand: ZENU                   | Valor: 0               | Meta: N/A      | 2026-06-10
+   rotacion-equipo-comercial        | Brand: FLEISCHMANN            | Valor: 0               | Meta: N/A      | 2026-06-10
+   rotacion-equipo-comercial        | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+   rotacion-personal                | Brand: FLEISCHMANN            | Valor: 0               | Meta: N/A      | 2026-06-10
+   rotacion-personal                | Brand: ZENU                   | Valor: 0               | Meta: N/A      | 2026-06-10
+   rotacion-personal                | Brand: ALPINA                 | Valor: 0               | Meta: N/A      | 2026-06-10
+
+📌 CARGO: LOGISTICA
+   promedio-pedidos-auxiliar        | Brand: ALPINA,FLEISCHMANN     | Valor: 918.91          | Meta: N/A      | 2026-06-12
+   promedio-pedidos-carro           | Brand: ALPINA,FLEISCHMANN     | Valor: 1072.07         | Meta: N/A      | 2026-06-12
+
+📌 CARGO: SST_CULTURA
+   actividades-cultura              | Brand: TAT                    | Valor: 0               | Meta: N/A      | 2026-06-10
+   actividades-cultura              | Brand: TYM                    | Valor: 0               | Meta: N/A      | 2026-06-10
+   calificacion-auditoria           | Brand: TAT                    | Valor: 0               | Meta: N/A      | 2026-06-10
+   calificacion-auditoria           | Brand: TYM                    | Valor: 0               | Meta: N/A      | 2026-06-10
+
+Total registros únicos: 55

@@ -1,0 +1,44 @@
+
+════════════════════════════════════════════════════════
+  REVISIÓN JUNIO 2026 — CARTERA, SST, ABAST, FACT
+════════════════════════════════════════════════════════
+
+── CARTERA ──
+  cartera-no-vencida: ⚠️  SIN DATO EN BD
+  cartera-mayor-30: ⚠️  SIN DATO EN BD
+  valor-cartera-venta: ⚠️  SIN DATO EN BD
+
+── SST / CULTURA ──
+  calificacion-auditoria       | Brand: TYM                    | Valor: 0               | Meta: N/A        | 2026-06-10
+  calificacion-auditoria       | Brand: TAT                    | Valor: 0               | Meta: N/A        | 2026-06-10
+  actividades-cultura          | Brand: TYM                    | Valor: 0               | Meta: N/A        | 2026-06-10
+  actividades-cultura          | Brand: TAT                    | Valor: 0               | Meta: N/A        | 2026-06-10
+  tiempo-contratacion: ⚠️  SIN DATO EN BD
+
+── ABASTECIMIENTOS ──
+  revision-precios: ⚠️  SIN DATO EN BD
+  cumplimiento-inventarios: ⚠️  SIN DATO EN BD
+  revision-margenes: ⚠️  SIN DATO EN BD
+  exactitud-inventarios: ⚠️  SIN DATO EN BD
+
+── FACTURACIÓN ──
+  impresion-facturas           | Brand: FAMILIA                | Valor: 100             | Meta: N/A        | 2026-06-16
+  impresion-facturas           | Brand: UNILEVER               | Valor: 100             | Meta: N/A        | 2026-06-16
+  impresion-facturas           | Brand: FLEISCHMANN            | Valor: 100             | Meta: N/A        | 2026-06-16
+  impresion-facturas           | Brand: ZENU                   | Valor: 100             | Meta: N/A        | 2026-06-16
+  error-facturacion: ⚠️  SIN DATO EN BD
+  pedidos-facturados           | Brand: UNILEVER               | Valor: 100             | Meta: N/A        | 2026-06-16
+  pedidos-facturados           | Brand: FAMILIA                | Valor: 100             | Meta: N/A        | 2026-06-16
+  pedidos-facturados           | Brand: FLEISCHMANN            | Valor: 100             | Meta: N/A        | 2026-06-16
+  pedidos-facturados           | Brand: ZENU                   | Valor: 100             | Meta: N/A        | 2026-06-16
+
+
+════ HISTORIAL COMPLETO (todos los registros, sin filtrar último) ════
+
+calificacion-auditoria:
+  2026-06-10 | TYM                  | valor: 0            | cargo: SST_CULTURA | tipo: DATA_UPDATE
+  2026-06-10 | TAT                  | valor: 0            | cargo: SST_CULTURA | tipo: DATA_UPDATE
+
+actividades-cultura:
+  2026-06-10 | TYM                  | valor: 0            | cargo: SST_CULTURA | tipo: DATA_UPDATE
+  2026-06-10 | TAT                  | valor: 0            | cargo: SST_CULTURA | tipo: DATA_UPDATE
