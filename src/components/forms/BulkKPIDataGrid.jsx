@@ -310,7 +310,7 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                 delete cleaned.updatedAt; delete cleaned.period; delete cleaned.timestamp;
 
                 // Sobreescribir campos compartidos (ventaTotal, valorNomina, etc.) con el valor
-                // más reciente del mes desde otros KPIs — tienen prioridad sobre datos propios de periodos anteriores
+                // más reciente del mes desde otros KPIs — SOLO si el dato propio no tiene ese campo
                 const sharedOverride = {};
                 const formulaFields = getKPIFormulaFields(kpi.id);
                 rawUpdates.forEach(upd => {
@@ -336,6 +336,8 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
                         if (!ALL_SHARED_FIELDS.includes(field.name)) return;
                         const restrictedAreas = AREA_RESTRICTED_FIELDS?.[field.name];
                         if (restrictedAreas && kpi.area === 'facturacion') return;
+                        // NO sobreescribir si el dato propio ya tiene este campo con valor válido
+                        if (cleaned[field.name] !== undefined && cleaned[field.name] !== null && cleaned[field.name] !== '') return;
                         const val = resolveSharedFieldValue(upd.additional_data, field.name);
                         if (val !== undefined && sharedOverride[field.name] === undefined) {
                             sharedOverride[field.name] = val;
@@ -388,8 +390,27 @@ const BulkKPIDataGrid = ({ kpis = [], currentUser, onSave, onCancel, rawUpdates 
             modified[key] = new Set();
         });
 
-        setGridData(initial);
-        setUserModified(modified);
+        // Preservar campos que el usuario ya modificó manualmente para que
+        // un re-render por rawUpdates no pise lo que está editando
+        setGridData(prev => {
+            const merged = { ...initial };
+            Object.keys(prev).forEach(key => {
+                const userEdited = userModified[key];
+                if (userEdited && userEdited.size > 0) {
+                    // Solo mantener los campos que el usuario tocó, el resto se renueva
+                    merged[key] = { ...(initial[key] || {}), ...prev[key] };
+                }
+            });
+            return merged;
+        });
+        setUserModified(prev => {
+            // Mantener las marcas de modificación existentes, agregar las nuevas filas vacías
+            const next = { ...prev };
+            Object.keys(modified).forEach(key => {
+                if (!next[key]) next[key] = new Set();
+            });
+            return next;
+        });
     }, [rows, rawUpdates, userEntity]);
 
     // Handle input change & propagate shared values to other rows

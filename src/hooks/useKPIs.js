@@ -896,6 +896,20 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                         if (currentUser?.role !== 'Gerente' && hasCompany && companyId !== activeCompany) return;
                         // Registros legacy sin company: solo incluir si somos TYM (la empresa original)
                         if (!hasCompany && activeCompany !== 'TYM' && currentUser?.role !== 'Gerente') return;
+
+                        // Ignorar registros vacíos: val=0 con todos los campos de fórmula undefined/null
+                        // Estos son registros guardados sin datos reales (formulario enviado vacío)
+                        if (upd.value === 0 && upd.additional_data) {
+                            const ad = upd.additional_data;
+                            const formulaFields = ['nominaLogistica','ventaTotal','totalVentas','valorNomina',
+                                'horasExtra','totalHoras','pedidosDevueltos','pedidosFacturados','fletes',
+                                'auxiliares','vehiculos','pedidos','actividades','actividadesProgramadas',
+                                'diasHabiles','diasPerdidos','vacantes','diasCobertura','totalIncidencias',
+                                'incidenciasResueltas','arqueos','arqueosProgramados','planillas','vales',
+                                'descuadres','conciliaciones','ajustes','cierresDias','notas','errores'];
+                            const hasAnyField = formulaFields.some(f => ad[f] !== undefined && ad[f] !== null && ad[f] !== '');
+                            if (!hasAnyField && ad.currentValue === undefined) return; // skip registro vacío
+                        }
                         
                         const brand = upd.additional_data?.brand || 'Global';
                         const kpiDef = kpiDefinitions.find(k => k.id === kpiId);
