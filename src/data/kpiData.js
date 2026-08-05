@@ -953,6 +953,9 @@ export const kpiDefinitions = [
             FLEISCHMANN: 7,
             UNILEVER: 45,
             FAMILIA: 18,
+            ZENU: 7,
+            TYM: 7,
+            TAT: 18,
             POLAR: 18
         },
         unit: 'días',
@@ -1215,6 +1218,7 @@ export const kpiDefinitions = [
             FLEISCHMANN: 0.5,
             UNILEVER: 0.5,
             FAMILIA: 0.5,
+            TYM: 0.5,
             TAT: 0.5
         },
         unit: '%',
