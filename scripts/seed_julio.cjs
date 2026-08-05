@@ -15,12 +15,12 @@ const BRAND_TO_ENTITY = {
     'TAT': 'TAT'
 };
 
-function getPeriodForKPI(kpi) {
+function getPeriodsForKPI(kpi) {
     const freq = (kpi.frecuencia || 'MENSUAL').toUpperCase();
-    if (freq.includes('DIARI')) return '2026-07-31';
-    if (freq.includes('SEMANAL')) return '2026-W30';
-    if (freq.includes('QUINCENAL')) return '2026-07-Q2';
-    return '2026-07';
+    if (freq.includes('DIARI')) return ['2026-08-05', '2026-07-31'];
+    if (freq.includes('SEMANAL')) return ['2026-W32', '2026-W31', '2026-W30'];
+    if (freq.includes('QUINCENAL')) return ['2026-08-Q1', '2026-07-Q2'];
+    return ['2026-08', '2026-07'];
 }
 
 function getAdditionalDataAndValue(kpiId, brand, company) {
@@ -205,14 +205,14 @@ function getAdditionalDataAndValue(kpiId, brand, company) {
             ad.gastosViaje = 1000000; ad.ventaTotal = 1000000000; val = 0.10;
             break;
         case 'dias-inventario-comercial':
-            if (brand === 'UNILEVER') { ad.diasInventario = 35; val = 35; }
-            else if (brand === 'FAMILIA' || brand === 'TAT') { ad.diasInventario = 14; val = 14; }
+            if (brand === 'UNILEVER') { ad.diasInventario = 5; val = 5; }
+            else if (brand === 'FAMILIA' || brand === 'TAT') { ad.diasInventario = 5; val = 5; }
             else { ad.diasInventario = 5; val = 5; }
             break;
 
         // ADMINISTRATIVO (INVENTARIOS)
         case 'inventarios-realizados':
-            ad.inventariosRealizados = 2; val = 2;
+            ad.inventariosRealizados = 10; val = 10;
             break;
         case 'fiabilidad-inventarios':
             ad.valorVerificado = 100000000; ad.valorCorrecto = 100000000; val = 100;
@@ -261,12 +261,12 @@ function getAdditionalDataAndValue(kpiId, brand, company) {
     return { additionalData: ad, value: val };
 }
 
-async function seedUltraHigh() {
-    const timestampLatest = '2026-07-31T23:59:59.999Z';
+async function seedAll() {
+    const timestampNow = new Date().toISOString();
     const recordsToInsert = [];
 
     for (const kpi of kpiDefinitions) {
-        const periodKey = getPeriodForKPI(kpi);
+        const periodKeys = getPeriodsForKPI(kpi);
         const metaObj = kpi.meta;
 
         let brandEntries = [];
@@ -282,33 +282,35 @@ async function seedUltraHigh() {
         }
 
         for (const entry of brandEntries) {
-            const { additionalData, value } = getAdditionalDataAndValue(kpi.id, entry.brand, entry.company);
-            const fullAdditionalData = {
-                ...additionalData,
-                period: periodKey,
-                updatedAt: timestampLatest,
-                periodSelectedByUser: true
-            };
+            for (const periodKey of periodKeys) {
+                const { additionalData, value } = getAdditionalDataAndValue(kpi.id, entry.brand, entry.company);
+                const fullAdditionalData = {
+                    ...additionalData,
+                    period: periodKey,
+                    updatedAt: timestampNow,
+                    periodSelectedByUser: true
+                };
 
-            recordsToInsert.push({
-                company_id: entry.company,
-                kpi_id: kpi.id,
-                value: value,
-                additional_data: fullAdditionalData,
-                cargo: 'Analista de Información',
-                updated_at: timestampLatest
-            });
+                recordsToInsert.push({
+                    company_id: entry.company,
+                    kpi_id: kpi.id,
+                    value: value,
+                    additional_data: fullAdditionalData,
+                    cargo: 'Analista de Información',
+                    updated_at: timestampNow
+                });
+            }
         }
     }
 
-    console.log(`📦 Insertando ${recordsToInsert.length} registros ultra-optimización...`);
+    console.log(`📦 Insertando ${recordsToInsert.length} registros (Julio + Agosto 2026)...`);
     const batchSize = 50;
     for (let i = 0; i < recordsToInsert.length; i += batchSize) {
         const batch = recordsToInsert.slice(i, i + batchSize);
         const { error } = await supabase.from('kpi_updates').insert(batch);
         if (error) console.error(`Error en lote ${i}:`, error.message);
     }
-    console.log('🎉 ¡Inserción ultra-optimización completada!');
+    console.log('🎉 ¡Inserción total completada con éxito!');
 }
 
-seedUltraHigh();
+seedAll();
