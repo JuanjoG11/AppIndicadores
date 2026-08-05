@@ -380,7 +380,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const isSameReportableMonth = currentMonthNorm === recordMonthNorm;
             const isFromCurrentPeriod = !forceHistorical && (
                 frequency === 'DIARIO' || frequency === 'DIARIA'
-                    ? isStrictCurrent
+                    ? (isStrictCurrent || isSameMonthNorm)
                     : granular
                         ? isSameReportableMonth  // cualquier semana/quincena del mes reportable
                         : (
@@ -975,7 +975,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 // Para DIARIO: solo el día actual
                                 // Para MENSUAL+: aceptar el mes reportable
                                 const isFromCurrentPeriod = (freq === 'DIARIO' || freq === 'DIARIA')
-                                    ? (group.periodKey === currentPeriodKey)
+                                    ? (group.periodKey === currentPeriodKey || groupMonthKey === currentMonthKey)
                                     : granular
                                         ? (groupMonthKey === currentMonthKey)  // cualquier semana/quincena del mes
                                         : (

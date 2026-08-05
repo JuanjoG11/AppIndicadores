@@ -64,7 +64,7 @@ const AreaDashboard = ({ kpiData, rawUpdates, activeCompany, currentUser, onUpda
         const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const now = new Date();
         const prevMonthName = MONTHS[now.getMonth() === 0 ? 11 : now.getMonth() - 1];
-        const isCurrentMonth = selectedMonth === prevMonthName;
+        const isCurrentMonth = selectedMonth === 'Julio' || selectedMonth === prevMonthName;
         
         return baseCompanyKPIs.map(kpi => {
             // KPIs del mes actual: SIEMPRE usar datos en vivo (independientemente de hasData)
