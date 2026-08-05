@@ -27,7 +27,7 @@ const KPIDetailCard = ({ kpi, onEdit, canEdit, currentUser, activeCompany, selec
     const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const now = new Date();
     const prevMonthName = MONTHS[now.getMonth() === 0 ? 11 : now.getMonth() - 1];
-    const isCurrentMonth = selectedMonth === prevMonthName;
+    const isCurrentMonth = selectedMonth === 'Julio' || selectedMonth === 'Agosto' || selectedMonth === prevMonthName;
 
     let displayHasData = false;
     // Cuando el mes seleccionado es el mes reportable (junio), usar datos en vivo

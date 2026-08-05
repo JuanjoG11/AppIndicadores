@@ -539,29 +539,23 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             const newUpdatedAt = d.updatedAt || new Date().toISOString();
             const newIsNewer = !oldBrandData.additionalData?.updatedAt || newUpdatedAt >= oldUpdatedAt;
 
-            // BUG FIX: Si es una actualización de META (META_UPDATE), no cambiar el estado de hasData, mantener el que ya tenía.
-            const nextHasData = d.type === 'META_UPDATE' 
-                ? (oldBrandData.hasData ?? false)
-                // Para DIARIO: nunca preservar hasData de otro día
-                // Para SEMANAL/MENSUAL: preservar solo si el dato NO es de un mes futuro al reportable
-                : (isFromCurrentPeriod ? true : (() => {
-                    if (frequency === 'DIARIO' || frequency === 'DIARIA') return false;
-                    const dataMonthKey = toMonthKey(recordPeriodIndex) || recordPeriodIndex;
-                    const reportableMonthKey = toMonthKey(currentReportablePeriod) || currentReportablePeriod;
-                    if (dataMonthKey > reportableMonthKey) return false; // dato futuro → limpiar
-                    return oldBrandData.hasData === true ? true : false;
-                })());
-
-            brandValues[dataKey] = {
-                ...oldBrandData,
-                currentValue: shouldShowInDashboard && newIsNewer && d.type !== 'META_UPDATE' ? newValue : (oldBrandData.currentValue || 0),
-                meta: targetMeta,
-                compliance: shouldShowInDashboard && newIsNewer && d.type !== 'META_UPDATE' ? compliance : (oldBrandData.compliance || 0),
-                semaphore: shouldShowInDashboard && newIsNewer && d.type !== 'META_UPDATE' ? semaphore : (oldBrandData.semaphore || 'gray'),
-                additionalData: shouldShowInDashboard && newIsNewer ? d : (oldBrandData.additionalData || d),
-                hasData: nextHasData
-            };
-            console.log(`[applyKPIUpdate] ${kpiId} brand=${currentBrand} period=${recordPeriodIndex} isFromCurrent=${isFromCurrentPeriod} type=${d.type} → hasData=${nextHasData}`);
+            if (isFromCurrentPeriod && d.type !== 'META_UPDATE') {
+                brandValues[dataKey] = {
+                    ...oldBrandData,
+                    currentValue: newValue,
+                    meta: targetMeta,
+                    compliance: compliance,
+                    semaphore: semaphore,
+                    additionalData: d,
+                    hasData: true
+                };
+            } else if (d.type === 'META_UPDATE') {
+                brandValues[dataKey] = {
+                    ...oldBrandData,
+                    meta: targetMeta
+                };
+            }
+            console.log(`[applyKPIUpdate] ${kpiId} brand=${currentBrand} period=${recordPeriodIndex} isFromCurrent=${isFromCurrentPeriod} type=${d.type} → hasData=${brandValues[dataKey]?.hasData}`);
 
             // ── CONSOLIDACIÓN DE VALORES PARA EL HISTORIAL ──
             let historyValue = newValue;
@@ -1101,24 +1095,25 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 const batchOldUpdatedAt = oldBrandEntry.additionalData?.updatedAt || 0;
                                 const batchNewUpdatedAt = upd.updated_at || upd.created_at || 0;
                                 const batchIsNewer = !oldBrandEntry.additionalData?.updatedAt || batchNewUpdatedAt >= batchOldUpdatedAt;
-                                brandValues[dataKey] = {
-                                    currentValue: shouldShowInDashboard && batchIsNewer ? upd.value : (oldBrandEntry.currentValue ?? upd.value),
-                                    compliance: shouldShowInDashboard && batchIsNewer ? compliance : (oldBrandEntry.compliance ?? compliance),
-                                    semaphore: shouldShowInDashboard && batchIsNewer ? semaphore : (oldBrandEntry.semaphore ?? semaphore),
-                                    // hasData: true si es del periodo reportable
-                                    // Para DIARIO: nunca preservar hasData de otro día
-                                    // Para SEMANAL/MENSUAL: preservar solo si el dato previo era del mes correcto
-                                    // NUNCA preservar si este dato es de un mes futuro al reportable
-                                    hasData: isFromCurrentPeriod ? true : (() => {
-                                        if (freq === 'DIARIO' || freq === 'DIARIA') return false;
-                                        const dataMonthKey = toMonthKey(group.periodKey) || group.periodKey;
-                                        if (dataMonthKey > currentMonthKey) return false; // dato futuro → limpiar
-                                        return oldBrandEntry.hasData === true ? true : false;
-                                    })(),
-                                    additionalData: shouldShowInDashboard && batchIsNewer
-                                        ? { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at }
-                                        : (oldBrandEntry.additionalData || { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at })
-                                };
+                                if (shouldShowInDashboard && batchIsNewer) {
+                                    brandValues[dataKey] = {
+                                        ...oldBrandEntry,
+                                        currentValue: upd.value,
+                                        compliance: compliance,
+                                        semaphore: semaphore,
+                                        hasData: true,
+                                        additionalData: { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at }
+                                    };
+                                } else if (!oldBrandEntry.hasData && isFromCurrentPeriod) {
+                                    brandValues[dataKey] = {
+                                        ...oldBrandEntry,
+                                        currentValue: upd.value,
+                                        compliance: compliance,
+                                        semaphore: semaphore,
+                                        hasData: true,
+                                        additionalData: { ...(upd.additional_data || {}), period: group.periodKey, updatedAt: upd.updated_at || upd.created_at }
+                                    };
+                                }
 
                                  // Determinar el estado del KPI base usando TODOS los brandValues disponibles
                                  const allEntityKeys = Object.keys(brandValues).filter(key => key.startsWith(`${currentCompany}-`));
@@ -1172,7 +1167,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                           currentValue: kpi.currentValue,
                                           compliance: kpi.compliance,
                                           semaphore: kpi.semaphore,
-                                          hasData: false, // dato de otro mes → no tiene datos del periodo actual
+                                          hasData: kpi.hasData || false, // preserve current period hasData state
                                           additionalData: kpi.additionalData || { ...(upd.additional_data || {}), period: group.periodKey }
                                       };
 
