@@ -201,10 +201,10 @@ function getJulyDataAndValue(kpiId, brand, company) {
             else { ad.ventasTotales = 590000000; ad.numeroVendedores = 10; val = 59000000; }
             break;
         case 'participacion-venta-credito':
-            ad.ventaCredito = 40000000; ad.ventaTotal = 1000000000; val = 4.0;
+            ad.ventaCredito = 100000000; ad.ventaTotal = 1000000000; val = 10.0;
             break;
         case 'cobro-optimo-cartera':
-            ad.carteraVencida = 40000000; ad.totalCartera = 100000000; val = 40;
+            ad.carteraVencida = 100000000; ad.totalCartera = 100000000; val = 100;
             break;
         case 'rotacion-equipo-comercial':
             ad.personalRetirado = 1; ad.promedioEmpleados = 50; val = 2.0;

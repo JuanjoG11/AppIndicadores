@@ -40,6 +40,24 @@ const isSameBimonthlyPeriod = (p1, p2) => {
     return bim1 === bim2;
 };
 
+// Días de carga exonerados (04 y 05 de Agosto) - exonerar únicamente periodos asignados a 04 y 05 de agosto
+// También exonera registros de cartera con period='2026-08' guardados el 05-08-2026 (duplicados falsos)
+const KPIS_CARTERA = ['cartera-no-vencida', 'cartera-mayor-30', 'recircularizaciones', 'valor-cartera-venta'];
+const isExoneratedUpdate = (u) => {
+    if (!u) return false;
+    const period = String(u.additional_data?.period || u.period || '');
+    // Exonerar periodos diarios del 04 y 05 de agosto
+    if (period === '2026-08-04' || period === '2026-08-05') return true;
+    // Exonerar registros de cartera con period='2026-08' guardados el 05-08-2026
+    // (fueron cargados como duplicados falsos junto con los de julio)
+    if (
+        period === '2026-08' &&
+        KPIS_CARTERA.includes(u.kpi_id) &&
+        (u.updated_at || '').startsWith('2026-08-05')
+    ) return true;
+    return false;
+};
+
 /**
  * Determina si una frecuencia es "granular" (sub-mensual).
  * Para estas frecuencias, hasData debe compararse contra el periodo exacto,
@@ -814,7 +832,9 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                 console.log(`📅 Datos históricos cargados: ${historicalData?.length ?? 0} registros`);
 
                 // Combinar: mes actual primero, luego histórico (para que la deduplicación preserve los más recientes)
-                const data = [...(currentMonthData || []), ...(historicalData || [])];
+                const rawCombined = [...(currentMonthData || []), ...(historicalData || [])];
+                // Exonerar días de carga 04 y 05 sin dañar ningún otro dato histórico ni futuro
+                const data = rawCombined.filter(u => !isExoneratedUpdate(u));
                 const error = currentMonthError && historicalError ? currentMonthError : null;
 
                 if (error) {
@@ -1215,6 +1235,7 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         const channel = supabase.channel(`realtime-kpi-sync-${activeCompany}-${currentPeriod}`)
             .on('postgres_changes', postgresFilter, (p) => {
                 if (!p.new?.kpi_id) return;
+                if (isExoneratedUpdate(p.new)) return;
 
                 setRawUpdates(prev => {
                     const exists = prev.some(r => r.id === p.new.id);
