@@ -40,6 +40,21 @@ const isSameBimonthlyPeriod = (p1, p2) => {
     return bim1 === bim2;
 };
 
+const CAJA_LEGACY_MAP = {
+    'planillas-cerradas': 'planillas-pendientes-cuadrar',
+    'vales-descuadres': 'actualizacion-estado-vales',
+    'indice-arqueo-caja': 'consignaciones-soportes-validados',
+    'arqueos-realizados': 'consignaciones-soportes-validados'
+};
+
+const normalizeUpdateKpi = (u) => {
+    if (!u) return u;
+    if (CAJA_LEGACY_MAP[u.kpi_id]) {
+        return { ...u, kpi_id: CAJA_LEGACY_MAP[u.kpi_id] };
+    }
+    return u;
+};
+
 // Días de carga exonerados (04 y 05 de Agosto) - exonerar únicamente periodos asignados a 04 y 05 de agosto
 // También exonera registros de cartera y comercial con period de agosto guardados el 05-08-2026 (duplicados falsos)
 const KPIS_CARTERA = ['cartera-no-vencida', 'cartera-mayor-30', 'recircularizaciones', 'valor-cartera-venta'];
@@ -62,7 +77,14 @@ const KPIS_COMERCIAL_TYM = [
     'obsolescencia',
     'mermas',
     'revision-margenes',
-    'revision-precios'
+    'revision-precios',
+    'consignaciones-soportes-validados',
+    'planillas-pendientes-cuadrar',
+    'actualizacion-estado-vales',
+    'planillas-cerradas',
+    'vales-descuadres',
+    'indice-arqueo-caja',
+    'arqueos-realizados'
 ];
 const isExoneratedUpdate = (u) => {
     if (!u) return false;
@@ -871,8 +893,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
 
                 // Combinar: mes actual primero, luego histórico (para que la deduplicación preserve los más recientes)
                 const rawCombined = [...(currentMonthData || []), ...(historicalData || [])];
-                // Exonerar días de carga 04 y 05 sin dañar ningún otro dato histórico ni futuro
-                const data = rawCombined.filter(u => !isExoneratedUpdate(u));
+                // Exonerar días de carga 04 y 05 sin dañar ningún otro dato histórico ni futuro y normalizar KPIs
+                const data = rawCombined.filter(u => !isExoneratedUpdate(u)).map(u => normalizeUpdateKpi(u));
                 const error = currentMonthError && historicalError ? currentMonthError : null;
 
                 if (error) {
@@ -1274,14 +1296,15 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
             .on('postgres_changes', postgresFilter, (p) => {
                 if (!p.new?.kpi_id) return;
                 if (isExoneratedUpdate(p.new)) return;
+                const normalizedNew = normalizeUpdateKpi(p.new);
 
                 setRawUpdates(prev => {
-                    const exists = prev.some(r => r.id === p.new.id);
-                    return exists ? prev.map(r => r.id === p.new.id ? p.new : r) : [...prev, p.new];
+                    const exists = prev.some(r => r.id === normalizedNew.id);
+                    return exists ? prev.map(r => r.id === normalizedNew.id ? normalizedNew : r) : [...prev, normalizedNew];
                 });
 
-                const realtimePeriod = p.new.additional_data?.period;
-                const kpiDef = kpiDefinitions.find(k => k.id === p.new.kpi_id);
+                const realtimePeriod = normalizedNew.additional_data?.period;
+                const kpiDef = kpiDefinitions.find(k => k.id === normalizedNew.kpi_id);
                 const freq = (kpiDef?.frecuencia || 'MENSUAL').toUpperCase();
                 const currentP = getPeriodIndex(new Date(), freq);
                 const currentMonthP = toMonthKey(currentP) || currentP;

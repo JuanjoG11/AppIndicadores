@@ -363,6 +363,18 @@ export const getKPIFormulaFields = (kpiId) => {
         'tiempo-contratacion': [
             { name: 'diasVacante', label: 'Días de Respuesta', type: 'number', placeholder: 'Eje: 7' }
         ],
+        'consignaciones-soportes-validados': [
+            { name: 'soportesValidados', label: 'N° de Soportes Correctamente Validados', type: 'number', placeholder: 'Ej: 99' },
+            { name: 'soportesRevisados', label: 'N° Total de Soportes Revisados', type: 'number', placeholder: 'Ej: 100' }
+        ],
+        'planillas-pendientes-cuadrar': [
+            { name: 'planillasCuadradas3Dias', label: 'N° de Planillas Cuadradas en 3 Días', type: 'number', placeholder: 'Ej: 99' },
+            { name: 'planillasDespachadas', label: 'N° Total de Planillas Despachadas', type: 'number', placeholder: 'Ej: 100' }
+        ],
+        'actualizacion-estado-vales': [
+            { name: 'valesIngresadosConceptos', label: 'N° de Vales Ingresados bajo los Conceptos', type: 'number', placeholder: 'Ej: 99' },
+            { name: 'valesGestionados', label: 'N° Total de Vales Gestionados', type: 'number', placeholder: 'Ej: 100' }
+        ],
         'arqueos-realizados': [
             { name: 'arqueosProgramados', label: 'Arqueos Programados', type: 'number', placeholder: 'Eje: 8' },
             { name: 'arqueosRealizados', label: 'Arqueos Realizados', type: 'number', placeholder: 'Eje: 8' },

@@ -306,6 +306,45 @@ export const SYSTEM_USERS = [
         color: '#6366f1',
         icon: 'Banknote'
     },
+    // ═══════════════════════════════════════════
+    // CAJA (por marca) - usuarios específicos para cargar sus propios KPIs
+    // ═══════════════════════════════════════════
+    {
+        username: 'caja_zenu',
+        password: 'Caja_Zenu26',
+        name: 'Caja · Zenú',
+        role: 'Analista',
+        cargo: 'CAJA',
+        company: 'TYM',
+        activeBrand: 'ZENU',
+        allowedAreas: ['caja'],
+        color: '#6366f1',
+        icon: 'Banknote'
+    },
+    {
+        username: 'caja_alpina',
+        password: 'Caja_Alpina26',
+        name: 'Caja · Alpina',
+        role: 'Analista',
+        cargo: 'CAJA',
+        company: 'TYM',
+        activeBrand: 'ALPINA',
+        allowedAreas: ['caja'],
+        color: '#6366f1',
+        icon: 'Banknote'
+    },
+    {
+        username: 'caja_fleischmann_familia',
+        password: 'Caja_FleischFam26',
+        name: 'Caja · Fleischmann & Familia',
+        role: 'Analista',
+        cargo: 'CAJA',
+        company: 'TYM',
+        activeBrand: ['FLEISCHMANN', 'FAMILIA'],
+        allowedAreas: ['caja'],
+        color: '#6366f1',
+        icon: 'Banknote'
+    },
 
     // ═══════════════════════════════════════════
     // CARTERA (sin separación de proveedor)

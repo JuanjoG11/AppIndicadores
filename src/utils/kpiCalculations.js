@@ -196,6 +196,21 @@ export const calculateKPIValue = (kpiId, rawData) => {
         break;
 
       // CAJA
+      case 'consignaciones-soportes-validados':
+        newValue = (d.soportesRevisados && d.soportesRevisados > 0)
+          ? (d.soportesValidados / d.soportesRevisados) * 100
+          : (d.currentValue !== undefined ? parseFloat(d.currentValue) : 0);
+        break;
+      case 'planillas-pendientes-cuadrar':
+        newValue = (d.planillasDespachadas && d.planillasDespachadas > 0)
+          ? (d.planillasCuadradas3Dias / d.planillasDespachadas) * 100
+          : (d.currentValue !== undefined ? parseFloat(d.currentValue) : 0);
+        break;
+      case 'actualizacion-estado-vales':
+        newValue = (d.valesGestionados && d.valesGestionados > 0)
+          ? (d.valesIngresadosConceptos / d.valesGestionados) * 100
+          : (d.currentValue !== undefined ? parseFloat(d.currentValue) : 0);
+        break;
       case 'planillas-cerradas':
         newValue = (d.planillasCerradas / d.planillasGeneradas) * 100;
         break;
