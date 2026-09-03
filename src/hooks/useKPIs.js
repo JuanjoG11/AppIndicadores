@@ -41,20 +41,58 @@ const isSameBimonthlyPeriod = (p1, p2) => {
 };
 
 // Días de carga exonerados (04 y 05 de Agosto) - exonerar únicamente periodos asignados a 04 y 05 de agosto
-// También exonera registros de cartera con period='2026-08' guardados el 05-08-2026 (duplicados falsos)
+// También exonera registros de cartera y comercial con period de agosto guardados el 05-08-2026 (duplicados falsos)
 const KPIS_CARTERA = ['cartera-no-vencida', 'cartera-mayor-30', 'recircularizaciones', 'valor-cartera-venta'];
+const KPIS_COMERCIAL_TYM = [
+    'venta-realizada-esperada',
+    'primer-margen',
+    'devoluciones-buen-estado',
+    'devoluciones-mal-estado-comercial',
+    'promedio-venta-vendedor',
+    'ventas-promedio-vendedor',
+    'participacion-venta-credito',
+    'cobro-optimo-cartera',
+    'rotacion-equipo-comercial',
+    'gasto-personal-comercial',
+    'gasto-viaje-comercial',
+    'dias-inventario-comercial',
+    'inventarios-realizados',
+    'fiabilidad-inventarios',
+    'quiebres-inventario',
+    'obsolescencia',
+    'mermas',
+    'revision-margenes',
+    'revision-precios'
+];
 const isExoneratedUpdate = (u) => {
     if (!u) return false;
     const period = String(u.additional_data?.period || u.period || '');
     // Exonerar periodos diarios del 04 y 05 de agosto
     if (period === '2026-08-04' || period === '2026-08-05') return true;
+
+    const isFromAug5 = (u.updated_at || '').startsWith('2026-08-05');
+
     // Exonerar registros de cartera con period='2026-08' guardados el 05-08-2026
     // (fueron cargados como duplicados falsos junto con los de julio)
     if (
         period === '2026-08' &&
         KPIS_CARTERA.includes(u.kpi_id) &&
-        (u.updated_at || '').startsWith('2026-08-05')
+        isFromAug5
     ) return true;
+
+    // Exonerar registros falsos de agosto para Comercial TYM y Administrativo cargados el 05-08-2026
+    const isAugustPeriod = period === '2026-08' || period.startsWith('2026-08') || period === '2026-W32';
+    const comp = u.company_id || u.additional_data?.company;
+    const brand = u.additional_data?.brand;
+    const isTym = comp === 'TYM' || ['ALPINA', 'ZENU', 'FLEISCHMANN', 'POLAR'].includes(brand);
+
+    if (
+        isFromAug5 &&
+        isAugustPeriod &&
+        isTym &&
+        KPIS_COMERCIAL_TYM.includes(u.kpi_id)
+    ) return true;
+
     return false;
 };
 
