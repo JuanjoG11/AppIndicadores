@@ -213,10 +213,10 @@ export const kpiDefinitions = [
             FLEISCHMANN: 1
         },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'HORAS EXTRAS / VENTA TOTAL',
-        sustentacion: 'SEMANAL',
+        sustentacion: 'MENSUAL',
         fuente: 'MAN GO'
     },
 
@@ -1219,7 +1219,7 @@ export const kpiDefinitions = [
         objetivo: 'Garantizar la ejecución de tareas críticas del sistema',
         meta: { TYM: 100, TAT: 100 },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
         formula: '(TAREAS EJECUTADAS / TAREAS PROGRAMADAS) * 100',
         sustentacion: 'REPORTE TI',
@@ -1249,7 +1249,7 @@ export const kpiDefinitions = [
         objetivo: 'Evitar la recurrencia de errores técnicos',
         meta: { TYM: 95, TAT: 95 },
         unit: '%',
-        frecuencia: 'SEMANAL',
+        frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
         formula: '(TOTAL INCIDENCIAS - INCIDENCIAS RECURRENTES) / TOTAL INCIDENCIAS * 100',
         sustentacion: 'REPORTE TI',
