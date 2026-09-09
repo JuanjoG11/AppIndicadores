@@ -92,10 +92,10 @@ export const kpiDefinitions = [
             FAMILIA: 1
         },
         unit: 'horas',
-        frecuencia: 'QUINCENAL',
+        frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
         formula: '(TOTAL HORAS EXTRAS / AUXILIARES) / 25 DÍAS',
-        sustentacion: 'SEMANAL',
+        sustentacion: 'MENSUAL',
         fuente: 'MAN GO'
     },
     {
@@ -269,10 +269,10 @@ export const kpiDefinitions = [
             FLEISCHMANN: 1
         },
         unit: '%',
-        frecuencia: 'QUINCENAL',
+        frecuencia: 'MENSUAL',
         responsable: 'GESTIÓN HUMANA',
         formula: 'HORAS EXTRAS / VENTA TOTAL',
-        sustentacion: 'SEMANAL',
+        sustentacion: 'MENSUAL',
         fuente: 'SYT / MAN GO'
     },
 
