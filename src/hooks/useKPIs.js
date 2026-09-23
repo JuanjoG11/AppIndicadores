@@ -42,9 +42,7 @@ const isSameBimonthlyPeriod = (p1, p2) => {
 
 const CAJA_LEGACY_MAP = {
     'planillas-cerradas': 'planillas-pendientes-cuadrar',
-    'vales-descuadres': 'actualizacion-estado-vales',
-    'indice-arqueo-caja': 'consignaciones-soportes-validados',
-    'arqueos-realizados': 'consignaciones-soportes-validados'
+    'vales-descuadres': 'actualizacion-estado-vales'
 };
 
 const normalizeUpdateKpi = (u) => {
@@ -980,7 +978,12 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 'auxiliares','vehiculos','pedidos','actividades','actividadesProgramadas',
                                 'diasHabiles','diasPerdidos','vacantes','diasCobertura','totalIncidencias',
                                 'incidenciasResueltas','arqueos','arqueosProgramados','planillas','vales',
-                                'descuadres','conciliaciones','ajustes','cierresDias','notas','errores'];
+                                'descuadres','conciliaciones','ajustes','cierresDias','notas','errores',
+                                // RRHH / Talento Humano
+                                'personalRetirado','promedioEmpleados',
+                                'diasVacante','valorHEDHEN','totalNomina','valorNomina',
+                                'diasPerdidos','diasLaborados',
+                                'actividadesEjecutadas','actividadesProgramadas'];
                             const hasAnyField = formulaFields.some(f => ad[f] !== undefined && ad[f] !== null && ad[f] !== '');
                             if (!hasAnyField && ad.currentValue === undefined) return; // skip registro vacío
                         }

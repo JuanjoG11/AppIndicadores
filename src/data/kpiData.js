@@ -427,6 +427,54 @@ export const kpiDefinitions = [
         visibleEnAreas: ['caja', 'contabilidad']
     },
     {
+        id: 'arqueos-realizados',
+        name: 'Cumplimiento de Arqueos',
+        area: 'caja',
+        objetivo: 'Garantizar el control permanente del efectivo. Comisión: $100.000',
+        meta: {
+            ALPINA: 4,
+            ZENU: 4,
+            FLEISCHMANN: 4,
+            UNILEVER: 4,
+            FAMILIA: 4
+        },
+        brands: ['TYM', 'TAT'],
+        unit: 'arqueos',
+        frecuencia: 'SEMANAL',
+        responsable: 'CAJA',
+        responsableTYM: 'CRISTIAN',
+        responsableTAT: 'CAJA',
+        responsableTATAlt: 'CONTADOR',
+        formula: 'ARQUEOS REALIZADOS / ARQUEOS PROGRAMADOS (Incluye reporte de Sobras/Faltantes)',
+        sustentacion: 'SEMANAL',
+        fuente: 'CONTABILIDAD',
+        visibleEnAreas: ['caja', 'contabilidad']
+    },
+    {
+        id: 'indice-arqueo-caja',
+        name: 'Índice de Arqueo en Caja',
+        area: 'caja',
+        objetivo: 'Seguimiento de diferencias en arqueos de caja (Sobra - Faltante)',
+        meta: {
+            ALPINA: 0,
+            ZENU: 0,
+            FLEISCHMANN: 0,
+            UNILEVER: 0,
+            FAMILIA: 0
+        },
+        brands: ['TYM', 'TAT'],
+        unit: 'arqueos',
+        frecuencia: 'SEMANAL',
+        responsable: 'CAJA',
+        responsableTYM: 'CRISTIAN',
+        responsableTAT: 'CAJA',
+        responsableTATAlt: 'CONTADOR',
+        formula: 'Número de arqueos con diferencia (Sobra - Faltante)',
+        sustentacion: 'SEMANAL',
+        fuente: 'CONTABILIDAD',
+        visibleEnAreas: ['caja', 'contabilidad']
+    },
+    {
         id: 'planillas-pendientes-cuadrar',
         name: 'Planillas Pendientes de Cuadrar',
         subName: 'Cierre de planillas en periodos correctos',
@@ -440,7 +488,7 @@ export const kpiDefinitions = [
             FAMILIA: 99
         },
         unit: '%',
-        frecuencia: 'DIARIO',
+        frecuencia: 'SEMANAL',
         responsable: 'CAJA',
         responsableTYM: 'CRISTIAN',
         responsableTAT: 'CAJA',
@@ -464,7 +512,7 @@ export const kpiDefinitions = [
             FAMILIA: 99
         },
         unit: '%',
-        frecuencia: 'DIARIO',
+        frecuencia: 'SEMANAL',
         responsable: 'CAJA',
         responsableTYM: 'CRISTIAN',
         responsableTAT: 'CAJA',

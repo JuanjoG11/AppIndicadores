@@ -99,13 +99,24 @@ export const filterKPIsByEntity = (kpiData, entity) => {
             // Determinar qué claves usar para el cálculo:
             // 1) Si existen datos brand-específicos (TYM-ALPINA, TYM-ZENU...) → usar SOLO esos
             // 2) Si no hay brand-específicos pero hay nivel entidad (TYM-TYM) → usar ese
+            // 3) Fallback: si RRHH guarda con brand='Global' (activeBrand:null), usar TYM-GLOBAL
             // Esto evita mezclar ambos niveles y promedios incorrectos
             const brandSpecificKeys = entityBrands.length > 0
                 ? entityBrands.map(b => `${entity}-${b}`).filter(k => brandValues[k]?.hasData)
                 : [];
-            const keysToAggregate = brandSpecificKeys.length > 0
+            let keysToAggregate = brandSpecificKeys.length > 0
                 ? brandSpecificKeys
                 : entityKeys.filter(k => brandValues[k]?.hasData);
+
+            // Fallback a Global: si no hay datos en claves brand-específicas ni de entidad,
+            // pero sí existe un registro guardado como 'Global' (ej. RRHH con activeBrand:null),
+            // usarlo para que el Gerente vea el dato aunque no esté desglosado por marca.
+            if (keysToAggregate.length === 0) {
+                const globalKey = `${entity}-GLOBAL`;
+                if (brandValues[globalKey]?.hasData) {
+                    keysToAggregate = [globalKey];
+                }
+            }
 
             // allFilled: todas las marcas definidas tienen datos brand-específicos
             let allFilled = false;

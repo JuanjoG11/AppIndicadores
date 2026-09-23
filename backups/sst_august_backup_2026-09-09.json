@@ -1,0 +1,802 @@
+[
+  {
+    "id": "bdf10d20-8bb7-4389-bce7-e5ec28e61957",
+    "kpi_id": "calificacion-auditoria",
+    "value": 98,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T04:59:02.459Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 98,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T04:59:02.459+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "9320def5-6bb5-4874-9499-d27fa83808eb",
+    "kpi_id": "calificacion-auditoria",
+    "value": 98,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T04:59:02.459Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 98,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T04:59:02.459+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "2bd635ea-d5c6-4e89-9b26-862f8ed2d90c",
+    "kpi_id": "actividades-cultura",
+    "value": 100,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T04:59:02.459Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 10,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T04:59:02.459+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "f879cccb-4032-4e8f-9d10-1e599c73bafe",
+    "kpi_id": "actividades-cultura",
+    "value": 100,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T04:59:02.459Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 10,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T04:59:02.459+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "249e1da5-4f3f-43a0-827d-42fbe4485ff7",
+    "kpi_id": "tiempo-contratacion",
+    "value": 4,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08-Q1",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T04:59:02.459Z",
+      "diasVacante": 4,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T04:59:02.459+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "4c444840-799b-4bf1-ad43-f7ec8991780d",
+    "kpi_id": "tiempo-contratacion",
+    "value": 4,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08-Q1",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T04:59:02.459Z",
+      "diasVacante": 4,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T04:59:02.459+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "f2938156-445b-491f-93a8-5fe8bb54db74",
+    "kpi_id": "calificacion-auditoria",
+    "value": 98,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T05:03:44.771Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 98,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T05:03:44.771+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "2dcaea65-613c-42ac-aa78-75990bf690f9",
+    "kpi_id": "calificacion-auditoria",
+    "value": 98,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T05:03:44.771Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 98,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T05:03:44.771+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "ef10ef01-3f92-4f91-b133-2138b1342ef4",
+    "kpi_id": "actividades-cultura",
+    "value": 100,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T05:03:44.771Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 10,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T05:03:44.771+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "d9ac2841-52a0-4bb4-8733-eae69570633d",
+    "kpi_id": "actividades-cultura",
+    "value": 100,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T05:03:44.771Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 10,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T05:03:44.771+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "05747a28-d4c0-486c-b33d-c5ae736f7437",
+    "kpi_id": "tiempo-contratacion",
+    "value": 4,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08-Q1",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T05:03:44.771Z",
+      "diasVacante": 4,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T05:03:44.771+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "0e8605ad-be07-4a10-b1f7-5435d618889b",
+    "kpi_id": "tiempo-contratacion",
+    "value": 4,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08-Q1",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T05:03:44.771Z",
+      "diasVacante": 4,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T05:03:44.771+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "57c94045-0032-4632-b752-6d5f12a6b4d9",
+    "kpi_id": "calificacion-auditoria",
+    "value": 88,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:58:24.336Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 88,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T12:58:24.336+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "27d16e51-73f5-4204-a7ba-ca2b7153a410",
+    "kpi_id": "calificacion-auditoria",
+    "value": 88,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:58:24.336Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 88,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T12:58:24.336+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "093c5112-1108-44c4-b37b-7e665bc60f05",
+    "kpi_id": "actividades-cultura",
+    "value": 100,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:58:24.336Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 10,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T12:58:24.336+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "2604e852-14be-4ba0-ba2c-cd44305ab057",
+    "kpi_id": "actividades-cultura",
+    "value": 100,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:58:24.336Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 10,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T12:58:24.336+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "c03a0dc3-d277-4e2f-9b08-283eaba3a6b0",
+    "kpi_id": "tiempo-contratacion",
+    "value": 4,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08-Q1",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:58:24.336Z",
+      "diasVacante": 4,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T12:58:24.336+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "464c6f3d-4edb-4bdc-96b7-887963a15f5b",
+    "kpi_id": "tiempo-contratacion",
+    "value": 4,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08-Q1",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:58:24.336Z",
+      "diasVacante": 4,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T12:58:24.336+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "69f9ee17-8de9-4049-a1ad-f5e285ad1639",
+    "kpi_id": "tiempo-contratacion",
+    "value": 4,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08-Q1",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:58:52.388Z",
+      "diasVacante": 4,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T12:58:52.388+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "6c87e391-abdb-458c-ad52-1ee37470ec78",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:58:52.388Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T12:58:52.388+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "f6a3d5c3-cab7-4eae-8af8-7a2160176e4b",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:58:52.388Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T12:58:52.388+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "3a242562-f15f-46c5-af1f-2aaeccda1ff6",
+    "kpi_id": "actividades-cultura",
+    "value": 100,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:58:52.388Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 10,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T12:58:52.388+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "5ef2f7c4-7ac6-42a5-a275-1f2a62116c44",
+    "kpi_id": "actividades-cultura",
+    "value": 100,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:58:52.388Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 10,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T12:58:52.388+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "dff208a2-b845-4b51-80a5-830c5862223f",
+    "kpi_id": "tiempo-contratacion",
+    "value": 4,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08-Q1",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:58:52.388Z",
+      "diasVacante": 4,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T12:58:52.388+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "c25cefaa-507c-4b9e-9bd1-b50f3aec6cda",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:59:15.695Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T12:59:15.695+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "0aed7cfc-7d99-420d-a850-64e5d506fc74",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:59:15.695Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T12:59:15.695+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "cb01c80c-a2ba-4b38-bf4d-5b98f70a17fb",
+    "kpi_id": "actividades-cultura",
+    "value": 70,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:59:15.695Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 7,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T12:59:15.695+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "038a09b2-8a50-4ebd-97f5-e913aaf8e0f6",
+    "kpi_id": "actividades-cultura",
+    "value": 70,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:59:15.695Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 7,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T12:59:15.695+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "6bbcfd26-8150-4cdc-ba26-9a02f4b76d14",
+    "kpi_id": "tiempo-contratacion",
+    "value": 8,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08-Q1",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T12:59:15.695Z",
+      "diasVacante": 8,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T12:59:15.695+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "f90c77ae-6a1d-4a4d-b76a-0f9647173cc4",
+    "kpi_id": "tiempo-contratacion",
+    "value": 8,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08-Q1",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T12:59:15.695Z",
+      "diasVacante": 8,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T12:59:15.695+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "351b868d-6939-492c-acb8-d371ec4275e8",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:19:18.343Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T13:19:18.343+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "843c5e7e-928d-491c-9872-02e2fd4a45d4",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:19:18.343Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T13:19:18.343+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "4735c809-81f3-49e0-92a0-29ea1143cd27",
+    "kpi_id": "actividades-cultura",
+    "value": 70,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:19:18.343Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 7,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T13:19:18.343+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "ac75d1c8-662d-4bb6-a73c-16f464f383cd",
+    "kpi_id": "actividades-cultura",
+    "value": 70,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:19:18.343Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 7,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T13:19:18.343+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "5e69570c-ddd0-44ba-a9c3-c0cb1c129dca",
+    "kpi_id": "tiempo-contratacion",
+    "value": 8,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08-Q1",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:19:18.343Z",
+      "diasVacante": 8,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T13:19:18.343+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "19ebcb72-cc43-4a5f-bbfc-43e32597e759",
+    "kpi_id": "tiempo-contratacion",
+    "value": 8,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08-Q1",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:19:18.343Z",
+      "diasVacante": 8,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T13:19:18.343+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "f3bcd6f3-bbad-4fbf-a10d-9e4055136cb1",
+    "kpi_id": "tiempo-contratacion",
+    "value": 8,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08-Q1",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:20:27.128Z",
+      "diasVacante": 8,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T13:20:27.128+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "8076a40f-3aab-4bf5-a8b4-d6364c32b2be",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:20:27.128Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T13:20:27.128+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "aeca111d-ceb6-456a-bac4-9d1c04c612a0",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:20:27.128Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T13:20:27.128+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "e9ecab52-da80-492c-9f8d-170a6a31e6fa",
+    "kpi_id": "actividades-cultura",
+    "value": 70,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:20:27.128Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 7,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T13:20:27.128+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "f3799feb-f53a-4e16-95c6-1b05bcf35e3f",
+    "kpi_id": "actividades-cultura",
+    "value": 70,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:20:27.128Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 7,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T13:20:27.128+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "81f37db1-e010-4dcf-b2a4-6a0e22092859",
+    "kpi_id": "tiempo-contratacion",
+    "value": 8,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08-Q1",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:20:27.128Z",
+      "diasVacante": 8,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T13:20:27.128+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "238d31f8-e7a3-44ce-80e6-1d5e1af13805",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:23:42.223Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T13:23:42.223+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "06b7be97-83de-4a39-8657-6b4e7dfa17ee",
+    "kpi_id": "calificacion-auditoria",
+    "value": 85,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:23:42.223Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 85,
+      "actividadesProgramadas": 100
+    },
+    "updated_at": "2026-08-05T13:23:42.223+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "f572b901-6ce2-4085-9cc3-5098d354f3ae",
+    "kpi_id": "actividades-cultura",
+    "value": 70,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:23:42.223Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 7,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T13:23:42.223+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "38f1f481-f766-43f5-92af-cdceafac24eb",
+    "kpi_id": "actividades-cultura",
+    "value": 70,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:23:42.223Z",
+      "periodSelectedByUser": true,
+      "actividadesEjecutadas": 7,
+      "actividadesProgramadas": 10
+    },
+    "updated_at": "2026-08-05T13:23:42.223+00:00",
+    "company_id": "TAT"
+  },
+  {
+    "id": "2e8a99ee-cea1-418c-8895-89ee6627d844",
+    "kpi_id": "tiempo-contratacion",
+    "value": 8,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TYM",
+      "period": "2026-08-Q1",
+      "company": "TYM",
+      "updatedAt": "2026-08-05T13:23:42.223Z",
+      "diasVacante": 8,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T13:23:42.223+00:00",
+    "company_id": "TYM"
+  },
+  {
+    "id": "228a5a47-0ea7-4ed2-b4a8-c62ed262758d",
+    "kpi_id": "tiempo-contratacion",
+    "value": 8,
+    "cargo": "Analista de Información",
+    "additional_data": {
+      "brand": "TAT",
+      "period": "2026-08-Q1",
+      "company": "TAT",
+      "updatedAt": "2026-08-05T13:23:42.223Z",
+      "diasVacante": 8,
+      "periodSelectedByUser": true
+    },
+    "updated_at": "2026-08-05T13:23:42.223+00:00",
+    "company_id": "TAT"
+  }
+]
