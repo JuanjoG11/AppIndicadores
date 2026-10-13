@@ -1029,6 +1029,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                             const upd = group.latestUpdate;
                             const kpiDef = kpiDefinitions.find(k => k.id === group.kpi_id);
                             if (!kpiDef) return;
+                            // Guard: si el periodKey es undefined (registro sin period en DB), omitir para evitar crash
+                            if (!group.periodKey) return;
 
                             newData = newData.map(kpi => {
                                 if (kpi.id !== upd.kpi_id) return kpi;
@@ -1115,6 +1117,8 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
                                 // BUG FIX #5 (batch): Para granulares usar el periodo exacto como key del historial
                                 const batchGranular = isGranularFrequency(freq);
                                 const normalizedMK = batchGranular ? group.periodKey : (toMonthKey(group.periodKey) || group.periodKey);
+                                // Guard: si normalizedMK es nulo/undefined (periodKey malformado), omitir este KPI
+                                if (!normalizedMK) return kpi;
                                 const existingEntry = (kpi.history || []).find(h =>
                                     batchGranular ? h.monthKey === normalizedMK : toMonthKey(h.monthKey) === normalizedMK
                                 );
