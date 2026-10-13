@@ -312,7 +312,7 @@ export const SYSTEM_USERS = [
     {
         username: 'caja_zenu',
         password: 'Caja_Zenu26',
-        name: 'Caja · Zenú',
+        name: 'Cristina · Caja Zenú',
         role: 'Analista',
         cargo: 'CAJA',
         company: 'TYM',
@@ -324,7 +324,7 @@ export const SYSTEM_USERS = [
     {
         username: 'caja_alpina',
         password: 'Caja_Alpina26',
-        name: 'Caja · Alpina',
+        name: 'Eliana · Caja Alpina',
         role: 'Analista',
         cargo: 'CAJA',
         company: 'TYM',
@@ -336,7 +336,7 @@ export const SYSTEM_USERS = [
     {
         username: 'caja_fleischmann_familia',
         password: 'Caja_FleischFam26',
-        name: 'Caja · Fleischmann & Familia',
+        name: 'Natalia · Caja Fleischmann & Familia',
         role: 'Analista',
         cargo: 'CAJA',
         company: 'TYM',

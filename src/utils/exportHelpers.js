@@ -26,17 +26,17 @@ const semCell = (text, sem) => cell(text, {
 const PERSONAS = [
     {
         nombre: 'David Aguirre',       cargo: 'Líder Logístico',            proveedor: 'Alpina · Fleischmann',
-        kpiIds: ['indice-devoluciones','promedio-pedidos-auxiliar','promedio-pedidos-carro','gasto-fletes-venta'],
+        kpiIds: ['pedidos-devueltos','promedio-pedidos-auxiliar','promedio-pedidos-carro','gasto-fletes-venta'],
         brands: ['ALPINA','FLEISCHMANN'], company: 'TYM',
     },
     {
         nombre: 'Felipe Murillo',      cargo: 'Líder Logístico',            proveedor: 'Zenú',
-        kpiIds: ['indice-devoluciones','promedio-pedidos-auxiliar','promedio-pedidos-carro','gasto-fletes-venta'],
+        kpiIds: ['pedidos-devueltos','promedio-pedidos-auxiliar','promedio-pedidos-carro','gasto-fletes-venta'],
         brands: ['ZENU'], company: 'TYM',
     },
     {
         nombre: 'Sebastián Arias',     cargo: 'Líder Logístico',            proveedor: 'Unilever · Familiar',
-        kpiIds: ['indice-devoluciones','promedio-pedidos-auxiliar','promedio-pedidos-carro','gasto-fletes-venta'],
+        kpiIds: ['pedidos-devueltos','promedio-pedidos-auxiliar','promedio-pedidos-carro','gasto-fletes-venta'],
         brands: ['UNILEVER','FAMILIA'], company: 'TAT',
     },
     {
@@ -49,69 +49,51 @@ const PERSONAS = [
         kpiIds: ['impresion-facturas','error-facturacion','pedidos-facturados'],
         brands: ['ZENU','FLEISCHMANN'], company: 'TYM',
     },
-    {
-        nombre: 'Mariana Gallego',     cargo: 'Auxiliar de Facturación',    proveedor: 'Unilever · Familiar',
-        kpiIds: ['impresion-facturas','error-facturacion','pedidos-facturados'],
-        brands: ['UNILEVER','FAMILIA'], company: 'TAT',
-    },
+
     {
         nombre: 'Anyi Mosquera',       cargo: 'Analista de Abastecimientos',proveedor: 'General',
-        kpiIds: ['revision-precios','fiabilidad-inventarios','revision-margenes','exactitud-inventarios'],
+        kpiIds: ['revision-precios','fiabilidad-inventarios','revision-margenes'],
         brands: null, company: 'TYM',
     },
     {
         nombre: 'Diana García',        cargo: 'Analista de Cartera',        proveedor: 'General',
-        kpiIds: ['cartera-al-dia','cartera-mayor-30','relacion-cartera-ventas'],
+        kpiIds: ['cartera-no-vencida','cartera-mayor-30','valor-cartera-venta'],
         brands: null, company: 'TYM',
     },
     {
         nombre: 'Cristian Ballesteros',cargo: 'Auxiliar Contable',          proveedor: 'General',
-        kpiIds: ['conciliaciones-bancarias','arqueos-caja','cierre-planillas'],
+        kpiIds: ['conciliaciones-bancarias','arqueos-realizados','planillas-pendientes-cuadrar'],
         brands: null, company: 'TYM',
     },
     {
         nombre: 'Karina Taba',         cargo: 'Analista de Gestión Humana', proveedor: 'General',
-        kpiIds: ['cobertura-vacantes','cumplimiento-sst','actividades-cultura'],
+        kpiIds: ['tiempo-contratacion','calificacion-auditoria','actividades-cultura'],
         brands: null, company: 'TYM',
     },
     {
         nombre: 'María José Franco',   cargo: 'Analista de Gestión Humana', proveedor: 'General',
-        kpiIds: ['cumplimiento-sst','actividades-cultura'],
+        kpiIds: ['calificacion-auditoria','actividades-cultura'],
         brands: null, company: 'TYM',
     },
     {
-        nombre: 'Daniel Arroyave',     cargo: 'Auxiliar de Caja',           proveedor: 'TAT',
-        kpiIds: ['cierre-planillas-caja','vales-cuadres','indice-arqueos'],
-        brands: null, company: 'TAT',
+        nombre: 'Cristina',            cargo: 'Auxiliar de Caja',           proveedor: 'Zenú',
+        kpiIds: ['arqueos-realizados','planillas-pendientes-cuadrar','actualizacion-estado-vales'],
+        brands: ['ZENU'], company: 'TYM',
     },
     {
-        nombre: 'Eliana González',     cargo: 'Auxiliar de Caja',           proveedor: 'TYM',
-        kpiIds: ['cierre-planillas-caja','vales-cuadres','indice-arqueos'],
-        brands: null, company: 'TYM',
+        nombre: 'Eliana González',     cargo: 'Auxiliar de Caja',           proveedor: 'Alpina',
+        kpiIds: ['arqueos-realizados','planillas-pendientes-cuadrar','actualizacion-estado-vales'],
+        brands: ['ALPINA'], company: 'TYM',
     },
     {
-        nombre: 'Nataly Molina',       cargo: 'Auxiliar de Caja',           proveedor: 'TYM',
-        kpiIds: ['cierre-planillas-caja','vales-cuadres','indice-arqueos'],
-        brands: null, company: 'TYM',
+        nombre: 'Nataly Molina',       cargo: 'Auxiliar de Caja',           proveedor: 'Fleischmann · Familia',
+        kpiIds: ['arqueos-realizados','planillas-pendientes-cuadrar','actualizacion-estado-vales'],
+        brands: ['FLEISCHMANN'], company: 'TYM',
     },
+
     {
         nombre: 'Juan José Colorado',  cargo: 'Software y TI',              proveedor: 'General',
-        kpiIds: ['tareas-programadas','mantenimiento-preventivo','efectividad-resolucion'],
-        brands: null, company: 'TYM',
-    },
-    {
-        nombre: 'Sandra Milena',       cargo: 'Líder Caja',                 proveedor: 'TYM',
-        kpiIds: ['arqueos-caja','indice-arqueos','cierre-planillas-caja','vales-cuadres'],
-        brands: null, company: 'TYM',
-    },
-    {
-        nombre: 'Oscar Giraldo',       cargo: 'Contador Principal',         proveedor: 'General',
-        kpiIds: ['dias-cierre','ajustes-posteriores','ajustes-revisoria','rotacion-cxc','conciliaciones-bancarias','cierre-planillas','multas-sanciones'],
-        brands: null, company: 'TYM',
-    },
-    {
-        nombre: 'Erika Valencia',      cargo: 'TYM y TAT - Talento Humano', proveedor: 'General',
-        kpiIds: ['rotacion-personal','indice-ausentismo','cumplimiento-sst','actividades-cultura','cobertura-vacantes'],
+        kpiIds: ['tareas-programadas','mantenimiento-equipos','resolucion-incidencias'],
         brands: null, company: 'TYM',
     },
 ];
@@ -144,8 +126,14 @@ function resolveKPI(kpi, persona) {
         return { meta: metaStr, resultado: resStr, semaforo: worst.semaforo, compliance: worst.compliance };
     }
 
-    // KPI sin marcas
-    const meta = kpi.targetMeta ?? (kpi.meta && typeof kpi.meta !== 'object' ? kpi.meta : '—');
+    // KPI sin marcas (brands: null) — puede tener meta como número o como objeto {TYM, TAT}
+    let meta;
+    if (typeof kpi.meta === 'object' && kpi.meta !== null) {
+        // meta por empresa: leer la de la compañía de la persona
+        meta = kpi.meta[persona.company] ?? kpi.meta['TYM'] ?? Object.values(kpi.meta)[0] ?? '—';
+    } else {
+        meta = kpi.targetMeta ?? kpi.meta ?? '—';
+    }
     if (!kpi.hasData) return { meta: String(meta), resultado: '—', semaforo: 'gray', compliance: null };
     return {
         meta: String(meta),
