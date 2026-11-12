@@ -72,8 +72,8 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'RRHH',
-        responsableTYM: 'CRISTIAN',
+        responsable: 'GESTIÓN HUMANA',
+        responsableTYM: 'GESTIÓN HUMANA',
         formula: 'VALOR FLETES / VENTA TOTAL',
         sustentacion: 'QUINCENAL',
         fuente: 'MEKANO'
