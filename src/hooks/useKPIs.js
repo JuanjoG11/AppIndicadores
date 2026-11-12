@@ -282,11 +282,13 @@ export const useKPIs = (currentUser, activeCompany, onToast) => {
         if (freq.includes('DIARI')) {
             return getPeriodIndex(now, frequency);
         }
-        // SEMANAL → semana anterior (última semana completada)
+        // SEMANAL → última semana del mes anterior (el mes reportable es siempre el mes vencido)
+        // Usar el último día del mes anterior garantiza que toMonthKey apunte al mes anterior,
+        // igual que para MENSUAL, evitando que a comienzos del mes nuevo se "pierdan" los datos
+        // de las últimas semanas del mes anterior.
         if (freq.includes('SEMANAL')) {
-            const prev = new Date(now);
-            prev.setDate(now.getDate() - 7);
-            return getPeriodIndex(prev, frequency);
+            const lastDayPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0); // día 0 = último día del mes anterior
+            return getPeriodIndex(lastDayPrevMonth, frequency);
         }
         // QUINCENAL → quincena anterior completada
         if (freq.includes('QUINCENAL')) {
