@@ -72,7 +72,7 @@ export const kpiDefinitions = [
         },
         unit: '%',
         frecuencia: 'QUINCENAL',
-        responsable: 'CONTADOR',
+        responsable: 'RRHH',
         responsableTYM: 'CRISTIAN',
         formula: 'VALOR FLETES / VENTA TOTAL',
         sustentacion: 'QUINCENAL',
